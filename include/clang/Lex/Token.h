@@ -16,6 +16,7 @@
 
 #include "clang/Basic/SourceLocation.h"
 #include "clang/Basic/TokenKinds.h"
+#include "clang/Lex/Conditional.h"
 #include "llvm/ADT/StringRef.h"
 #include <cassert>
 
@@ -67,6 +68,7 @@ class Token {
 
   /// Flags - Bits we track about this token, members of the TokenFlags enum.
   unsigned short Flags;
+  Variablity::PresenceCondition* condition;
 
 public:
   // Various flags set per token:
@@ -306,6 +308,9 @@ public:
   /// represented as characters between '<#' and '#>' in the source code. The
   /// lexer uses identifier tokens to represent placeholders.
   bool isEditorPlaceholder() const { return getFlag(IsEditorPlaceholder); }
+
+  void setConditionalInfo(Variablity::PresenceCondition* pc){ this->condition = pc; }
+  std::string getConditionalInfoString() { return this->condition->toString(); }
 };
 
 /// \brief Information about the conditional stack (\#if directives)
