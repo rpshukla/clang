@@ -2725,17 +2725,12 @@ void Preprocessor::HandleIfdefDirective(Token &Result,
     CurPPLexer->pushConditionalLevel(DirectiveTok.getLocation(),
                                      /*wasskip*/false, /*foundnonskip*/false,
                                      /*foundelse*/false);
-  } else if (!MI == isIfndef) {
+  } else{ // if (!MI == isIfndef) {
+    // this is now an else, because we want to assume every macro is defined for variable aware analysis
     // Yes, remember that we are inside a conditional, then lex the next token.
     CurPPLexer->pushConditionalLevel(DirectiveTok.getLocation(),
                                      /*wasskip*/false, /*foundnonskip*/true,
                                      /*foundelse*/false);
-  } else {
-    // No, skip the contents of this block.
-    SkipExcludedConditionalBlock(HashToken.getLocation(),
-                                 DirectiveTok.getLocation(),
-                                 /*Foundnonskip*/ false,
-                                 /*FoundElse*/ false);
   }
 }
 
@@ -2774,15 +2769,10 @@ void Preprocessor::HandleIfDirective(Token &IfToken,
     // the directive blocks.
     CurPPLexer->pushConditionalLevel(IfToken.getLocation(), /*wasskip*/false,
                                      /*foundnonskip*/false, /*foundelse*/false);
-  } else if (ConditionalTrue) {
+  } else { // if (ConditionalTrue) {
     // Yes, remember that we are inside a conditional, then lex the next token.
     CurPPLexer->pushConditionalLevel(IfToken.getLocation(), /*wasskip*/false,
                                    /*foundnonskip*/true, /*foundelse*/false);
-  } else {
-    // No, skip the contents of this block.
-    SkipExcludedConditionalBlock(HashToken.getLocation(), IfToken.getLocation(),
-                                 /*Foundnonskip*/ false,
-                                 /*FoundElse*/ false);
   }
 }
 
@@ -2844,10 +2834,9 @@ void Preprocessor::HandleElseDirective(Token &Result, const Token &HashToken) {
     return;
   }
 
-  // Finally, skip the rest of the contents of this block.
-  SkipExcludedConditionalBlock(HashToken.getLocation(), CI.IfLoc,
-                               /*Foundnonskip*/ true,
-                               /*FoundElse*/ true, Result.getLocation());
+  // Else, don't skip toalow analysis
+  CurPPLexer->pushConditionalLevel(CI.IfLoc, /*wasskip*/false,
+                                     /*foundnonskip*/false, /*foundelse*/true);
 }
 
 /// HandleElifDirective - Implements the \#elif directive.
@@ -2889,8 +2878,6 @@ void Preprocessor::HandleElifDirective(Token &ElifToken,
     return;
   }
 
-  // Finally, skip the rest of the contents of this block.
-  SkipExcludedConditionalBlock(
-      HashToken.getLocation(), CI.IfLoc, /*Foundnonskip*/ true,
-      /*FoundElse*/ CI.FoundElse, ElifToken.getLocation());
+  CurPPLexer->pushConditionalLevel(ElifToken.getLocation(), /*wasskip*/false,
+                                     /*foundnonskip*/false, /*foundelse*/false);
 }
