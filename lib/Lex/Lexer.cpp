@@ -3102,9 +3102,6 @@ bool Lexer::Lex(Token &Result) {
       Variablity::PresenceCondition* pc;
       if(decls.size() > 0){
           pc = Variablity::PresenceCondition::getList(decls, names);
-
-          llvm::outs() << pc->toString() << " ";
-          llvm::outs()  << "(" << PP->getSpelling(Result) << ")\n";
       }else{
           pc = new Variablity::True();
       }
