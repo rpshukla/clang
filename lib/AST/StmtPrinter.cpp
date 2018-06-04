@@ -71,6 +71,7 @@ namespace  {
     void PrintRawDecl(Decl *D);
     void PrintRawDeclStmt(const DeclStmt *S);
     void PrintRawIfStmt(IfStmt *If);
+    void PrintRawVariantStmt(VariantStmt *If);
     void PrintRawCXXCatchStmt(CXXCatchStmt *Catch);
     void PrintCallArgs(CallExpr *E);
     void PrintRawSEHExceptHandler(SEHExceptStmt *S);
@@ -219,6 +220,38 @@ void StmtPrinter::PrintRawIfStmt(IfStmt *If) {
 void StmtPrinter::VisitIfStmt(IfStmt *If) {
   Indent();
   PrintRawIfStmt(If);
+}
+
+void StmtPrinter::PrintRawVariantStmt(VariantStmt *Var) {
+  OS << "is present? [PUT CONDITION HERE]"; // TODO: print condition
+
+  if (CompoundStmt *CS = dyn_cast<CompoundStmt>(Var->getIf())) {
+    OS << ' ';
+    PrintRawCompoundStmt(CS);
+    OS << (Var->getNot() ? ' ' : '\n');
+  } else {
+    OS << '\n';
+    PrintStmt(Var->getIf());
+    if (Var->getNot()) Indent();
+  }
+
+  if (Stmt *Else = Var->getNot()) {
+    OS << "else";
+
+    if (CompoundStmt *CS = dyn_cast<CompoundStmt>(Else)) {
+      OS << ' ';
+      PrintRawCompoundStmt(CS);
+      OS << '\n';
+    } else {
+      OS << '\n';
+      PrintStmt(Var->getNot());
+    }
+  }
+}
+
+void StmtPrinter::VisitVariantStmt(VariantStmt *Var) {
+  Indent();
+  PrintRawVariantStmt(Var);
 }
 
 void StmtPrinter::VisitSwitchStmt(SwitchStmt *Node) {

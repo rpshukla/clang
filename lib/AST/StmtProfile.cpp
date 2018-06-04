@@ -242,6 +242,10 @@ void StmtProfiler::VisitIfStmt(const IfStmt *S) {
   VisitDecl(S->getConditionVariable());
 }
 
+void StmtProfiler::VisitVariantStmt(const VariantStmt *S) {
+  VisitStmt(S); // TODO: is this all?
+}
+
 void StmtProfiler::VisitSwitchStmt(const SwitchStmt *S) {
   VisitStmt(S);
   VisitDecl(S->getConditionVariable());
