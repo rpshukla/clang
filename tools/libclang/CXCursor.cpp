@@ -120,6 +120,10 @@ CXCursor cxcursor::MakeCXCursor(const Stmt *S, const Decl *Parent,
     K = CXCursor_DefaultStmt;
     break;
   
+  case Stmt::VariantStmtClass:
+    K = CXCursor_VariantStmt;
+    break;
+
   case Stmt::IfStmtClass:
     K = CXCursor_IfStmt;
     break;

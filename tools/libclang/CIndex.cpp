@@ -4962,6 +4962,8 @@ CXString clang_getCursorKindSpelling(enum CXCursorKind Kind) {
       return cxstring::createRef("CaseStmt");
   case CXCursor_DefaultStmt:
       return cxstring::createRef("DefaultStmt");
+  case CXCursor_VariantStmt:
+      return cxstring::createRef("VariantStmt");
   case CXCursor_IfStmt:
       return cxstring::createRef("IfStmt");
   case CXCursor_SwitchStmt:

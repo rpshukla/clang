@@ -2504,6 +2504,10 @@ enum CXCursorKind {
 
   CXCursor_LastStmt = CXCursor_OMPTargetTeamsDistributeSimdDirective,
 
+  /** \brief An if statement
+   */
+  CXCursor_VariantStmt                        = 280,
+
   /**
    * \brief Cursor that represents the translation unit itself.
    *
