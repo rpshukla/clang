@@ -17,6 +17,7 @@
 #include "clang/AST/DeclGroup.h"
 #include "clang/AST/StmtIterator.h"
 #include "clang/Basic/CapturedStmt.h"
+#include "clang/Lex/Conditional.h"
 #include "clang/Basic/IdentifierTable.h"
 #include "clang/Basic/LLVM.h"
 #include "clang/Basic/SourceLocation.h"
@@ -928,6 +929,50 @@ public:
     return T->getStmtClass() == AttributedStmtClass;
   }
 };
+class VariantStmt : public Stmt {
+    Variablity::PresenceCondition condition;
+    Stmt *IfPresent;
+    Stmt *NotPresent;
+
+    SourceLocation IfLoc;
+    SourceLocation NotLoc;
+
+public:
+    VariantStmt(const ASTContext &C, SourceLocation IL,
+            Stmt *IfPresent, Stmt *NotPresent, SourceLocation NL = SourceLocation());
+
+    explicit VariantStmt(EmptyShell Empty) : Stmt(VariantStmtClass, Empty) {} // TODO: No clue what is going on in this line
+
+
+    void setCondition(Variablity::PresenceCondition pc) { condition = pc; }
+    const Variablity::PresenceCondition getCondition() const { return condition; }
+    void setIf(Stmt *S) { NotPresent = S;}
+    const Stmt *getIf() const { return IfPresent; } // Not sure if these should be const or not
+    void setNot(Stmt *S) { NotPresent = S;}
+    const Stmt *getNot() const { return NotPresent; }
+
+
+    SourceLocation getIfLoc() const { return IfLoc; }
+    void setIfLoc(SourceLocation L) { IfLoc = L; }
+    SourceLocation getNotLoc() const { return NotLoc; }
+    void setNotLoc(SourceLocation L) { NotLoc = L; }
+
+    SourceLocation getLocStart() const LLVM_READONLY { return IfLoc; }
+
+    SourceLocation getLocEnd() const LLVM_READONLY {
+        return NotPresent->getLocEnd();
+    }
+
+    static bool classof(const Stmt *T) {
+        return T->getStmtClass() == VariantStmtClass; 
+    }
+
+    // Iterators
+    child_range children() {
+        return child_range(child_iterator(), child_iterator());
+    }
+};
+
 
 /// IfStmt - This represents an if/then/else.
 class IfStmt : public Stmt {

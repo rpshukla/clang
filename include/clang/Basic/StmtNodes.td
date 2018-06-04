@@ -14,6 +14,7 @@ def CompoundStmt : Stmt;
 def LabelStmt : Stmt;
 def AttributedStmt : Stmt;
 def IfStmt : Stmt;
+def VariantStmt : Stmt;
 def SwitchStmt : Stmt;
 def WhileStmt : Stmt;
 def DoStmt : Stmt;
