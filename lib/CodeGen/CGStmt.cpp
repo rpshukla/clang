@@ -343,6 +343,9 @@ void CodeGenFunction::EmitStmt(const Stmt *S, ArrayRef<const Attr *> Attrs) {
     EmitOMPTargetTeamsDistributeSimdDirective(
         cast<OMPTargetTeamsDistributeSimdDirective>(*S));
     break;
+  case Stmt::VariantStmtClass:
+    // Code generation is not supported for variant stmts
+    break;
   }
 }
 
