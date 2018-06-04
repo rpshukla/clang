@@ -567,6 +567,18 @@ StmtResult Sema::BuildIfStmt(SourceLocation IfLoc, bool IsConstexpr,
              Cond.get().second, thenStmt, ElseLoc, elseStmt);
 }
 
+StmtResult
+Sema::ActOnVariantStmt(SourceLocation IfLoc, Stmt *IfPresent,
+                  Stmt *NotPresent, SourceLocation NotLoc) {
+  return BuildVariantStmt(IfLoc, IfPresent, NotPresent, NotLoc);
+}
+
+StmtResult Sema::BuildVariantStmt(SourceLocation IfLoc, Stmt *IfPresent,
+                  Stmt *NotPresent, SourceLocation NotLoc) {
+  return new (Context)
+      VariantStmt(Context, IfLoc, IfPresent, NotPresent, NotLoc);
+}
+
 namespace {
   struct CaseCompareFunctor {
     bool operator()(const std::pair<llvm::APSInt, CaseStmt*> &LHS,

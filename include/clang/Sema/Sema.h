@@ -3725,6 +3725,10 @@ public:
                          Stmt *InitStmt,
                          ConditionResult Cond, Stmt *ThenVal,
                          SourceLocation ElseLoc, Stmt *ElseVal);
+  StmtResult ActOnVariantStmt(SourceLocation IfLoc, Stmt *IfPresent,
+                  Stmt *NotPresent, SourceLocation NotLoc);
+  StmtResult BuildVariantStmt(SourceLocation IfLoc, Stmt *IfPresent,
+                  Stmt *NotPresent, SourceLocation NotLoc);
   StmtResult ActOnStartOfSwitchStmt(SourceLocation SwitchLoc,
                                     Stmt *InitStmt,
                                     ConditionResult Cond);
