@@ -947,9 +947,9 @@ public:
     void setCondition(Variablity::PresenceCondition pc) { condition = pc; }
     const Variablity::PresenceCondition getCondition() const { return condition; }
     void setIf(Stmt *S) { NotPresent = S;}
-    const Stmt *getIf() const { return IfPresent; } // Not sure if these should be const or not
+    Stmt *getIf() { return IfPresent; } // Not sure if these should be const or not
     void setNot(Stmt *S) { NotPresent = S;}
-    const Stmt *getNot() const { return NotPresent; }
+    Stmt *getNot() { return NotPresent; }
 
 
     SourceLocation getIfLoc() const { return IfLoc; }

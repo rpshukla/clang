@@ -1245,6 +1245,15 @@ public:
   ///
   /// By default, performs semantic analysis to build the new statement.
   /// Subclasses may override this routine to provide different behavior.
+  StmtResult RebuildVariantStmt(SourceLocation IfLoc, Stmt *Then,
+                           SourceLocation ElseLoc, Stmt *Else) {
+    return getSema().ActOnVariantStmt(IfLoc, Then, Else, ElseLoc);
+  }
+  
+  /// \brief Build a new "if" statement.
+  ///
+  /// By default, performs semantic analysis to build the new statement.
+  /// Subclasses may override this routine to provide different behavior.
   StmtResult RebuildIfStmt(SourceLocation IfLoc, bool IsConstexpr,
                            Sema::ConditionResult Cond, Stmt *Init, Stmt *Then,
                            SourceLocation ElseLoc, Stmt *Else) {
@@ -6591,6 +6600,27 @@ StmtResult TreeTransform<Derived>::TransformAttributedStmt(AttributedStmt *S) {
 }
 
 template<typename Derived>
+StmtResult
+TreeTransform<Derived>::TransformVariantStmt(VariantStmt *S) {
+  // Transform the "then" branch.
+  StmtResult If = getDerived().TransformStmt(S->getIf());
+  if (If.isInvalid())
+    return StmtError();
+
+  // Transform the "else" branch.
+  StmtResult Not = getDerived().TransformStmt(S->getNot());
+  if (Not.isInvalid())
+    return StmtError();
+
+  if (!getDerived().AlwaysRebuild() &&
+      If.get() == S->getIf() &&
+      Not.get() == S->getNot())
+    return S;
+
+  return getDerived().RebuildVariantStmt(S->getIfLoc(),
+                                    If.get(), S->getNotLoc(),
+                                    Not.get());
+}template<typename Derived>
 StmtResult
 TreeTransform<Derived>::TransformIfStmt(IfStmt *S) {
   // Transform the initialization statement
