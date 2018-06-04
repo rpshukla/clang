@@ -126,6 +126,16 @@ void ASTStmtWriter::VisitAttributedStmt(AttributedStmt *S) {
   Code = serialization::STMT_ATTRIBUTED;
 }
 
+void ASTStmtWriter::VisitVariantStmt(VariantStmt *S) {
+  VisitStmt(S);
+  //Record.AddPresenceCondition(S->getCondition());
+  Record.AddStmt(S->getIf());
+  Record.AddStmt(S->getNot());
+  Record.AddSourceLocation(S->getIfLoc());
+  Record.AddSourceLocation(S->getNotLoc());
+  Code = serialization::STMT_VARIANT;
+}
+
 void ASTStmtWriter::VisitIfStmt(IfStmt *S) {
   VisitStmt(S);
   Record.push_back(S->isConstexpr());

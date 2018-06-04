@@ -166,6 +166,15 @@ void ASTStmtReader::VisitAttributedStmt(AttributedStmt *S) {
   S->AttrLoc = ReadSourceLocation();
 }
 
+void ASTStmtReader::VisitVariantStmt(VariantStmt *S) {
+  VisitStmt(S);
+  //S->setCondition(Record.readPresenceCondition());
+  S->setIf(Record.readSubStmt());
+  S->setNot(Record.readSubStmt());
+  S->setIfLoc(ReadSourceLocation());
+  S->setNotLoc(ReadSourceLocation());
+}
+
 void ASTStmtReader::VisitIfStmt(IfStmt *S) {
   VisitStmt(S);
   S->setConstexpr(Record.readInt());
@@ -3101,6 +3110,10 @@ Stmt *ASTReader::ReadStmtFromStream(ModuleFile &F) {
       S = AttributedStmt::CreateEmpty(
         Context,
         /*NumAttrs*/Record[ASTStmtReader::NumStmtFields]);
+      break;
+
+    case STMT_VARIANT:
+      S = new (Context) VariantStmt(Empty);
       break;
 
     case STMT_IF:

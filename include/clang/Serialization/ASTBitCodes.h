@@ -1471,6 +1471,9 @@ namespace serialization {
       /// \brief An AttributedStmt record.
       STMT_ATTRIBUTED,
 
+      /// \brief An VariantStmt record.
+      STMT_VARIANT,
+
       /// \brief An IfStmt record.
       STMT_IF,
 
