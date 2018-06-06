@@ -310,6 +310,7 @@ public:
   bool isEditorPlaceholder() const { return getFlag(IsEditorPlaceholder); }
 
   void setConditionalInfo(Variablity::PresenceCondition* pc){ this->condition = pc; }
+  Variablity::PresenceCondition* getConditional() { return this->condition; }
   std::string getConditionalInfoString() { return this->condition->toString(); }
 };
 

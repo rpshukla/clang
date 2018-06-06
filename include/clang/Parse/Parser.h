@@ -264,6 +264,11 @@ class Parser : public CodeCompletionHandler {
   /// just a regular sub-expression.
   SourceLocation ExprStatementTokLoc;
 
+  /// The condition of the current parser, this is later compared to the condition
+  /// of each token it parses to see if it should parse that token, split at that
+  /// token, or skip over it entirely.
+  Variablity::PresenceCondition* condition;
+
 public:
   Parser(Preprocessor &PP, Sema &Actions, bool SkipFunctionBodies);
   ~Parser() override;
@@ -273,6 +278,10 @@ public:
   Preprocessor &getPreprocessor() const { return PP; }
   Sema &getActions() const { return Actions; }
   AttributeFactory &getAttrFactory() { return AttrFactory; }
+
+  void setConditionalInfo(Variablity::PresenceCondition* pc){ this->condition = pc; }
+  Variablity::PresenceCondition* getConditional() { return this->condition; }
+  std::string getConditionalInfoString() { return this->condition->toString(); }
 
   const Token &getCurToken() const { return Tok; }
   Scope *getCurScope() const { return Actions.getCurScope(); }
@@ -317,7 +326,7 @@ public:
     assert(!isTokenSpecial() &&
            "Should consume special tokens with Consume*Token");
     PrevTokLocation = Tok.getLocation();
-    PP.Lex(Tok);
+    SplitOrConsume(Tok);
     return PrevTokLocation;
   }
 
@@ -327,7 +336,7 @@ public:
     assert(!isTokenSpecial() &&
            "Should consume special tokens with Consume*Token");
     PrevTokLocation = Tok.getLocation();
-    PP.Lex(Tok);
+    SplitOrConsume(Tok);
     return true;
   }
 
@@ -400,12 +409,14 @@ private:
   /// For typos, give a fixit to '='
   bool isTokenEqualOrEqualTypo();
 
+  void SplitOrConsume(Token &Result);
+
   /// \brief Return the current token to the token stream and make the given
   /// token the current token.
   void UnconsumeToken(Token &Consumed) {
       Token Next = Tok;
       PP.EnterToken(Consumed);
-      PP.Lex(Tok);
+      SplitOrConsume(Tok);
       PP.EnterToken(Next);
   }
 
@@ -413,7 +424,7 @@ private:
     assert(Tok.isAnnotation() && "wrong consume method");
     SourceLocation Loc = Tok.getLocation();
     PrevTokLocation = Tok.getAnnotationEndLoc();
-    PP.Lex(Tok);
+    SplitOrConsume(Tok);
     return Loc;
   }
 
@@ -426,7 +437,7 @@ private:
     else if (ParenCount)
       --ParenCount;       // Don't let unbalanced )'s drive the count negative.
     PrevTokLocation = Tok.getLocation();
-    PP.Lex(Tok);
+    SplitOrConsume(Tok);
     return PrevTokLocation;
   }
 
@@ -440,7 +451,7 @@ private:
       --BracketCount;     // Don't let unbalanced ]'s drive the count negative.
 
     PrevTokLocation = Tok.getLocation();
-    PP.Lex(Tok);
+    SplitOrConsume(Tok);
     return PrevTokLocation;
   }
 
@@ -454,7 +465,7 @@ private:
       --BraceCount;     // Don't let unbalanced }'s drive the count negative.
 
     PrevTokLocation = Tok.getLocation();
-    PP.Lex(Tok);
+    SplitOrConsume(Tok);
     return PrevTokLocation;
   }
 
@@ -466,7 +477,7 @@ private:
     assert(isTokenStringLiteral() &&
            "Should only consume string literals with this method");
     PrevTokLocation = Tok.getLocation();
-    PP.Lex(Tok);
+    SplitOrConsume(Tok);
     return PrevTokLocation;
   }
 
@@ -478,7 +489,7 @@ private:
   SourceLocation ConsumeCodeCompletionToken() {
     assert(Tok.is(tok::code_completion));
     PrevTokLocation = Tok.getLocation();
-    PP.Lex(Tok);
+    SplitOrConsume(Tok);
     return PrevTokLocation;
   }
 
