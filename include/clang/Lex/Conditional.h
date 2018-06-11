@@ -1,4 +1,5 @@
-//===-- clang/Lex/conditional.h - Instruction class definition -------*- C++ -*-===//
+//===-- clang/Lex/conditional.h - Instruction class definition -------*- C++
+//-*-===//
 //
 //                     The LLVM Compiler Infrastructure
 //
@@ -8,7 +9,8 @@
 //===----------------------------------------------------------------------===//
 ///
 /// \file
-/// This file contains the conditional class, the variable aware part of the token
+/// This file contains the conditional class, the variable aware part of the
+/// token
 ///
 //===----------------------------------------------------------------------===//
 #ifndef LLVM_CLANG_LEX_CONDITIONAL
@@ -17,72 +19,119 @@
 
 #include <string>
 #include <vector>
+#include <map>
 
-namespace Variablity{
+namespace Variablity {
 
-    class PresenceCondition;
-    class And;
-    class True;
-    class Not;
-    class Literal;
+enum PCType{
+    TRUE, AND, OR, NOT, LIT,
+};
 
-    class PresenceCondition{
-        // This class is for holding the conditonal
-        public:
-            virtual std::string toString();
-            // This function returns the presence condition based on the stack given
-            static PresenceCondition* getList(std::vector<bool> declarations, std::vector<std::string> names);
+class PresenceCondition;
+class And;
+class Or;
+class True;
+class Not;
+class Literal;
 
-            virtual ~PresenceCondition() {}
-    };
+class PresenceCondition {
+    std::map<std::string, bool*> solve_map;
+    // This class is for holding the conditonal
+public:
+    PCType typeOfPC;
+    virtual std::string toString();
+    bool isSatisfiable();
+    virtual PresenceCondition* toCnf();
+    virtual PresenceCondition* toNegationNormal();
+    // This function returns the presence condition based on the stack given
+    static PresenceCondition* getList(std::vector<bool> declarations,
+        std::vector<std::string> names);
 
-    class True: public PresenceCondition{
-        // Always true, tokens outside of any ifdef, and ifndef will have this
-        public:
-            std::string toString();
-    };
+    // These three methods are called to determine if th parser should split
+    bool ShouldSplitOnCondition(PresenceCondition* other);
+    bool ShouldContinueOnCondition(PresenceCondition* other);
+    bool ShouldSkipOnCondition(PresenceCondition* other);
+    void solve(PresenceCondition* other);
 
-    class Literal: public PresenceCondition{
-        // Literal presence condition ocurres when there is a single ifdef, also,
-        // Not and And presence conditions are made up of these
-        std::string literal;
+    virtual ~PresenceCondition() {}
+};
 
-        public:
-        std::string toString();
+class True : public PresenceCondition {
+    // Always true, tokens outside of any ifdef, and ifndef will have this
+public:
+    std::string toString();
+    PresenceCondition* toCnf();
+    PresenceCondition* toNegationNormal();
+    True(){
+        this->typeOfPC = TRUE;
+    }
+};
 
+class Literal : public PresenceCondition {
+    // Literal presence condition ocurres when there is a single ifdef, also,
+    // Not and And presence conditions are made up of these
+    std::string literal;
 
-        Literal(std::string lit): literal(lit){}
-        ~Literal(){}
-    };
+public:
+    std::string toString();
+    PresenceCondition* toCnf();
+    PresenceCondition* toNegationNormal();
 
-    class And: public PresenceCondition {
-        // When there is nested if[n]def's the and is needed to represent both conditions
-        // and can be nested And(And(And(Literal("A"), Literal("B")), Literal("C")), Literal("D"))
-        // as deep as needed.
-        PresenceCondition* left;
-        PresenceCondition* right;
+    Literal(std::string lit)
+        : literal(lit)
+    {
+        this->typeOfPC = LIT;
+    }
+    ~Literal() {}
+};
 
-        public:
-        std::string toString();
-        And(PresenceCondition *left_, PresenceCondition *right_);
-        ~And(){}
-    };
+class And : public PresenceCondition {
+    // When there is nested if[n]def's the and is needed to represent both
+    // conditions and can be nested And(And(And(Literal("A"), Literal("B")),
+    // Literal("C")), Literal("D")) as deep as needed.
+    PresenceCondition* left;
+    PresenceCondition* right;
 
+public:
+    std::string toString();
+    PresenceCondition* toCnf();
+    PresenceCondition* toNegationNormal();
+    And(PresenceCondition* left_, PresenceCondition* right_);
+    ~And() {}
 
-    class Not: public PresenceCondition {
-        // Not is needed when there are ifndef, or ifdef 0, then the not
-        // of a literal is required
-        PresenceCondition* right;
+    friend Not;
+    friend Or;
+};
 
-        public:
-        std::string toString();
+class Or : public PresenceCondition {
+    // #if defined(A) || defined(B)
+    PresenceCondition* left;
+    PresenceCondition* right;
 
+public:
+    std::string toString();
+    PresenceCondition* toCnf();
+    PresenceCondition* toNegationNormal();
+    Or(PresenceCondition* left_, PresenceCondition* right_);
+    ~Or() {}
 
-        Not(PresenceCondition *right_){ this->right = right_; }
-        ~Not(){}
-    };
+    friend Not;
+};
 
-}
+class Not : public PresenceCondition {
+    // Not is needed when there are ifndef, or ifdef 0, then the not
+    // of a literal is required
+    PresenceCondition* right;
 
+public:
+    std::string toString();
+    PresenceCondition* toCnf();
+    PresenceCondition* toNegationNormal();
+
+    Not(PresenceCondition* right_) { this->right = right_; this->typeOfPC = NOT; }
+    ~Not() {}
+};
+
+} // namespace Variablity
 
 #endif

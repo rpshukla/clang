@@ -2,6 +2,7 @@
 
 set(LLVM_LINK_COMPONENTS support)
 
+
 add_clang_library(clangLex
   HeaderMap.cpp
   HeaderSearch.cpp
@@ -29,4 +30,5 @@ add_clang_library(clangLex
 
   LINK_LIBS
   clangBasic
+  cryptominisat5
   )
