@@ -47,8 +47,16 @@ IdentifierInfo *Parser::getSEHExceptKeyword() {
   return Ident__except;
 }
 void Parser::SplitOrConsume(Token &Result){
-    PP.Lex(Result);
-    //llvm::outs() << "[" << Result.getConditionalInfoString() << "]" << Result.getName() << " ";
+  PP.Lex(Result);
+  if(this->getConditional()->ShouldContinueOnCondition(Result.getConditional())){
+    // Do nothing, we good
+  }
+  else if(this->getConditional()->ShouldSplitOnCondition(Result.getConditional())){
+    throw new Variablity::Split();
+  }
+  else if(this->getConditional()->ShouldSkipOnCondition(Result.getConditional())){
+    this->SplitOrConsume(Result);
+  }
 }
 
 Parser::Parser(Preprocessor &pp, Sema &actions, bool skipFunctionBodies)

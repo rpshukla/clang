@@ -29,6 +29,7 @@
 #include "llvm/Support/SaveAndRestore.h"
 #include <memory>
 #include <stack>
+#include <stdexcept>
 
 namespace clang {
   class PragmaHandler;
@@ -2843,5 +2844,12 @@ private:
 };
 
 }  // end namespace clang
+namespace Variablity{
+  class Split : public std::runtime_error
+  {
+    public:
+      Split() : runtime_error("Splitting Here") {}
+  };
+}
 
 #endif
