@@ -313,6 +313,7 @@ public:
   /// ParseTopLevelDecl - Parse one top-level declaration. Returns true if
   /// the EOF was encountered.
   bool ParseTopLevelDecl(DeclGroupPtrTy &Result);
+  bool SplitableParseTopLevelDecl(DeclGroupPtrTy &Result);
   bool ParseTopLevelDecl() {
     DeclGroupPtrTy Result;
     return ParseTopLevelDecl(Result);
@@ -1757,6 +1758,9 @@ private:
     ACK_StatementsOpenMPAnyExecutable
   };
   StmtResult
+  SplitableParseStatementOrDeclaration(StmtVector &Stmts, AllowedConstructsKind Allowed,
+                              SourceLocation *TrailingElseLoc = nullptr);
+  StmtResult
   ParseStatementOrDeclaration(StmtVector &Stmts, AllowedConstructsKind Allowed,
                               SourceLocation *TrailingElseLoc = nullptr);
   StmtResult ParseStatementOrDeclarationAfterAttributes(
@@ -2847,8 +2851,11 @@ private:
 namespace Variablity{
   class Split : public std::runtime_error
   {
+      std::string spelling;
     public:
-      Split() : runtime_error("Splitting Here") {}
+      Split(std::string s) : runtime_error(s.c_str()) {
+        spelling = s; 
+      }
   };
 }
 

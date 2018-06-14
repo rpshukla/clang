@@ -50,11 +50,14 @@ void Parser::SplitOrConsume(Token &Result){
   PP.Lex(Result);
   if(this->getConditional()->ShouldContinueOnCondition(Result.getConditional())){
     // Do nothing, we good
+    llvm::outs() << "GOOD";
   }
   else if(this->getConditional()->ShouldSplitOnCondition(Result.getConditional())){
-    throw new Variablity::Split();
+    llvm::outs() << "SPLIT";
+    throw Variablity::Split(PP.getSpelling(Result));
   }
   else if(this->getConditional()->ShouldSkipOnCondition(Result.getConditional())){
+    llvm::outs() << "SKIP";
     this->SplitOrConsume(Result);
   }
 }
@@ -555,6 +558,16 @@ bool Parser::ParseFirstTopLevelDecl(DeclGroupPtrTy &Result) {
 /// ParseTopLevelDecl - Parse one top-level declaration, return whatever the
 /// action tells us to.  This returns true if the EOF was encountered.
 bool Parser::ParseTopLevelDecl(DeclGroupPtrTy &Result) {
+  try{
+    return SplitableParseTopLevelDecl(Result);
+  }catch (Variablity::Split& e){
+    llvm::outs() << "Caught Split at declaration level. Remember to handle here.";
+    return false;
+  }
+}
+/// ParseTopLevelDecl - Parse one top-level declaration, return whatever the
+/// action tells us to.  This returns true if the EOF was encountered.
+bool Parser::SplitableParseTopLevelDecl(DeclGroupPtrTy &Result) {
   DestroyTemplateIdAnnotationsRAIIObj CleanupRAII(TemplateIds);
 
   // Skip over the EOF token, flagging end of previous input for incremental

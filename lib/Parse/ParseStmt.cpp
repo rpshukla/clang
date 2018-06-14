@@ -96,7 +96,7 @@ StmtResult Parser::ParseStatement(SourceLocation *TrailingElseLoc,
 /// [OBC]   '@' 'throw' ';'
 ///
 StmtResult
-Parser::ParseStatementOrDeclaration(StmtVector &Stmts,
+Parser::SplitableParseStatementOrDeclaration(StmtVector &Stmts,
                                     AllowedConstructsKind Allowed,
                                     SourceLocation *TrailingElseLoc) {
 
@@ -117,6 +117,17 @@ Parser::ParseStatementOrDeclaration(StmtVector &Stmts,
     return Res;
 
   return Actions.ProcessStmtAttributes(Res.get(), Attrs.getList(), Attrs.Range);
+}
+
+StmtResult
+Parser::ParseStatementOrDeclaration(StmtVector &Stmts,
+                                    AllowedConstructsKind Allowed,
+                                    SourceLocation *TrailingElseLoc) {
+  try{
+    return SplitableParseStatementOrDeclaration(Stmts, Allowed, TrailingElseLoc);
+  }catch(Variablity::Split& e){
+    llvm::outs() << "Caught split exception at stmt level";
+  }
 }
 
 namespace {
