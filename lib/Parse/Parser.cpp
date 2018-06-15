@@ -47,17 +47,19 @@ IdentifierInfo *Parser::getSEHExceptKeyword() {
   return Ident__except;
 }
 void Parser::SplitOrConsume(Token &Result){
+  PP.EnableBacktrackAtThisPos();
   PP.Lex(Result);
   if(this->getConditional()->ShouldContinueOnCondition(Result.getConditional())){
-    // Do nothing, we good
-    llvm::outs() << "GOOD";
+    //llvm::outs() << "GOOD[" << PP.getSpelling(Result) << "]\n";
+    PP.CommitBacktrackedTokens();
   }
   else if(this->getConditional()->ShouldSplitOnCondition(Result.getConditional())){
-    llvm::outs() << "SPLIT";
-    throw Variablity::Split(PP.getSpelling(Result));
+    //llvm::outs() << "SPLIT[" << PP.getSpelling(Result) << "]\n";
+    this->SplitFlag++;
   }
   else if(this->getConditional()->ShouldSkipOnCondition(Result.getConditional())){
-    llvm::outs() << "SKIP";
+    //llvm::outs() << "SKIP[" << PP.getSpelling(Result) << "]\n";
+    PP.CommitBacktrackedTokens();
     this->SplitOrConsume(Result);
   }
 }
@@ -558,11 +560,11 @@ bool Parser::ParseFirstTopLevelDecl(DeclGroupPtrTy &Result) {
 /// ParseTopLevelDecl - Parse one top-level declaration, return whatever the
 /// action tells us to.  This returns true if the EOF was encountered.
 bool Parser::ParseTopLevelDecl(DeclGroupPtrTy &Result) {
-  try{
-    return SplitableParseTopLevelDecl(Result);
-  }catch (Variablity::Split& e){
-    llvm::outs() << "Caught Split at declaration level. Remember to handle here.";
+  if(this->SplitFlag){
+    llvm::outs() << "Split at declaration level. Remember to handle here.";
     return false;
+  }else{
+    return SplitableParseTopLevelDecl(Result);
   }
 }
 /// ParseTopLevelDecl - Parse one top-level declaration, return whatever the

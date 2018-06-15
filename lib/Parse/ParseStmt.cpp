@@ -123,10 +123,31 @@ StmtResult
 Parser::ParseStatementOrDeclaration(StmtVector &Stmts,
                                     AllowedConstructsKind Allowed,
                                     SourceLocation *TrailingElseLoc) {
-  try{
+  if(this->SplitFlag){
+    this->SplitFlag--;
+    Variablity::PresenceCondition* ctx = this->getConditional();
+    Variablity::PresenceCondition* pc = this->Tok.getConditional();
+
+
+    this->condition = new Variablity::And(ctx, pc);
+    StmtResult sr = SplitableParseStatementOrDeclaration(Stmts, Allowed, TrailingElseLoc); 
+
+
+
+    PP.Backtrack();
+    this->condition = new Variablity::And(ctx, new Variablity::Not(pc));
+    this->ConsumeAnyToken();
+
+    StmtResult sr2 = SplitableParseStatementOrDeclaration(Stmts, Allowed, TrailingElseLoc); 
+
+   StmtResult variant = Actions.ActOnVariantStmt(sr.get()->getLocStart(), sr.get(), sr2.get(), sr2.get()->getLocStart());
+
+
+    //variant.get()->dumpColor();
+    return variant; // TODO: figure out why this causes looping
+    
+  }else{
     return SplitableParseStatementOrDeclaration(Stmts, Allowed, TrailingElseLoc);
-  }catch(Variablity::Split& e){
-    llvm::outs() << "Caught split exception at stmt level";
   }
 }
 
