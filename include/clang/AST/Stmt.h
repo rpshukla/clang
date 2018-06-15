@@ -930,9 +930,9 @@ public:
   }
 };
 class VariantStmt : public Stmt {
+    enum { IF_VAR, NOT_VAR, END_VAR };
+    Stmt* SubExprs[END_VAR];
     Variablity::PresenceCondition condition;
-    Stmt *IfPresent;
-    Stmt *NotPresent;
 
     SourceLocation IfLoc;
     SourceLocation NotLoc;
@@ -946,10 +946,10 @@ public:
 
     void setCondition(Variablity::PresenceCondition pc) { condition = pc; }
     const Variablity::PresenceCondition getCondition() const { return condition; }
-    void setIf(Stmt *S) { NotPresent = S;}
-    Stmt *getIf() { return IfPresent; } // Not sure if these should be const or not
-    void setNot(Stmt *S) { NotPresent = S;}
-    Stmt *getNot() { return NotPresent; }
+    void setIf(Stmt *S) { SubExprs[IF_VAR] = S;}
+    Stmt *getIf() { return SubExprs[IF_VAR]; } // Not sure if these should be const or not
+    void setNot(Stmt *S) { SubExprs[NOT_VAR] = S;}
+    Stmt *getNot() { return SubExprs[NOT_VAR]; }
 
 
     SourceLocation getIfLoc() const { return IfLoc; }
@@ -960,7 +960,7 @@ public:
     SourceLocation getLocStart() const LLVM_READONLY { return IfLoc; }
 
     SourceLocation getLocEnd() const LLVM_READONLY {
-        return NotPresent->getLocEnd();
+        return SubExprs[NOT_VAR]->getLocEnd();
     }
 
     static bool classof(const Stmt *T) {
@@ -969,7 +969,7 @@ public:
 
     // Iterators
     child_range children() {
-        return child_range(child_iterator(), child_iterator());
+        return child_range(&SubExprs[0], &SubExprs[0]+END_VAR);
     }
 };
 

@@ -789,7 +789,9 @@ void MSAsmStmt::initialize(const ASTContext &C, StringRef asmstr,
 }
 VariantStmt::VariantStmt(const ASTContext &C, SourceLocation IL,
         Stmt *IP, Stmt *NP, SourceLocation NL) 
-    : Stmt(VariantStmtClass), IfLoc(IL), IfPresent(IP), NotPresent(NP), NotLoc(NL){
+    : Stmt(VariantStmtClass), IfLoc(IL), NotLoc(NL){
+  SubExprs[IF_VAR] = IP;
+  SubExprs[NOT_VAR] = NP;
 }
 
 IfStmt::IfStmt(const ASTContext &C, SourceLocation IL, bool IsConstexpr,
