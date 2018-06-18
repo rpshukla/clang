@@ -223,7 +223,7 @@ void StmtPrinter::VisitIfStmt(IfStmt *If) {
 }
 
 void StmtPrinter::PrintRawVariantStmt(VariantStmt *Var) {
-  OS << "is present? [PUT CONDITION HERE]"; // TODO: print condition
+  OS << "#ifdef " << Var->getCondition()->toString();
 
   if (CompoundStmt *CS = dyn_cast<CompoundStmt>(Var->getIf())) {
     OS << ' ';
@@ -236,7 +236,7 @@ void StmtPrinter::PrintRawVariantStmt(VariantStmt *Var) {
   }
 
   if (Stmt *Else = Var->getNot()) {
-    OS << "else";
+    OS << "#else";
 
     if (CompoundStmt *CS = dyn_cast<CompoundStmt>(Else)) {
       OS << ' ';
@@ -247,6 +247,9 @@ void StmtPrinter::PrintRawVariantStmt(VariantStmt *Var) {
       PrintStmt(Var->getNot());
     }
   }
+  Indent();
+  OS << "#endif";
+  OS << '\n';
 }
 
 void StmtPrinter::VisitVariantStmt(VariantStmt *Var) {

@@ -1245,9 +1245,9 @@ public:
   ///
   /// By default, performs semantic analysis to build the new statement.
   /// Subclasses may override this routine to provide different behavior.
-  StmtResult RebuildVariantStmt(SourceLocation IfLoc, Stmt *Then,
-                           SourceLocation ElseLoc, Stmt *Else) {
-    return getSema().ActOnVariantStmt(IfLoc, Then, Else, ElseLoc);
+  StmtResult RebuildVariantStmt(Variablity::PresenceCondition* pc, 
+          SourceLocation IfLoc, Stmt *Then, SourceLocation ElseLoc, Stmt *Else) {
+    return getSema().ActOnVariantStmt(pc, IfLoc, Then, Else, ElseLoc);
   }
   
   /// \brief Build a new "if" statement.
@@ -6617,7 +6617,8 @@ TreeTransform<Derived>::TransformVariantStmt(VariantStmt *S) {
       Not.get() == S->getNot())
     return S;
 
-  return getDerived().RebuildVariantStmt(S->getIfLoc(),
+  return getDerived().RebuildVariantStmt(S->getCondition(),
+                                    S->getIfLoc(),
                                     If.get(), S->getNotLoc(),
                                     Not.get());
 }template<typename Derived>

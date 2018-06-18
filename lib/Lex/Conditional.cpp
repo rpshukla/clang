@@ -86,21 +86,21 @@ bool PresenceCondition::isSatisfiable() {
     return solver.solve() == l_True;
 }
 
-std::string PresenceCondition::toString() {
+const std::string PresenceCondition::toString() {
     // This should never be called, it should always be overridden
     return "##ERROR##";
 }
 
 
-std::string True::toString() {
+const std::string True::toString() {
     return "True";
 }
 
-std::string Literal::toString() {
+const std::string Literal::toString() {
     return this->literal;
 }
 
-std::string And::toString() {
+const std::string And::toString() {
     return "(" + this->left->toString() + " && " + this->right->toString() + ")";
 }
 
@@ -110,7 +110,7 @@ And::And(PresenceCondition* left_, PresenceCondition* right_) {
     this->typeOfPC = AND;
 }
 
-std::string Or::toString() {
+const std::string Or::toString() {
     return "(" + this->left->toString() + " || " + this->right->toString() + ")";
 }
 
@@ -121,7 +121,7 @@ Or::Or(PresenceCondition* left_, PresenceCondition* right_) {
 }
 
 
-std::string Not::toString() {
+const std::string Not::toString() {
     return "~" + this->right->toString();
 }
 

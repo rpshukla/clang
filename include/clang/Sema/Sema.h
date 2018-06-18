@@ -3725,9 +3725,11 @@ public:
                          Stmt *InitStmt,
                          ConditionResult Cond, Stmt *ThenVal,
                          SourceLocation ElseLoc, Stmt *ElseVal);
-  StmtResult ActOnVariantStmt(SourceLocation IfLoc, Stmt *IfPresent,
+  StmtResult ActOnVariantStmt(Variablity::PresenceCondition* pc, 
+                  SourceLocation IfLoc,  Stmt *IfPresent,
                   Stmt *NotPresent, SourceLocation NotLoc);
-  StmtResult BuildVariantStmt(SourceLocation IfLoc, Stmt *IfPresent,
+  StmtResult BuildVariantStmt(Variablity::PresenceCondition* pc, 
+                  SourceLocation IfLoc,  Stmt *IfPresent,
                   Stmt *NotPresent, SourceLocation NotLoc);
   StmtResult ActOnStartOfSwitchStmt(SourceLocation SwitchLoc,
                                     Stmt *InitStmt,

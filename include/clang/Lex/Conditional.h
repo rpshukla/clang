@@ -39,7 +39,7 @@ class PresenceCondition {
     // This class is for holding the conditonal
 public:
     PCType typeOfPC;
-    virtual std::string toString();
+    const virtual std::string toString();
     bool isSatisfiable();
     virtual PresenceCondition* toCnf();
     virtual PresenceCondition* toNegationNormal();
@@ -59,7 +59,7 @@ public:
 class True : public PresenceCondition {
     // Always true, tokens outside of any ifdef, and ifndef will have this
 public:
-    std::string toString();
+    const std::string toString();
     PresenceCondition* toCnf();
     PresenceCondition* toNegationNormal();
     True(){
@@ -73,7 +73,7 @@ class Literal : public PresenceCondition {
     std::string literal;
 
 public:
-    std::string toString();
+    const std::string toString();
     PresenceCondition* toCnf();
     PresenceCondition* toNegationNormal();
 
@@ -93,7 +93,7 @@ class And : public PresenceCondition {
     PresenceCondition* right;
 
 public:
-    std::string toString();
+    const std::string toString();
     PresenceCondition* toCnf();
     PresenceCondition* toNegationNormal();
     And(PresenceCondition* left_, PresenceCondition* right_);
@@ -109,7 +109,7 @@ class Or : public PresenceCondition {
     PresenceCondition* right;
 
 public:
-    std::string toString();
+    const std::string toString();
     PresenceCondition* toCnf();
     PresenceCondition* toNegationNormal();
     Or(PresenceCondition* left_, PresenceCondition* right_);
@@ -124,7 +124,7 @@ class Not : public PresenceCondition {
     PresenceCondition* right;
 
 public:
-    std::string toString();
+    const std::string toString();
     PresenceCondition* toCnf();
     PresenceCondition* toNegationNormal();
 

@@ -932,20 +932,20 @@ public:
 class VariantStmt : public Stmt {
     enum { IF_VAR, NOT_VAR, END_VAR };
     Stmt* SubExprs[END_VAR];
-    Variablity::PresenceCondition condition;
+    Variablity::PresenceCondition* condition;
 
     SourceLocation IfLoc;
     SourceLocation NotLoc;
 
 public:
-    VariantStmt(const ASTContext &C, SourceLocation IL,
+    VariantStmt(const ASTContext &C, Variablity::PresenceCondition* pc, SourceLocation IL,
             Stmt *IfPresent, Stmt *NotPresent, SourceLocation NL = SourceLocation());
 
     explicit VariantStmt(EmptyShell Empty) : Stmt(VariantStmtClass, Empty) {} // TODO: No clue what is going on in this line
 
 
-    void setCondition(Variablity::PresenceCondition pc) { condition = pc; }
-    const Variablity::PresenceCondition getCondition() const { return condition; }
+    void setCondition(Variablity::PresenceCondition* pc) { condition = pc; }
+    Variablity::PresenceCondition *getCondition() { return condition; }
     void setIf(Stmt *S) { SubExprs[IF_VAR] = S;}
     Stmt *getIf() { return SubExprs[IF_VAR]; } // Not sure if these should be const or not
     void setNot(Stmt *S) { SubExprs[NOT_VAR] = S;}

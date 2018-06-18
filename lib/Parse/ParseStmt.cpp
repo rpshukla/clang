@@ -140,11 +140,11 @@ Parser::ParseStatementOrDeclaration(StmtVector &Stmts,
 
     StmtResult sr2 = SplitableParseStatementOrDeclaration(Stmts, Allowed, TrailingElseLoc); 
 
-   StmtResult variant = Actions.ActOnVariantStmt(sr.get()->getLocStart(), sr.get(), sr2.get(), sr2.get()->getLocStart());
+   StmtResult variant = Actions.ActOnVariantStmt(pc, sr.get()->getLocStart(), sr.get(), sr2.get(), sr2.get()->getLocStart());
 
 
     //variant.get()->dumpColor();
-    return variant; // TODO: figure out why this causes looping
+    return variant;
     
   }else{
     return SplitableParseStatementOrDeclaration(Stmts, Allowed, TrailingElseLoc);
