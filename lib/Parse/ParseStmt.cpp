@@ -123,8 +123,9 @@ StmtResult
 Parser::ParseStatementOrDeclaration(StmtVector &Stmts,
                                     AllowedConstructsKind Allowed,
                                     SourceLocation *TrailingElseLoc) {
-  if(this->SplitFlag){
-    this->SplitFlag--;
+  if(this->StateStack.top()){
+    this->StateStack.top()--;
+    this->StateStack.push(0);
     Variablity::PresenceCondition* ctx = this->getConditional();
     Variablity::PresenceCondition* pc = this->Tok.getConditional();
 
@@ -142,6 +143,7 @@ Parser::ParseStatementOrDeclaration(StmtVector &Stmts,
 
    StmtResult variant = Actions.ActOnVariantStmt(pc, sr.get()->getLocStart(), sr.get(), sr2.get(), sr2.get()->getLocStart());
 
+    this->StateStack.pop();
 
     //variant.get()->dumpColor();
     return variant;

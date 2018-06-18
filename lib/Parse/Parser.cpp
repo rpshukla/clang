@@ -55,7 +55,7 @@ void Parser::SplitOrConsume(Token &Result){
   }
   else if(this->getConditional()->ShouldSplitOnCondition(Result.getConditional())){
     //llvm::outs() << "SPLIT[" << PP.getSpelling(Result) << "]\n";
-    this->SplitFlag++;
+    this->StateStack.top()++;
   }
   else if(this->getConditional()->ShouldSkipOnCondition(Result.getConditional())){
     //llvm::outs() << "SKIP[" << PP.getSpelling(Result) << "]\n";
@@ -75,6 +75,7 @@ Parser::Parser(Preprocessor &pp, Sema &actions, bool skipFunctionBodies)
   Actions.CurScope = nullptr;
   NumCachedScopes = 0;
   CurParsedObjCImpl = nullptr;
+  StateStack.push(0);
 
   // Add #pragma handlers. These are removed and destroyed in the
   // destructor.
@@ -560,7 +561,7 @@ bool Parser::ParseFirstTopLevelDecl(DeclGroupPtrTy &Result) {
 /// ParseTopLevelDecl - Parse one top-level declaration, return whatever the
 /// action tells us to.  This returns true if the EOF was encountered.
 bool Parser::ParseTopLevelDecl(DeclGroupPtrTy &Result) {
-  if(this->SplitFlag){
+  if(this->StateStack.top()){
     llvm::outs() << "Split at declaration level. Remember to handle here.";
     return false;
   }else{

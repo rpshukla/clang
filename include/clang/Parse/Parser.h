@@ -63,9 +63,9 @@ class Parser : public CodeCompletionHandler {
   friend class ParenBraceBracketBalancer;
   friend class BalancedDelimiterTracker;
 
-  /// SplitFlag - Indicator of whether to split or not. When this is not zero,
+  /// StateStack - Indicator of whether to split or not. When top is not zero,
   /// it indicates we should split.
-  int SplitFlag;
+  std::stack<char> StateStack;
 
   Preprocessor &PP;
 
