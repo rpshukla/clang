@@ -130,8 +130,10 @@ Parser::ParseStatementOrDeclaration(StmtVector &Stmts,
     Variablity::PresenceCondition* pc = this->Tok.getConditional();
 
 
+
     this->condition = new Variablity::And(ctx, pc);
-    StmtResult sr = SplitableParseStatementOrDeclaration(Stmts, Allowed, TrailingElseLoc); 
+    //StmtResult sr = ParseStatementOrDeclaration(Stmts, Allowed, TrailingElseLoc); 
+    StmtResult sr = ParseVariantBody(Stmts, Allowed, TrailingElseLoc);
 
 
 
@@ -139,18 +141,42 @@ Parser::ParseStatementOrDeclaration(StmtVector &Stmts,
     this->condition = new Variablity::And(ctx, new Variablity::Not(pc));
     this->ConsumeAnyToken();
 
-    StmtResult sr2 = SplitableParseStatementOrDeclaration(Stmts, Allowed, TrailingElseLoc); 
+    //StmtResult sr2 = ParseStatementOrDeclaration(Stmts, Allowed, TrailingElseLoc); 
+    StmtResult sr2 = ParseVariantBody(Stmts, Allowed, TrailingElseLoc);
 
    StmtResult variant = Actions.ActOnVariantStmt(pc, sr.get()->getLocStart(), sr.get(), sr2.get(), sr2.get()->getLocStart());
 
     this->StateStack.pop();
+    this->condition = ctx;
 
-    //variant.get()->dumpColor();
     return variant;
     
   }else{
     return SplitableParseStatementOrDeclaration(Stmts, Allowed, TrailingElseLoc);
   }
+}
+/// ParseVariantBody
+StmtResult Parser::ParseVariantBody(StmtVector &PrevStmts,
+                                    AllowedConstructsKind Allowed,
+                                    SourceLocation *TrailingElseLoc) {
+  PrettyStackTraceLoc CrashInfo(PP.getSourceManager(),
+                                Tok.getLocation(),
+                                "in variant statement ('{}')");
+  SourceLocation StartLoc = Tok.getLocation();
+  StmtVector Stmts;
+
+  while (!getConditional()->ShouldJoinOnCondition(Tok.getConditional()) &&
+         Tok.isNot(tok::eof)) {
+
+    StmtResult R = ParseStatementOrDeclaration(Stmts, ACK_Any);
+
+    if (R.isUsable())
+      Stmts.push_back(R.get());
+  }
+
+  SourceLocation CloseLoc = Tok.getLocation();
+  return Actions.ActOnCompoundStmt(StartLoc, CloseLoc,
+                                   Stmts, false);
 }
 
 namespace {

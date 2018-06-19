@@ -1761,9 +1761,8 @@ private:
     /// \brief Allow statements and all executable OpenMP directives
     ACK_StatementsOpenMPAnyExecutable
   };
-  StmtResult
-  SplitableParseStatementOrDeclaration(StmtVector &Stmts, AllowedConstructsKind Allowed,
-                              SourceLocation *TrailingElseLoc = nullptr);
+  StmtResult SplitableParseStatementOrDeclaration(StmtVector &Stmts, 
+          AllowedConstructsKind Allowed, SourceLocation *TrailingElseLoc = nullptr);
   StmtResult
   ParseStatementOrDeclaration(StmtVector &Stmts, AllowedConstructsKind Allowed,
                               SourceLocation *TrailingElseLoc = nullptr);
@@ -1778,6 +1777,8 @@ private:
                                 ExprResult Expr = ExprResult());
   StmtResult ParseDefaultStatement();
   StmtResult ParseCompoundStatement(bool isStmtExpr = false);
+  StmtResult ParseVariantBody(StmtVector &Stmts, AllowedConstructsKind Allowed,
+                              SourceLocation *TrailingElseLoc = nullptr);
   StmtResult ParseCompoundStatement(bool isStmtExpr,
                                     unsigned ScopeFlags);
   void ParseCompoundStatementLeadingPragmas();

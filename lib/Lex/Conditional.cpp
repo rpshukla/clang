@@ -12,6 +12,12 @@ bool PresenceCondition::ShouldSplitOnCondition(PresenceCondition* other) {
     }
     return this->solve_map[other->toString()][0] && this->solve_map[other->toString()][1];
 }
+bool PresenceCondition::ShouldJoinOnCondition(PresenceCondition* other) {
+    if(this->solve_map.find(other->toString()) == this->solve_map.end()){
+        this->solve(other);
+    }
+    return this->solve_map[other->toString()][2] && !this->solve_map[other->toString()][3];
+}
 bool PresenceCondition::ShouldContinueOnCondition(PresenceCondition* other) {
     if(this->solve_map.find(other->toString()) == this->solve_map.end()){
         this->solve(other);
@@ -25,20 +31,28 @@ bool PresenceCondition::ShouldSkipOnCondition(PresenceCondition* other) {
     return !this->solve_map[other->toString()][0] && this->solve_map[other->toString()][1];
 }
 
+#include <iostream>
 void PresenceCondition::solve(PresenceCondition* other){
     PresenceCondition* equ_1 = new And(this, (new Or(new Not(this), other)));
     PresenceCondition* equ_2 = new And(this, (new Or(new Not(this), new Not(other))));
 
-    
+    PresenceCondition* equ_3 = new And(other, new Not(this));
+    PresenceCondition* equ_4 = new And(this, new Not(other));
 
-    bool* ans = new bool[2];
-    ans[0] = equ_1->isSatisfiable();
-    ans[1] = equ_2->isSatisfiable();
+
+
+    bool* ans = new bool[4];
+    ans[0] = equ_1->isSatisfiable(); // parser implies token
+    ans[1] = equ_2->isSatisfiable(); // parser implies not token
+    ans[2] = equ_3->isSatisfiable(); // not (token implies parser)
+    ans[3] = equ_4->isSatisfiable(); // not (parser implies token)
     this->solve_map[other->toString()] = ans;
 
 
     delete equ_1;
     delete equ_2;
+    delete equ_3;
+    delete equ_4;
 }
 
 
@@ -52,7 +66,13 @@ bool PresenceCondition::isSatisfiable() {
 
     SATSolver solver;
     std::vector<Lit> clause;
+    std::string True = "True";
+    map[True] = vars++;
 
+    solver.new_vars(1);
+    clause.push_back(Lit(map[True], false));
+    solver.add_clause(clause);
+    clause.clear();
 
     bool isNeg = false;
     for(unsigned long i = 0; i < cnf.length(); i++){
@@ -161,6 +181,23 @@ PresenceCondition* Or::toNegationNormal(){
     Or* pc = this;
     pc->left = pc->left->toNegationNormal();
     pc->right = pc->right->toNegationNormal();
+    
+    if(pc->right->typeOfPC == TRUE){
+        return pc->right;
+    }
+    if(pc->left->typeOfPC == TRUE){
+        return pc->left;
+    }
+    if(pc->left->typeOfPC == NOT){
+        if(((Not*)pc->left)->right->typeOfPC == TRUE){
+            return pc->right;
+        }
+    }
+    if(pc->right->typeOfPC == NOT){
+        if(((Not*)pc->right)->right->typeOfPC == TRUE){
+            return pc->left;
+        }
+    }
     return pc;
 }
 
@@ -168,6 +205,22 @@ PresenceCondition* And::toNegationNormal(){
     And* pc = this;
     pc->left = pc->left->toNegationNormal();
     pc->right = pc->right->toNegationNormal();
+    if(pc->right->typeOfPC == TRUE){
+        return pc->left;
+    }
+    if(pc->left->typeOfPC == TRUE){
+        return pc->right;
+    }
+    if(pc->left->typeOfPC == NOT){
+        if(((Not*)pc->left)->right->typeOfPC == TRUE){
+            return pc->left;
+        }
+    }
+    if(pc->right->typeOfPC == NOT){
+        if(((Not*)pc->right)->right->typeOfPC == TRUE){
+            return pc->right;
+        }
+    }
     return pc;
 
 }

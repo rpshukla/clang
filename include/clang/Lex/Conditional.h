@@ -51,6 +51,7 @@ public:
     bool ShouldSplitOnCondition(PresenceCondition* other);
     bool ShouldContinueOnCondition(PresenceCondition* other);
     bool ShouldSkipOnCondition(PresenceCondition* other);
+    bool ShouldJoinOnCondition(PresenceCondition* other);
     void solve(PresenceCondition* other);
 
     virtual ~PresenceCondition() {}
@@ -130,6 +131,8 @@ public:
 
     Not(PresenceCondition* right_) { this->right = right_; this->typeOfPC = NOT; }
     ~Not() {}
+    friend Or;
+    friend And;
 };
 
 } // namespace Variablity
