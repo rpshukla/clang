@@ -46,7 +46,10 @@ IdentifierInfo *Parser::getSEHExceptKeyword() {
 
   return Ident__except;
 }
+
+
 void Parser::SplitOrConsume(Token &Result){
+  TryAgain:
   PP.EnableBacktrackAtThisPos();
   PP.Lex(Result);
   if(this->getConditional()->ShouldContinueOnCondition(Result.getConditional())){
@@ -60,7 +63,7 @@ void Parser::SplitOrConsume(Token &Result){
   else if(this->getConditional()->ShouldSkipOnCondition(Result.getConditional())){
     //llvm::outs() << "SKIP[" << PP.getSpelling(Result) << "]\n";
     PP.CommitBacktrackedTokens();
-    this->SplitOrConsume(Result);
+    goto TryAgain; // Avoid recursive tail call
   }
 }
 
