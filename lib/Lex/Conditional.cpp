@@ -31,6 +31,7 @@ bool PresenceCondition::ShouldSkipOnCondition(PresenceCondition* other) {
     return !this->solve_map[other->toString()][0] && this->solve_map[other->toString()][1];
 }
 
+
 void PresenceCondition::solve(PresenceCondition* other){
     PresenceCondition* equ_1 = new And(this, (new Or(new Not(this), other)));
     PresenceCondition* equ_2 = new And(this, (new Or(new Not(this), new Not(other))));
@@ -46,6 +47,17 @@ void PresenceCondition::solve(PresenceCondition* other){
     ans[2] = equ_3->isSatisfiable(); // not (token implies parser)
     ans[3] = equ_4->isSatisfiable(); // not (parser implies token)
     this->solve_map[other->toString()] = ans;
+
+#if 0
+    printf("Solve:\n");
+    printf("Parser: %s, Tok: %s\n", toString().c_str(), other->toString().c_str());
+    printf("Equ_1: %s\n", equ_1->toNegationNormal()->toCnf()->toString().c_str());
+    printf("Equ_2: %s\n", equ_2->toNegationNormal()->toCnf()->toString().c_str());
+    printf("Equ_3: %s\n", equ_3->toNegationNormal()->toCnf()->toString().c_str());
+    printf("Equ_4: %s\n", equ_4->toNegationNormal()->toCnf()->toString().c_str());
+    printf("Results: %d %d %d %d\n", ans[0], ans[1], ans[2], ans[3]);
+#endif
+
 
 
     delete equ_1;
@@ -101,6 +113,7 @@ bool PresenceCondition::isSatisfiable() {
         }
     }
     solver.add_clause(clause);
+    clause.clear();
     
     return solver.solve() == l_True;
 }
@@ -248,15 +261,20 @@ PresenceCondition* Literal::toNegationNormal(){
 }
 PresenceCondition* Or::toCnf(){
     Or* pc = this;
+    pc->left = pc->left->toCnf();
+    pc->right = pc->right->toCnf();
     if(pc->right->typeOfPC == AND){
         PresenceCondition* tmp = pc->right;
         pc->right = pc->left;
         pc->left = tmp;
     }
 
-    // ((a*b) | c) ---> ((a|c) & (b|c))
+    // ((a&b) | c) ---> ((a|c) & (b|c))
     if(pc->left->typeOfPC == AND){
-        return (new And(new Or(((And*)pc->left)->left, pc->right), new Or(((And*)pc->left)->right, pc->right)))->toCnf();
+        const auto a = ((And*)pc->left)->left->toCnf();
+        const auto b = ((And*)pc->left)->right->toCnf();
+        const auto c = pc->right->toCnf();
+        return (new And(new Or(a, c), new Or(b, c)))->toCnf();
     }
     return this;
 }
