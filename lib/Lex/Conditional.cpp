@@ -31,7 +31,6 @@ bool PresenceCondition::ShouldSkipOnCondition(PresenceCondition* other) {
     return !this->solve_map[other->toString()][0] && this->solve_map[other->toString()][1];
 }
 
-#include <iostream>
 void PresenceCondition::solve(PresenceCondition* other){
     PresenceCondition* equ_1 = new And(this, (new Or(new Not(this), other)));
     PresenceCondition* equ_2 = new And(this, (new Or(new Not(this), new Not(other))));

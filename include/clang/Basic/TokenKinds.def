@@ -130,6 +130,9 @@ TOK(eod)                 // End of preprocessing directive (end of line inside a
                          // directive).
 TOK(code_completion)     // Code completion marker
 
+
+TOK(split)               // An indicator for splitting
+
 // C99 6.4.9: Comments.
 TOK(comment)             // Comment (only in -E -C[C] mode)
 

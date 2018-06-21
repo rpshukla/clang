@@ -165,6 +165,15 @@ StmtResult Parser::ParseVariantBody(StmtVector &PrevStmts,
   SourceLocation StartLoc = Tok.getLocation();
   StmtVector Stmts;
 
+    
+  if(Tok.is(tok::split)) 
+      ConsumeToken();
+
+  //llvm::outs() << getConditional()->ShouldJoinOnCondition(Tok.getConditional())
+      //<< getConditional()->toString() << "   "
+      //<< Tok.getConditional()->toString() << "   "
+      //<< " " << PP.getSpelling(Tok) << "\n";
+
   while (!getConditional()->ShouldJoinOnCondition(Tok.getConditional()) &&
          Tok.isNot(tok::eof)) {
 
