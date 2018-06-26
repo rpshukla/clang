@@ -564,11 +564,6 @@ bool Parser::ParseFirstTopLevelDecl(DeclGroupPtrTy &Result) {
 /// SplitableParseTopLevelDecl - Parse one top-level declaration, return whatever the
 /// action tells us to.  This returns true if the EOF was encountered.
 bool Parser::SplitableParseTopLevelDecl(DeclGroupPtrTy &Result) {
-    return false;
-}
-/// ParseTopLevelDecl - Parse one top-level declaration, return whatever the
-/// action tells us to.  This returns true if the EOF was encountered.
-bool Parser::ParseTopLevelDecl(DeclGroupPtrTy &Result) {
   DestroyTemplateIdAnnotationsRAIIObj CleanupRAII(TemplateIds);
 
   // Skip over the EOF token, flagging end of previous input for incremental
@@ -634,6 +629,31 @@ bool Parser::ParseTopLevelDecl(DeclGroupPtrTy &Result) {
 
   Result = ParseExternalDeclaration(attrs);
   return false;
+}
+/// ParseTopLevelDecl - Parse one top-level declaration, return whatever the
+/// action tells us to.  This returns true if the EOF was encountered.
+bool Parser::ParseTopLevelDecl(DeclGroupPtrTy &Result) {
+    Variablity::PresenceCondition* pc = Tok.getConditional();
+    if(Tok.is(tok::split)){
+      ConsumeToken();
+    }
+    bool res = SplitableParseTopLevelDecl(Result);
+    if(res)
+      return true;
+    if(StateStack.top()){
+      StateStack.top() = 0;
+
+    }
+    if(Result.get().isSingleDecl()){
+      Result.get().getSingleDecl()->setConditional(pc);
+      Result.get().getSingleDecl()->dumpColor();
+    }else{
+      for(int i = 0; i < Result.get().getDeclGroup().size(); i++){
+        Result.get().getDeclGroup()[i]->dumpColor();
+        Result.get().getDeclGroup()[i]->setConditional(pc);
+      }
+    }
+    return false;
 }
 
 /// ParseExternalDeclaration:

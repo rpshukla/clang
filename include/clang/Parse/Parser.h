@@ -1941,6 +1941,9 @@ private:
     bool ParsedForRangeDecl() { return !ColonLoc.isInvalid(); }
   };
 
+  DeclGroupPtrTy SplitableParseDeclaration(DeclaratorContext Context,
+                                  SourceLocation &DeclEnd,
+                                  ParsedAttributesWithRange &attrs);
   DeclGroupPtrTy ParseDeclaration(DeclaratorContext Context,
                                   SourceLocation &DeclEnd,
                                   ParsedAttributesWithRange &attrs);
