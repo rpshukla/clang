@@ -20,6 +20,7 @@
 #include "clang/Basic/SourceLocation.h"
 #include "clang/Basic/Specifiers.h"
 #include "clang/Basic/VersionTuple.h"
+#include "clang/Lex/Conditional.h"
 #include "llvm/ADT/ArrayRef.h"
 #include "llvm/ADT/PointerIntPair.h"
 #include "llvm/ADT/PointerUnion.h"
@@ -84,7 +85,10 @@ enum AvailabilityResult {
 /// of all subclasses (not requiring more than the alignment of Decl) is
 /// asserted in DeclBase.cpp.
 class LLVM_ALIGNAS(/*alignof(uint64_t)*/ 8) Decl {
+  Variablity::PresenceCondition* condition;
 public:
+  void setConditional(Variablity::PresenceCondition* pc){ this->condition = pc; }
+  Variablity::PresenceCondition* getConditional() { return this->condition; }
   /// \brief Lists the kind of concrete classes of Decl.
   enum Kind {
 #define DECL(DERIVED, BASE) DERIVED,

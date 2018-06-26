@@ -561,19 +561,14 @@ bool Parser::ParseFirstTopLevelDecl(DeclGroupPtrTy &Result) {
   return NoTopLevelDecls;
 }
 
-/// ParseTopLevelDecl - Parse one top-level declaration, return whatever the
+/// SplitableParseTopLevelDecl - Parse one top-level declaration, return whatever the
 /// action tells us to.  This returns true if the EOF was encountered.
-bool Parser::ParseTopLevelDecl(DeclGroupPtrTy &Result) {
-  if(this->StateStack.top()){
-    llvm::outs() << "Split at declaration level. Remember to handle here.";
+bool Parser::SplitableParseTopLevelDecl(DeclGroupPtrTy &Result) {
     return false;
-  }else{
-    return SplitableParseTopLevelDecl(Result);
-  }
 }
 /// ParseTopLevelDecl - Parse one top-level declaration, return whatever the
 /// action tells us to.  This returns true if the EOF was encountered.
-bool Parser::SplitableParseTopLevelDecl(DeclGroupPtrTy &Result) {
+bool Parser::ParseTopLevelDecl(DeclGroupPtrTy &Result) {
   DestroyTemplateIdAnnotationsRAIIObj CleanupRAII(TemplateIds);
 
   // Skip over the EOF token, flagging end of previous input for incremental

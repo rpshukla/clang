@@ -311,7 +311,6 @@ public:
 
   void setConditionalInfo(Variablity::PresenceCondition* pc){ this->condition = pc; }
   Variablity::PresenceCondition* getConditional() { return this->condition; }
-  std::string getConditionalInfoString() { return this->condition->toString(); }
 };
 
 /// \brief Information about the conditional stack (\#if directives)
