@@ -205,11 +205,30 @@ private:
 
   void setFlags(Scope *Parent, unsigned F);
 
+  Variablity::PresenceCondition* Condition = nullptr;
+
 public:
   Scope(Scope *Parent, unsigned ScopeFlags, DiagnosticsEngine &Diag)
     : ErrorTrap(Diag) {
     Init(Parent, ScopeFlags);
   }
+
+
+  void setConditional(Variablity::PresenceCondition* Condition){
+      this->Condition = Condition;
+  }
+
+  Variablity::PresenceCondition* getConditional(){
+      if(Condition != nullptr){
+          return Condition;
+      }else if(AnyParent != nullptr){
+          return AnyParent->getConditional();
+      }else{
+          return new Variablity::True();
+      }
+  }
+
+
 
   /// getFlags - Return the flags for this scope.
   ///

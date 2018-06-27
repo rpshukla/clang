@@ -1703,6 +1703,52 @@ NamedDecl *LookupResult::getAcceptableDeclSlow(NamedDecl *D) const {
   return findAcceptableDecl(getSema(), D);
 }
 
+void LookupResult::clearForCondition(Variablity::PresenceCondition* pc){
+start:
+  auto i = begin();
+  while(i != end()){
+    if(pc->ShouldSkipOnCondition(i->getConditional())){
+      Decls.erase(i);
+      goto start; // I can't figure out iterators
+    }
+    i++;
+  }
+
+  if(empty()){
+    ResultKind = NotFound;
+  }
+}
+
+void LookupResult::TryAndResolveContextualAmbiguity(){
+start:
+  auto i = begin();
+  auto one = **i;
+  while(i != end()){
+    if(one.getConditional()->ShouldSkipOnCondition(i->getConditional())
+        && true){ // replace true with some kind of type checking
+      Decls.erase(i);
+      goto start; // I can't figure out iterators
+    }
+    i++;
+  }
+  if(Decls.size() == 1){
+    ResultKind = Found;
+  }
+}
+
+bool Sema::LookupName(LookupResult &R, Scope *S, bool AllowBuiltinCreation) {
+
+  bool res = VariableLookupName(R, S, AllowBuiltinCreation);
+
+  R.clearForCondition(S->getConditional());
+  if(R.isAmbiguous() && R.getAmbiguityKind() == 2){
+    R.print(llvm::outs()); llvm::outs() << "\n";
+    R.TryAndResolveContextualAmbiguity();
+  }
+
+  return res && !R.empty(); 
+}
+
 /// @brief Perform unqualified name lookup starting from a given
 /// scope.
 ///
@@ -1731,7 +1777,7 @@ NamedDecl *LookupResult::getAcceptableDeclSlow(NamedDecl *D) const {
 /// used to diagnose ambiguities.
 ///
 /// @returns \c true if lookup succeeded and false otherwise.
-bool Sema::LookupName(LookupResult &R, Scope *S, bool AllowBuiltinCreation) {
+bool Sema::VariableLookupName(LookupResult &R, Scope *S, bool AllowBuiltinCreation) {
   DeclarationName Name = R.getLookupName();
   if (!Name) return false;
 

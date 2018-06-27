@@ -17,6 +17,7 @@
 
 #include "clang/AST/DeclCXX.h"
 #include "clang/Sema/Sema.h"
+#include "clang/Lex/Conditional.h"
 
 #include "llvm/ADT/Optional.h"
 
@@ -31,6 +32,10 @@ namespace clang {
 /// results occurred for a given lookup.
 class LookupResult {
 public:
+  /// removes all results that occur in a nonapplicable presencecondition
+  void clearForCondition(Variablity::PresenceCondition* pc);
+  void TryAndResolveContextualAmbiguity();
+
   enum LookupResultKind {
     /// @brief No entity found met the criteria.
     NotFound = 0,

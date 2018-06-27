@@ -3152,6 +3152,8 @@ public:
                               LookupNameKind NameKind,
                               RedeclarationKind Redecl
                                 = NotForRedeclaration);
+  bool VariableLookupName(LookupResult &R, Scope *S,
+                  bool AllowBuiltinCreation = false);
   bool LookupName(LookupResult &R, Scope *S,
                   bool AllowBuiltinCreation = false);
   bool LookupQualifiedName(LookupResult &R, DeclContext *LookupCtx,

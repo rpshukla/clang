@@ -849,6 +849,11 @@ void DeclPrinter::VisitVarDecl(VarDecl *D) {
     }
   }
   prettyPrintAttributes(D);
+
+  if(D->getConditional() != nullptr)
+      Out << "        /* In context: " << D->getConditional()->toString() << " */";
+  else
+      Out << "        /* In context: UNKNOWN */";
 }
 
 void DeclPrinter::VisitParmVarDecl(ParmVarDecl *D) {

@@ -1699,21 +1699,21 @@ Parser::DeclGroupPtrTy Parser::SplitableParseDeclaration(DeclaratorContext Conte
 Parser::DeclGroupPtrTy Parser::ParseDeclaration(DeclaratorContext Context,
                                                 SourceLocation &DeclEnd,
                                           ParsedAttributesWithRange &attrs) {
-  DeclGroupPtrTy Result = SplitableParseDeclaration(Context, DeclEnd, attrs);
   Variablity::PresenceCondition* pc = getConditional(); 
   if(StateStack.top()){
     pc = Tok.getConditional();
     StateStack.top() = 0;
     if(Tok.is(tok::split))
       ConsumeToken();
-
   }
+
+  getCurScope()->setConditional(pc);
+  DeclGroupPtrTy Result = SplitableParseDeclaration(Context, DeclEnd, attrs);
+
   if(Result.get().isSingleDecl()){
     Result.get().getSingleDecl()->setConditional(pc);
-    Result.get().getSingleDecl()->dumpColor();
   }else{
-    for(int i = 0; i < Result.get().getDeclGroup().size(); i++){
-      Result.get().getDeclGroup()[i]->dumpColor();
+    for(unsigned int i = 0; i < Result.get().getDeclGroup().size(); i++){
       Result.get().getDeclGroup()[i]->setConditional(pc);
     }
   }

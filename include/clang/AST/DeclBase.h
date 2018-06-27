@@ -85,7 +85,7 @@ enum AvailabilityResult {
 /// of all subclasses (not requiring more than the alignment of Decl) is
 /// asserted in DeclBase.cpp.
 class LLVM_ALIGNAS(/*alignof(uint64_t)*/ 8) Decl {
-  Variablity::PresenceCondition* condition;
+  Variablity::PresenceCondition* condition = new Variablity::True(); // placeholder value til I fix things
 public:
   void setConditional(Variablity::PresenceCondition* pc){ this->condition = pc; }
   Variablity::PresenceCondition* getConditional() { return this->condition; }
