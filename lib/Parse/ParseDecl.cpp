@@ -1709,6 +1709,7 @@ Parser::DeclGroupPtrTy Parser::ParseDeclaration(DeclaratorContext Context,
 
   getCurScope()->setConditional(pc);
   DeclGroupPtrTy Result = SplitableParseDeclaration(Context, DeclEnd, attrs);
+  getCurScope()->setConditional(Tok.getConditional());
 
   if(Result.get().isSingleDecl()){
     Result.get().getSingleDecl()->setConditional(pc);

@@ -1722,10 +1722,17 @@ start:
 void LookupResult::TryAndResolveContextualAmbiguity(){
 start:
   auto i = begin();
-  auto one = **i;
+  Decl* one = *(i++);
   while(i != end()){
-    if(one.getConditional()->ShouldSkipOnCondition(i->getConditional())
-        && true){ // replace true with some kind of type checking
+    if(one->getConditional()->ShouldSkipOnCondition(i->getConditional())
+        && one->getKind() == i->getKind()){
+      if(one->getKind() == Decl::Kind::Var){
+        if(reinterpret_cast<ValueDecl*>(*i)->getType() != 
+            reinterpret_cast<ValueDecl*>(one)->getType()){
+          i++;
+          continue;
+        }
+      }
       Decls.erase(i);
       goto start; // I can't figure out iterators
     }
@@ -1741,9 +1748,9 @@ bool Sema::LookupName(LookupResult &R, Scope *S, bool AllowBuiltinCreation) {
   bool res = VariableLookupName(R, S, AllowBuiltinCreation);
 
   R.clearForCondition(S->getConditional());
-  if(R.isAmbiguous() && R.getAmbiguityKind() == 2){
-    R.print(llvm::outs()); llvm::outs() << "\n";
+  if(!R.empty()){
     R.TryAndResolveContextualAmbiguity();
+    //R.print(llvm::outs()); llvm::outs() << "\n";
   }
 
   return res && !R.empty(); 

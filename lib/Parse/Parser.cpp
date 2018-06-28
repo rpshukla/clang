@@ -633,16 +633,17 @@ bool Parser::SplitableParseTopLevelDecl(DeclGroupPtrTy &Result) {
 /// ParseTopLevelDecl - Parse one top-level declaration, return whatever the
 /// action tells us to.  This returns true if the EOF was encountered.
 bool Parser::ParseTopLevelDecl(DeclGroupPtrTy &Result) {
-  Variablity::PresenceCondition* pc = getConditional(); 
   if(StateStack.top()){
-    pc = Tok.getConditional();
     StateStack.top() = 0;
-    if(Tok.is(tok::split))
+    while(Tok.is(tok::split)){
       ConsumeToken();
+    }
   }
 
+  Variablity::PresenceCondition* pc = Tok.getConditional(); 
   getCurScope()->setConditional(pc);
   bool res = SplitableParseTopLevelDecl(Result);
+  getCurScope()->setConditional(Tok.getConditional());
   if(res)
     return true;
 
