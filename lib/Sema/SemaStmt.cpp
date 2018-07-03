@@ -2161,8 +2161,8 @@ BuildNonArrayForRange(Sema &SemaRef, Expr *BeginRange, Expr *EndRange,
     //   lookup (3.4.5), and if either (or both) finds at least one
     //   declaration, begin-expr and end-expr are __range.begin() and
     //   __range.end(), respectively;
-    SemaRef.LookupQualifiedName(BeginMemberLookup, D);
-    SemaRef.LookupQualifiedName(EndMemberLookup, D);
+    SemaRef.LookupQualifiedName(BeginMemberLookup, SemaRef.getCurScope(),  D);
+    SemaRef.LookupQualifiedName(EndMemberLookup, SemaRef.getCurScope(),  D);
 
     if (BeginMemberLookup.empty() != EndMemberLookup.empty()) {
       SourceLocation RangeLoc = BeginVar->getLocation();

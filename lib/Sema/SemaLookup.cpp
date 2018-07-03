@@ -1233,7 +1233,7 @@ bool Sema::CppLookupName(LookupResult &R, Scope *S) {
         // example, inside a class without any base classes, we never need to
         // perform qualified lookup because all of the members are on top of the
         // identifier chain.
-        if (LookupQualifiedName(R, Ctx, /*InUnqualifiedLookup=*/true))
+        if (LookupQualifiedName(R, getCurScope(),  Ctx, /*InUnqualifiedLookup=*/true))
           return true;
       }
     }
@@ -2064,7 +2064,7 @@ static bool HasOnlyStaticMembers(InputIterator First, InputIterator Last) {
 /// occurs as part of unqualified name lookup.
 ///
 /// \returns true if lookup succeeded, false if it failed.
-bool Sema::VariableLookupQualifiedName(LookupResult &R, DeclContext *LookupCtx,
+bool Sema::VariableLookupQualifiedName(LookupResult &R, Scope* S, DeclContext *LookupCtx,
                                bool InUnqualifiedLookup) {
   assert(LookupCtx && "Sema::LookupQualifiedName requires a lookup context");
 
@@ -2266,9 +2266,9 @@ bool Sema::VariableLookupQualifiedName(LookupResult &R, DeclContext *LookupCtx,
   return true;
 }
 
-bool Sema::LookupQualifiedName(LookupResult &R, DeclContext *LookupCtx,
+bool Sema::LookupQualifiedName(LookupResult &R, Scope* S, DeclContext *LookupCtx,
                                bool InUnqualifiedLookup) {
-  bool res = VariableLookupQualifiedName(R, LookupCtx, InUnqualifiedLookup);
+  bool res = VariableLookupQualifiedName(R, getCurScope(),  LookupCtx, InUnqualifiedLookup);
 
   //LookupCtx->dumpDeclContext();
   //llvm::outs() << LookupCtx->getDeclKindName() << "\n";
@@ -2295,14 +2295,14 @@ bool Sema::LookupQualifiedName(LookupResult &R, DeclContext *LookupCtx,
 /// \param SS An optional C++ scope-specifier.
 ///
 /// \returns true if lookup succeeded, false if it failed.
-bool Sema::LookupQualifiedName(LookupResult &R, DeclContext *LookupCtx,
+bool Sema::LookupQualifiedName(LookupResult &R, Scope* S, DeclContext *LookupCtx,
                                CXXScopeSpec &SS) {
   auto *NNS = SS.getScopeRep();
   if (NNS && NNS->getKind() == NestedNameSpecifier::Super)
     return LookupInSuper(R, NNS->getAsRecordDecl());
   else
 
-    return LookupQualifiedName(R, LookupCtx);
+    return LookupQualifiedName(R, getCurScope(),  LookupCtx);
 }
 
 /// @brief Performs name lookup for a name that was parsed in the
@@ -2344,7 +2344,7 @@ bool Sema::LookupParsedName(LookupResult &R, Scope *S, CXXScopeSpec *SS,
         return false;
 
       R.setContextRange(SS->getRange());
-      return LookupQualifiedName(R, DC);
+      return LookupQualifiedName(R, getCurScope(),  DC);
     }
 
     // We could not resolve the scope specified to a specific declaration
@@ -2378,7 +2378,7 @@ bool Sema::LookupInSuper(LookupResult &R, CXXRecordDecl *Class) {
         BaseSpec.getType()->castAs<RecordType>()->getDecl());
     LookupResult Result(*this, R.getLookupNameInfo(), R.getLookupKind());
 	Result.setBaseObjectType(Context.getRecordType(Class));
-    LookupQualifiedName(Result, RD);
+    LookupQualifiedName(Result, getCurScope(),  RD);
 
     // Copy the lookup results into the target, merging the base's access into
     // the path access.
@@ -4241,7 +4241,7 @@ void TypoCorrectionConsumer::performQualifiedLookups() {
 
       Result.clear();
       Result.setLookupName(QR.getCorrectionAsIdentifierInfo());
-      if (!SemaRef.LookupQualifiedName(Result, Ctx))
+      if (!SemaRef.LookupQualifiedName(Result, SemaRef.getCurScope(),  Ctx))
         continue;
 
       // Any corrections added below will be validated in subsequent
@@ -4436,7 +4436,7 @@ static void LookupPotentialTypoResult(Sema &SemaRef,
       }
     }
 
-    SemaRef.LookupQualifiedName(Res, MemberContext);
+    SemaRef.LookupQualifiedName(Res, SemaRef.getCurScope(),  MemberContext);
     return;
   }
 

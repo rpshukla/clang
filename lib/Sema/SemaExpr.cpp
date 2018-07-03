@@ -1788,7 +1788,7 @@ Sema::DiagnoseEmptyLookup(Scope *S, CXXScopeSpec &SS, LookupResult &R,
   DeclContext *DC = SS.isEmpty() ? CurContext : nullptr;
   while (DC) {
     if (isa<CXXRecordDecl>(DC)) {
-      LookupQualifiedName(R, DC);
+      LookupQualifiedName(R, getCurScope(),  DC);
 
       if (!R.empty()) {
         // Don't give errors about ambiguities in this lookup.
@@ -2272,7 +2272,7 @@ ExprResult Sema::BuildQualifiedDeclarationNameExpr(
     return ExprError();
 
   LookupResult R(*this, NameInfo, LookupOrdinaryName);
-  LookupQualifiedName(R, DC);
+  LookupQualifiedName(R, getCurScope(),  DC);
 
   if (R.isAmbiguous())
     return ExprError();
@@ -12678,7 +12678,7 @@ ExprResult Sema::BuildBuiltinOffsetOf(SourceLocation BuiltinLoc,
     
     // Look for the field.
     LookupResult R(*this, OC.U.IdentInfo, OC.LocStart, LookupMemberName);
-    LookupQualifiedName(R, RD);
+    LookupQualifiedName(R, getCurScope(),  RD);
     FieldDecl *MemberDecl = R.getAsSingle<FieldDecl>();
     IndirectFieldDecl *IndirectMemberDecl = nullptr;
     if (!MemberDecl) {

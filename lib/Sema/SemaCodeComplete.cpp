@@ -4432,7 +4432,7 @@ void Sema::CodeCompleteCall(Scope *S, Expr *Fn, ArrayRef<Expr *> Args) {
         DeclarationName OpName = Context.DeclarationNames
                                  .getCXXOperatorName(OO_Call);
         LookupResult R(*this, OpName, Loc, LookupOrdinaryName);
-        LookupQualifiedName(R, DC);
+        LookupQualifiedName(R, getCurScope(),  DC);
         R.suppressDiagnostics();
         SmallVector<Expr *, 12> ArgExprs(1, NakedFn);
         ArgExprs.append(Args.begin(), Args.end());

@@ -5942,7 +5942,7 @@ CXXRecordMembersNamed(StringRef Name, Sema &S, QualType Ty) {
 
   // We just need to include all members of the right kind turned up by the
   // filter, at this point.
-  if (S.LookupQualifiedName(R, RT->getDecl()))
+  if (S.LookupQualifiedName(R, S.getCurScope(),  RT->getDecl()))
     for (LookupResult::iterator I = R.begin(), E = R.end(); I != E; ++I) {
       NamedDecl *decl = (*I)->getUnderlyingDecl();
       if (MemberKind *FK = dyn_cast<MemberKind>(decl))
@@ -7046,7 +7046,7 @@ static void emitReplacement(Sema &S, SourceLocation Loc, SourceRange Range,
     if (NamespaceDecl *Std = S.getStdNamespace()) {
       LookupResult R(S, &S.Context.Idents.get("abs"), Loc, Sema::LookupAnyName);
       R.suppressDiagnostics();
-      S.LookupQualifiedName(R, Std);
+      S.LookupQualifiedName(R, S.getCurScope(),  Std);
 
       for (const auto *I : R) {
         const FunctionDecl *FDecl = nullptr;

@@ -336,7 +336,7 @@ ParsedType Sema::getTypeName(const IdentifierInfo &II, SourceLocation NameLoc,
     // computed, which is either the type of the base of a member access
     // expression or the declaration context associated with a prior
     // nested-name-specifier.
-    LookupQualifiedName(Result, LookupCtx);
+    LookupQualifiedName(Result, getCurScope(),  LookupCtx);
 
     if (ObjectTypePtr && Result.empty()) {
       // C++ [basic.lookup.classref]p3:
@@ -5391,7 +5391,7 @@ NamedDecl *Sema::HandleDeclarator(Scope *S, Declarator &D,
 
     LookupName(Previous, S, CreateBuiltins);
   } else { // Something like "int foo::x;"
-    LookupQualifiedName(Previous, DC);
+    LookupQualifiedName(Previous, getCurScope(),  DC);
 
     // C++ [dcl.meaning]p1:
     //   When the declarator-id is qualified, the declaration shall refer to a
@@ -7653,7 +7653,7 @@ static NamedDecl *DiagnoseInvalidRedeclaration(
   if (IsLocalFriend)
     SemaRef.LookupName(Prev, S);
   else
-    SemaRef.LookupQualifiedName(Prev, NewDC);
+    SemaRef.LookupQualifiedName(Prev, SemaRef.getCurScope(),  NewDC);
   assert(!Prev.isAmbiguous() &&
          "Cannot have an ambiguity in previous-declaration lookup");
   CXXMethodDecl *MD = dyn_cast<CXXMethodDecl>(NewFD);
@@ -13276,7 +13276,7 @@ Decl *Sema::ActOnTag(Scope *S, unsigned TagSpec, TagUseKind TUK,
 
     SearchDC = DC;
     // Look-up name inside 'foo::'.
-    LookupQualifiedName(Previous, DC);
+    LookupQualifiedName(Previous, getCurScope(),  DC);
 
     if (Previous.isAmbiguous())
       return nullptr;
@@ -13469,7 +13469,7 @@ Decl *Sema::ActOnTag(Scope *S, unsigned TagSpec, TagUseKind TUK,
     // and we should instead merge compatible types found by lookup.
     if (getLangOpts().CPlusPlus) {
       Previous.setRedeclarationKind(forRedeclarationInCurContext());
-      LookupQualifiedName(Previous, SearchDC);
+      LookupQualifiedName(Previous, getCurScope(),  SearchDC);
     } else {
       Previous.setRedeclarationKind(forRedeclarationInCurContext());
       LookupName(Previous, S);

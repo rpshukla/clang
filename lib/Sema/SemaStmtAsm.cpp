@@ -722,7 +722,7 @@ bool Sema::LookupInlineAsmField(StringRef Base, StringRef Member,
     LookupResult FieldResult(*this, &Context.Idents.get(NextMember),
                              SourceLocation(), LookupMemberName);
 
-    if (!LookupQualifiedName(FieldResult, RT->getDecl()))
+    if (!LookupQualifiedName(FieldResult, getCurScope(),  RT->getDecl()))
       return true;
 
     if (!FieldResult.isSingleResult())
@@ -766,7 +766,7 @@ Sema::LookupInlineAsmVarDeclField(Expr *E, StringRef Member,
   LookupResult FieldResult(*this, &Context.Idents.get(Member), AsmLoc,
                            LookupMemberName);
 
-  if (!LookupQualifiedName(FieldResult, RT->getDecl()))
+  if (!LookupQualifiedName(FieldResult, getCurScope(),  RT->getDecl()))
     return ExprResult();
 
   // Only normal and indirect field results will work.

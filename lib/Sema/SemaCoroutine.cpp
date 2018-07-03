@@ -30,7 +30,7 @@ static LookupResult lookupMember(Sema &S, const char *Name, CXXRecordDecl *RD,
   // Suppress diagnostics when a private member is selected. The same warnings
   // will be produced again when building the call.
   LR.suppressDiagnostics();
-  Res = S.LookupQualifiedName(LR, RD);
+  Res = S.LookupQualifiedName(LR, S.getCurScope(),  RD);
   return LR;
 }
 
@@ -57,7 +57,7 @@ static QualType lookupPromiseType(Sema &S, const FunctionDecl *FD,
 
   LookupResult Result(S, &S.PP.getIdentifierTable().get("coroutine_traits"),
                       FuncLoc, Sema::LookupOrdinaryName);
-  if (!S.LookupQualifiedName(Result, StdExp)) {
+  if (!S.LookupQualifiedName(Result, S.getCurScope(),  StdExp)) {
     S.Diag(KwLoc, diag::err_implied_coroutine_type_not_found)
         << "std::experimental::coroutine_traits";
     return QualType();
@@ -117,7 +117,7 @@ static QualType lookupPromiseType(Sema &S, const FunctionDecl *FD,
   // Look up the ::promise_type member.
   LookupResult R(S, &S.PP.getIdentifierTable().get("promise_type"), KwLoc,
                  Sema::LookupOrdinaryName);
-  S.LookupQualifiedName(R, RD);
+  S.LookupQualifiedName(R, S.getCurScope(),  RD);
   auto *Promise = R.getAsSingle<TypeDecl>();
   if (!Promise) {
     S.Diag(FuncLoc,
@@ -159,7 +159,7 @@ static QualType lookupCoroutineHandleType(Sema &S, QualType PromiseType,
 
   LookupResult Result(S, &S.PP.getIdentifierTable().get("coroutine_handle"),
                       Loc, Sema::LookupOrdinaryName);
-  if (!S.LookupQualifiedName(Result, StdExp)) {
+  if (!S.LookupQualifiedName(Result, S.getCurScope(),  StdExp)) {
     S.Diag(Loc, diag::err_implied_coroutine_type_not_found)
         << "std::experimental::coroutine_handle";
     return QualType();
@@ -322,7 +322,7 @@ static ExprResult buildCoroutineHandle(Sema &S, QualType PromiseType,
   DeclContext *LookupCtx = S.computeDeclContext(CoroHandleType);
   LookupResult Found(S, &S.PP.getIdentifierTable().get("from_address"), Loc,
                      Sema::LookupOrdinaryName);
-  if (!S.LookupQualifiedName(Found, LookupCtx)) {
+  if (!S.LookupQualifiedName(Found, S.getCurScope(),  LookupCtx)) {
     S.Diag(Loc, diag::err_coroutine_handle_missing_member)
         << "from_address";
     return ExprError();
@@ -768,7 +768,7 @@ static Expr *buildStdNoThrowDeclRef(Sema &S, SourceLocation Loc) {
 
   LookupResult Result(S, &S.PP.getIdentifierTable().get("nothrow"), Loc,
                       Sema::LookupOrdinaryName);
-  if (!S.LookupQualifiedName(Result, Std)) {
+  if (!S.LookupQualifiedName(Result, S.getCurScope(),  Std)) {
     // FIXME: <experimental/coroutine> should have been included already.
     // If we require it to include <new> then this diagnostic is no longer
     // needed.
@@ -948,7 +948,7 @@ bool CoroutineStmtBuilder::makeReturnOnAllocFailure() {
   DeclarationName DN =
       S.PP.getIdentifierInfo("get_return_object_on_allocation_failure");
   LookupResult Found(S, DN, Loc, Sema::LookupMemberName);
-  if (!S.LookupQualifiedName(Found, PromiseRecordDecl))
+  if (!S.LookupQualifiedName(Found, S.getCurScope(),  PromiseRecordDecl))
     return true;
 
   CXXScopeSpec SS;

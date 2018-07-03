@@ -340,7 +340,7 @@ void Sema::LookupTemplateName(LookupResult &Found,
     // computed, which is either the type of the base of a member access
     // expression or the declaration context associated with a prior
     // nested-name-specifier.
-    LookupQualifiedName(Found, LookupCtx);
+    LookupQualifiedName(Found, getCurScope(),  LookupCtx);
     if (!ObjectType.isNull() && Found.empty()) {
       // C++ [basic.lookup.classref]p1:
       //   In a class member access expression (5.2.5), if the . or -> token is
@@ -1214,7 +1214,7 @@ Sema::CheckClassTemplate(Scope *S, unsigned TagSpec, TagUseKind TUK,
     } else if (TUK != TUK_Friend && TUK != TUK_Reference)
       diagnoseQualifiedDeclaration(SS, SemanticContext, Name, NameLoc);
 
-    LookupQualifiedName(Previous, SemanticContext);
+    LookupQualifiedName(Previous, getCurScope(),  SemanticContext);
   } else {
     SemanticContext = CurContext;
 
@@ -1292,7 +1292,7 @@ Sema::CheckClassTemplate(Scope *S, unsigned TagSpec, TagUseKind TUK,
         DeclContext *LookupContext = SemanticContext;
         while (LookupContext->isTransparentContext())
           LookupContext = LookupContext->getLookupParent();
-        LookupQualifiedName(Previous, LookupContext);
+        LookupQualifiedName(Previous, getCurScope(),  LookupContext);
 
         if (Previous.isAmbiguous())
           return true;
@@ -9543,7 +9543,7 @@ Sema::CheckTypenameType(ElaboratedTypeKeyword Keyword,
 
   DeclarationName Name(&II);
   LookupResult Result(*this, Name, IILoc, LookupOrdinaryName);
-  LookupQualifiedName(Result, Ctx, SS);
+  LookupQualifiedName(Result, getCurScope(),  Ctx, SS);
   unsigned DiagID = 0;
   Decl *Referenced = nullptr;
   switch (Result.getResultKind()) {

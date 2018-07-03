@@ -413,7 +413,7 @@ bool Sema::isNonTypeNestedNameSpecifier(Scope *S, CXXScopeSpec &SS,
         RequireCompleteDeclContext(SS, LookupCtx))
       return false;
     
-    LookupQualifiedName(Found, LookupCtx);
+    LookupQualifiedName(Found, getCurScope(),  LookupCtx);
   } else if (isDependent) {
     return false;
   } else {
@@ -518,7 +518,7 @@ bool Sema::BuildCXXNestedNameSpecifier(Scope *S, NestedNameSpecInfo &IdInfo,
         RequireCompleteDeclContext(SS, LookupCtx))
       return true;
 
-    LookupQualifiedName(Found, LookupCtx);
+    LookupQualifiedName(Found, getCurScope(),  LookupCtx);
 
     if (!ObjectType.isNull() && Found.empty()) {
       // C++ [basic.lookup.classref]p4:
@@ -579,7 +579,7 @@ bool Sema::BuildCXXNestedNameSpecifier(Scope *S, NestedNameSpecInfo &IdInfo,
     // as other entity, don't look for typos.
     LookupResult R(*this, Found.getLookupNameInfo(), LookupOrdinaryName);
     if (LookupCtx)
-      LookupQualifiedName(R, LookupCtx);
+      LookupQualifiedName(R, getCurScope(),  LookupCtx);
     else if (S && !isDependent)
       LookupName(R, S);
     if (!R.empty()) {

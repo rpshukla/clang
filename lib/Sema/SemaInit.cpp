@@ -8511,7 +8511,7 @@ QualType Sema::DeduceTemplateSpecializationFromInitializer(
       Context.DeclarationNames.getCXXDeductionGuideName(Template),
       TSInfo->getTypeLoc().getEndLoc());
   LookupResult Guides(*this, NameInfo, LookupOrdinaryName);
-  LookupQualifiedName(Guides, Template->getDeclContext());
+  LookupQualifiedName(Guides, getCurScope(),  Template->getDeclContext());
 
   // FIXME: Do not diagnose inaccessible deduction guides. The standard isn't
   // clear on this, but they're not found by name so access does not apply.

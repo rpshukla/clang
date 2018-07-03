@@ -1197,7 +1197,7 @@ Decl *TemplateDeclInstantiator::VisitClassTemplateDecl(ClassTemplateDecl *D) {
     LookupResult R(SemaRef, Pattern->getDeclName(), Pattern->getLocation(),
                    Sema::LookupOrdinaryName,
                    SemaRef.forRedeclarationInCurContext());
-    SemaRef.LookupQualifiedName(R, DC);
+    SemaRef.LookupQualifiedName(R, SemaRef.getCurScope(),  DC);
 
     if (R.isSingleResult()) {
       PrevClassTemplate = R.getAsSingle<ClassTemplateDecl>();
@@ -1780,7 +1780,7 @@ Decl *TemplateDeclInstantiator::VisitFunctionDecl(FunctionDecl *D,
     // Look only into the namespace where the friend would be declared to
     // find a previous declaration. This is the innermost enclosing namespace,
     // as described in ActOnFriendFunctionDecl.
-    SemaRef.LookupQualifiedName(Previous, DC);
+    SemaRef.LookupQualifiedName(Previous, SemaRef.getCurScope(),  DC);
 
     // In C++, the previous declaration we find might be a tag type
     // (class or enum). In this case, the new declaration will hide the
@@ -2064,7 +2064,7 @@ TemplateDeclInstantiator::VisitCXXMethodDecl(CXXMethodDecl *D,
                         Sema::ForExternalRedeclaration);
 
   if (!FunctionTemplate || TemplateParams || isFriend) {
-    SemaRef.LookupQualifiedName(Previous, Record);
+    SemaRef.LookupQualifiedName(Previous, SemaRef.getCurScope(),  Record);
 
     // In C++, the previous declaration we find might be a tag type
     // (class or enum). In this case, the new declaration will hide the
@@ -2512,7 +2512,7 @@ Decl *TemplateDeclInstantiator::VisitUsingDecl(UsingDecl *D) {
   SS.Adopt(QualifierLoc);
   if (CheckRedeclaration) {
     Prev.setHideTags(false);
-    SemaRef.LookupQualifiedName(Prev, Owner);
+    SemaRef.LookupQualifiedName(Prev, SemaRef.getCurScope(),  Owner);
 
     // Check for invalid redeclarations.
     if (SemaRef.CheckUsingDeclRedeclaration(D->getUsingLoc(),
@@ -2728,7 +2728,7 @@ Decl *TemplateDeclInstantiator::VisitClassScopeFunctionSpecializationDecl(
     TemplateArgsPtr = &TemplateArgs;
   }
 
-  SemaRef.LookupQualifiedName(Previous, SemaRef.CurContext);
+  SemaRef.LookupQualifiedName(Previous, SemaRef.getCurScope(),  SemaRef.CurContext);
   if (SemaRef.CheckFunctionTemplateSpecialization(NewFD, TemplateArgsPtr,
                                                   Previous)) {
     NewFD->setInvalidDecl();
@@ -4131,7 +4131,7 @@ void Sema::BuildVariableInstantiation(
       Previous.addDecl(NewPrev);
   } else if (!isa<VarTemplateSpecializationDecl>(NewVar) &&
              OldVar->hasLinkage())
-    LookupQualifiedName(Previous, NewVar->getDeclContext(), false);
+    LookupQualifiedName(Previous, getCurScope(),  NewVar->getDeclContext(), false);
   CheckVariableDeclaration(NewVar, Previous);
 
   if (!InstantiatingVarTemplate) {

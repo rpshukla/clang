@@ -3156,11 +3156,11 @@ public:
                   bool AllowBuiltinCreation = false);
   bool LookupName(LookupResult &R, Scope *S,
                   bool AllowBuiltinCreation = false);
-  bool VariableLookupQualifiedName(LookupResult &R, DeclContext *LookupCtx,
+  bool VariableLookupQualifiedName(LookupResult &R, Scope* S, DeclContext *LookupCtx,
                            bool InUnqualifiedLookup = false);
-  bool LookupQualifiedName(LookupResult &R, DeclContext *LookupCtx,
+  bool LookupQualifiedName(LookupResult &R, Scope* S, DeclContext *LookupCtx,
                            bool InUnqualifiedLookup = false);
-  bool LookupQualifiedName(LookupResult &R, DeclContext *LookupCtx,
+  bool LookupQualifiedName(LookupResult &R, Scope* S, DeclContext *LookupCtx,
                            CXXScopeSpec &SS);
   bool LookupParsedName(LookupResult &R, Scope *S, CXXScopeSpec *SS,
                         bool AllowBuiltinCreation = false,

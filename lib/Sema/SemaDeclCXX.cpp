@@ -953,7 +953,7 @@ static bool lookupStdTypeTraitMember(Sema &S, LookupResult &TraitMemberLookup,
   // standard library implementation in use.
   LookupResult Result(S, &S.PP.getIdentifierTable().get(Trait),
                       Loc, Sema::LookupOrdinaryName);
-  if (!S.LookupQualifiedName(Result, Std))
+  if (!S.LookupQualifiedName(Result, S.getCurScope(),  Std))
     return DiagnoseMissing();
   if (Result.isAmbiguous())
     return true;
@@ -983,7 +983,7 @@ static bool lookupStdTypeTraitMember(Sema &S, LookupResult &TraitMemberLookup,
   assert(RD && "specialization of class template is not a class?");
 
   // Look up the member of the trait type.
-  S.LookupQualifiedName(TraitMemberLookup, RD);
+  S.LookupQualifiedName(TraitMemberLookup, S.getCurScope(),  RD);
   return TraitMemberLookup.isAmbiguous();
 }
 
@@ -1115,7 +1115,7 @@ static bool checkTupleLikeDecomposition(Sema &S,
   bool UseMemberGet = false;
   if (S.isCompleteType(Src->getLocation(), DecompType)) {
     if (auto *RD = DecompType->getAsCXXRecordDecl())
-      S.LookupQualifiedName(MemberGet, RD);
+      S.LookupQualifiedName(MemberGet, S.getCurScope(),  RD);
     if (MemberGet.isAmbiguous())
       return true;
     UseMemberGet = !MemberGet.empty();
@@ -8511,7 +8511,7 @@ Decl *Sema::ActOnStartNamespaceDef(Scope *NamespcScope,
     // as if by qualified name lookup.
     LookupResult R(*this, II, IdentLoc, LookupOrdinaryName,
                    ForExternalRedeclaration);
-    LookupQualifiedName(R, CurContext->getRedeclContext());
+    LookupQualifiedName(R, getCurScope(),  CurContext->getRedeclContext());
     NamedDecl *PrevDecl =
         R.isSingleResult() ? R.getRepresentativeDecl() : nullptr;
     PrevNS = dyn_cast_or_null<NamespaceDecl>(PrevDecl);
@@ -8664,7 +8664,7 @@ NamespaceDecl *Sema::lookupStdExperimentalNamespace() {
     if (auto Std = getStdNamespace()) {
       LookupResult Result(*this, &PP.getIdentifierTable().get("experimental"),
                           SourceLocation(), LookupNamespaceName);
-      if (!LookupQualifiedName(Result, Std) ||
+      if (!LookupQualifiedName(Result, getCurScope(),  Std) ||
           !(StdExperimentalNamespaceCache =
                 Result.getAsSingle<NamespaceDecl>()))
         Result.suppressDiagnostics();
@@ -8759,7 +8759,7 @@ static ClassTemplateDecl *LookupStdInitializerList(Sema &S, SourceLocation Loc){
 
   LookupResult Result(S, &S.PP.getIdentifierTable().get("initializer_list"),
                       Loc, Sema::LookupOrdinaryName);
-  if (!S.LookupQualifiedName(Result, Std)) {
+  if (!S.LookupQualifiedName(Result, S.getCurScope(),  Std)) {
     S.Diag(Loc, diag::err_implied_std_initializer_list_not_found);
     return nullptr;
   }
@@ -9470,7 +9470,7 @@ NamedDecl *Sema::BuildUsingDeclaration(Scope *S, AccessSpecifier AS,
   } else {
     assert(IsInstantiation && "no scope in non-instantiation");
     if (CurContext->isRecord())
-      LookupQualifiedName(Previous, CurContext);
+      LookupQualifiedName(Previous, getCurScope(),  CurContext);
     else {
       // No redeclaration check is needed here; in non-member contexts we
       // diagnosed all possible conflicts with other using-declarations when
@@ -9550,7 +9550,7 @@ NamedDecl *Sema::BuildUsingDeclaration(Scope *S, AccessSpecifier AS,
                    Context.getTypeDeclType(cast<CXXRecordDecl>(CurContext)));
   }
 
-  LookupQualifiedName(R, LookupContext);
+  LookupQualifiedName(R, getCurScope(),  LookupContext);
 
   // Try to correct typos if possible. If constructor name lookup finds no
   // results, that means the named class has no explicit constructors, and we
@@ -9841,7 +9841,7 @@ bool Sema::CheckUsingDeclQualifier(SourceLocation UsingLoc,
       LookupResult R(*this, NameInfo, LookupOrdinaryName);
       R.setHideTags(false);
       R.suppressDiagnostics();
-      LookupQualifiedName(R, RD);
+      LookupQualifiedName(R, getCurScope(),  RD);
 
       if (R.getAsSingle<TypeDecl>()) {
         if (getLangOpts().CPlusPlus11) {
@@ -11081,7 +11081,7 @@ buildSingleCopyAssignRecursively(Sema &S, SourceLocation Loc, QualType T,
     DeclarationName Name
       = S.Context.DeclarationNames.getCXXOperatorName(OO_Equal);
     LookupResult OpLookup(S, Name, Loc, Sema::LookupOrdinaryName);
-    S.LookupQualifiedName(OpLookup, ClassDecl, false);
+    S.LookupQualifiedName(OpLookup, S.getCurScope(),  ClassDecl, false);
 
     // Prior to C++11, filter out any result that isn't a copy/move-assignment
     // operator.
@@ -13802,7 +13802,7 @@ NamedDecl *Sema::ActOnFriendFunctionDecl(Scope *S, Declarator &D,
       LookupDC = LookupDC->getParent();
 
     while (true) {
-      LookupQualifiedName(Previous, LookupDC);
+      LookupQualifiedName(Previous, getCurScope(),  LookupDC);
 
       if (!Previous.empty()) {
         DC = LookupDC;
@@ -13828,7 +13828,7 @@ NamedDecl *Sema::ActOnFriendFunctionDecl(Scope *S, Declarator &D,
 
     if (RequireCompleteDeclContext(SS, DC)) return nullptr;
 
-    LookupQualifiedName(Previous, DC);
+    LookupQualifiedName(Previous, getCurScope(),  DC);
 
     // Ignore things found implicitly in the wrong scope.
     // TODO: better diagnostics for this case.  Suggesting the right

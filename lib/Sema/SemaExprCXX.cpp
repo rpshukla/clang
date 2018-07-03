@@ -193,7 +193,7 @@ ParsedType Sema::getDestructorName(SourceLocation TildeLoc,
     if (Step == 0 && LookupCtx) {
       if (RequireCompleteDeclContext(SS, LookupCtx))
         return nullptr;
-      LookupQualifiedName(Found, LookupCtx);
+      LookupQualifiedName(Found, getCurScope(),  LookupCtx);
     } else if (Step == 1 && LookInScope && S) {
       LookupName(Found, S);
     } else {
@@ -487,12 +487,12 @@ Sema::ActOnCXXTypeid(SourceLocation OpLoc, SourceLocation LParenLoc,
   if (!CXXTypeInfoDecl) {
     IdentifierInfo *TypeInfoII = &PP.getIdentifierTable().get("type_info");
     LookupResult R(*this, TypeInfoII, SourceLocation(), LookupTagName);
-    LookupQualifiedName(R, getStdNamespace());
+    LookupQualifiedName(R, getCurScope(),  getStdNamespace());
     CXXTypeInfoDecl = R.getAsSingle<RecordDecl>();
     // Microsoft's typeinfo doesn't have type_info in std but in the global
     // namespace if _HAS_EXCEPTIONS is defined to 0. See PR13153.
     if (!CXXTypeInfoDecl && LangOpts.MSVCCompat) {
-      LookupQualifiedName(R, Context.getTranslationUnitDecl());
+      LookupQualifiedName(R, getCurScope(),  Context.getTranslationUnitDecl());
       CXXTypeInfoDecl = R.getAsSingle<RecordDecl>();
     }
     if (!CXXTypeInfoDecl)
@@ -612,7 +612,7 @@ Sema::ActOnCXXUuidof(SourceLocation OpLoc, SourceLocation LParenLoc,
   if (!MSVCGuidDecl) {
     IdentifierInfo *GuidII = &PP.getIdentifierTable().get("_GUID");
     LookupResult R(*this, GuidII, SourceLocation(), LookupTagName);
-    LookupQualifiedName(R, Context.getTranslationUnitDecl());
+    LookupQualifiedName(R, getCurScope(),  Context.getTranslationUnitDecl());
     MSVCGuidDecl = R.getAsSingle<RecordDecl>();
     if (!MSVCGuidDecl)
       return ExprError(Diag(OpLoc, diag::err_need_header_before_ms_uuidof));
@@ -1522,7 +1522,7 @@ static bool doesUsualArrayDeleteWantSize(Sema &S, SourceLocation loc,
   DeclarationName deleteName =
     S.Context.DeclarationNames.getCXXOperatorName(OO_Array_Delete);
   LookupResult ops(S, deleteName, loc, Sema::LookupOrdinaryName);
-  S.LookupQualifiedName(ops, record->getDecl());
+  S.LookupQualifiedName(ops, S.getCurScope(),  record->getDecl());
 
   // We're just doing this for information.
   ops.suppressDiagnostics();
@@ -2201,7 +2201,7 @@ resolveAllocationOverload(Sema &S, LookupResult &R, SourceRange Range,
         S.Context.getLangOpts().MSVCCompat) {
       R.clear();
       R.setLookupName(S.Context.DeclarationNames.getCXXOperatorName(OO_New));
-      S.LookupQualifiedName(R, S.Context.getTranslationUnitDecl());
+      S.LookupQualifiedName(R, S.getCurScope(),  S.Context.getTranslationUnitDecl());
       // FIXME: This will give bad diagnostics pointing at the wrong functions.
       return resolveAllocationOverload(S, R, Range, Args, PassAlignment,
                                        Operator, nullptr);
@@ -2315,7 +2315,7 @@ bool Sema::FindAllocationFunctions(SourceLocation StartLoc, SourceRange Range,
     //   allocated type is a class type T or array thereof, the allocation
     //   function's name is looked up in the scope of T.
     if (AllocElemType->isRecordType() && !UseGlobal)
-      LookupQualifiedName(R, AllocElemType->getAsCXXRecordDecl());
+      LookupQualifiedName(R, getCurScope(),  AllocElemType->getAsCXXRecordDecl());
 
     // We can see ambiguity here if the allocation function is found in
     // multiple base classes.
@@ -2326,7 +2326,7 @@ bool Sema::FindAllocationFunctions(SourceLocation StartLoc, SourceRange Range,
     //   a class type, the allocation function's name is looked up in the
     //   global scope.
     if (R.empty())
-      LookupQualifiedName(R, Context.getTranslationUnitDecl());
+      LookupQualifiedName(R, getCurScope(),  Context.getTranslationUnitDecl());
 
     assert(!R.empty() && "implicitly declared allocation functions not found");
     assert(!R.isAmbiguous() && "global allocation functions are ambiguous");
@@ -2365,7 +2365,7 @@ bool Sema::FindAllocationFunctions(SourceLocation StartLoc, SourceRange Range,
   if (AllocElemType->isRecordType() && !UseGlobal) {
     CXXRecordDecl *RD
       = cast<CXXRecordDecl>(AllocElemType->getAs<RecordType>()->getDecl());
-    LookupQualifiedName(FoundDelete, RD);
+    LookupQualifiedName(FoundDelete, getCurScope(),  RD);
   }
   if (FoundDelete.isAmbiguous())
     return true; // FIXME: clean up expressions?
@@ -2373,7 +2373,7 @@ bool Sema::FindAllocationFunctions(SourceLocation StartLoc, SourceRange Range,
   bool FoundGlobalDelete = FoundDelete.empty();
   if (FoundDelete.empty()) {
     DeclareGlobalNewDelete();
-    LookupQualifiedName(FoundDelete, Context.getTranslationUnitDecl());
+    LookupQualifiedName(FoundDelete, getCurScope(),  Context.getTranslationUnitDecl());
   }
 
   FoundDelete.suppressDiagnostics();
@@ -2743,7 +2743,7 @@ FunctionDecl *Sema::FindUsualDeallocationFunction(SourceLocation StartLoc,
   DeclareGlobalNewDelete();
 
   LookupResult FoundDelete(*this, Name, StartLoc, LookupOrdinaryName);
-  LookupQualifiedName(FoundDelete, Context.getTranslationUnitDecl());
+  LookupQualifiedName(FoundDelete, getCurScope(),  Context.getTranslationUnitDecl());
 
   // FIXME: It's possible for this to result in ambiguity, through a
   // user-declared variadic operator delete or the enable_if attribute. We
@@ -2777,7 +2777,7 @@ bool Sema::FindDeallocationFunction(SourceLocation StartLoc, CXXRecordDecl *RD,
                                     FunctionDecl *&Operator, bool Diagnose) {
   LookupResult Found(*this, Name, StartLoc, LookupOrdinaryName);
   // Try to find operator delete/operator delete[] in class scope.
-  LookupQualifiedName(Found, RD);
+  LookupQualifiedName(Found, getCurScope(),  RD);
 
   if (Found.isAmbiguous())
     return true;
@@ -4213,7 +4213,7 @@ static bool HasNoThrowOperator(const RecordType *RT, OverloadedOperatorKind Op,
   DeclarationName Name = C.DeclarationNames.getCXXOperatorName(Op);
   DeclarationNameInfo NameInfo(Name, KeyLoc);
   LookupResult Res(Self, NameInfo, Sema::LookupOrdinaryName);
-  if (Self.LookupQualifiedName(Res, RD)) {
+  if (Self.LookupQualifiedName(Res, Self.getCurScope(),  RD)) {
     bool FoundOperator = false;
     Res.suppressDiagnostics();
     for (LookupResult::iterator Op = Res.begin(), OpEnd = Res.end();

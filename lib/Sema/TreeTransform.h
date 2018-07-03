@@ -1049,7 +1049,7 @@ public:
       return QualType();
 
     TagDecl *Tag = nullptr;
-    SemaRef.LookupQualifiedName(Result, DC);
+    SemaRef.LookupQualifiedName(Result, SemaRef.getCurScope(),  DC);
     switch (Result.getResultKind()) {
       case LookupResult::NotFound:
       case LookupResult::NotFoundInCurrentInstantiation:
@@ -1072,7 +1072,7 @@ public:
       // Check where the name exists but isn't a tag type and use that to emit
       // better diagnostics.
       LookupResult Result(SemaRef, Id, IdLoc, Sema::LookupTagName);
-      SemaRef.LookupQualifiedName(Result, DC);
+      SemaRef.LookupQualifiedName(Result, SemaRef.getCurScope(),  DC);
       switch (Result.getResultKind()) {
         case LookupResult::Found:
         case LookupResult::FoundOverloaded:

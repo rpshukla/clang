@@ -7181,7 +7181,7 @@ void Sema::AddMemberOperatorCandidates(OverloadedOperatorKind Op,
       return;
 
     LookupResult Operators(*this, OpName, OpLoc, LookupOrdinaryName);
-    LookupQualifiedName(Operators, T1Rec->getDecl());
+    LookupQualifiedName(Operators, getCurScope(),  T1Rec->getDecl());
     Operators.suppressDiagnostics();
 
     for (LookupResult::iterator Oper = Operators.begin(),
@@ -11539,7 +11539,7 @@ DiagnoseTwoPhaseLookup(Sema &SemaRef, SourceLocation FnLoc,
     if (DC->isTransparentContext())
       continue;
 
-    SemaRef.LookupQualifiedName(R, DC);
+    SemaRef.LookupQualifiedName(R, SemaRef.getCurScope(),  DC);
 
     if (!R.empty()) {
       R.suppressDiagnostics();
@@ -12925,7 +12925,7 @@ Sema::BuildCallToObjectOfClassType(Scope *S, Expr *Obj,
     return true;
 
   LookupResult R(*this, OpName, LParenLoc, LookupOrdinaryName);
-  LookupQualifiedName(R, Record->getDecl());
+  LookupQualifiedName(R, getCurScope(),  Record->getDecl());
   R.suppressDiagnostics();
 
   for (LookupResult::iterator Oper = R.begin(), OperEnd = R.end();
@@ -13201,7 +13201,7 @@ Sema::BuildOverloadedArrowExpr(Scope *S, Expr *Base, SourceLocation OpLoc,
     return ExprError();
 
   LookupResult R(*this, OpName, OpLoc, LookupOrdinaryName);
-  LookupQualifiedName(R, BaseRecord->getDecl());
+  LookupQualifiedName(R, getCurScope(),  BaseRecord->getDecl());
   R.suppressDiagnostics();
 
   for (LookupResult::iterator Oper = R.begin(), OperEnd = R.end();
