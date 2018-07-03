@@ -1743,9 +1743,7 @@ start:
   }
 }
 
-bool Sema::LookupName(LookupResult &R, Scope *S, bool AllowBuiltinCreation) {
-
-  bool res = VariableLookupName(R, S, AllowBuiltinCreation);
+bool Sema::VariableLookupCommon(LookupResult &R, Scope* S, bool Result){
 
   //R.print(llvm::outs()); llvm::outs() << S->getConditional()->toString() << "\n";
   R.clearForCondition(S->getConditional());
@@ -1754,7 +1752,14 @@ bool Sema::LookupName(LookupResult &R, Scope *S, bool AllowBuiltinCreation) {
     //R.print(llvm::outs()); llvm::outs() << "\n";
   }
 
-  return res && !R.empty(); 
+  return Result && !R.empty(); 
+}
+
+bool Sema::LookupName(LookupResult &R, Scope *S, bool AllowBuiltinCreation) {
+
+  bool res = VariableLookupName(R, S, AllowBuiltinCreation);
+
+  return VariableLookupCommon(R, S, res);
 }
 
 /// @brief Perform unqualified name lookup starting from a given
@@ -2266,19 +2271,12 @@ bool Sema::VariableLookupQualifiedName(LookupResult &R, Scope* S, DeclContext *L
   return true;
 }
 
+
 bool Sema::LookupQualifiedName(LookupResult &R, Scope* S, DeclContext *LookupCtx,
                                bool InUnqualifiedLookup) {
   bool res = VariableLookupQualifiedName(R, getCurScope(),  LookupCtx, InUnqualifiedLookup);
 
-  //LookupCtx->dumpDeclContext();
-  //llvm::outs() << LookupCtx->getDeclKindName() << "\n";
-  //R.clearForCondition(S->getConditional());
-  if(!R.empty()){
-    R.TryAndResolveContextualAmbiguity();
-    //R.print(llvm::outs()); llvm::outs() << "\n";
-  }
-
-  return res && !R.empty(); 
+  return VariableLookupCommon(R, S, res);
 }
 /// \brief Performs qualified name lookup or special type of lookup for
 /// "__super::" scope specifier.
