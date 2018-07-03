@@ -1637,7 +1637,23 @@ void Parser::stripTypeAttributesOffDeclSpec(ParsedAttributesWithRange &Attrs,
   Attrs.addAllAtEnd(TypeAttrHead);
 }
 
-Parser::DeclGroupPtrTy Parser::SplitableParseDeclaration(DeclaratorContext Context,
+/// ParseDeclaration - Parse a full 'declaration', which consists of
+/// declaration-specifiers, some number of declarators, and a semicolon.
+/// 'Context' should be a DeclaratorContext value.  This returns the
+/// location of the semicolon in DeclEnd.
+///
+///       declaration: [C99 6.7]
+///         block-declaration ->
+///           simple-declaration
+///           others                   [FIXME]
+/// [C++]   template-declaration
+/// [C++]   namespace-definition
+/// [C++]   using-directive
+/// [C++]   using-declaration
+/// [C++11/C11] static_assert-declaration
+///         others... [FIXME]
+///
+Parser::DeclGroupPtrTy Parser::ParseDeclaration(DeclaratorContext Context,
                                                 SourceLocation &DeclEnd,
                                           ParsedAttributesWithRange &attrs) {
   ParenBraceBracketBalancer BalancerRAIIObj(*this);
@@ -1679,46 +1695,6 @@ Parser::DeclGroupPtrTy Parser::SplitableParseDeclaration(DeclaratorContext Conte
   // This routine returns a DeclGroup, if the thing we parsed only contains a
   // single decl, convert it now.
   return Actions.ConvertDeclToDeclGroup(SingleDecl);
-}
-/// ParseDeclaration - Parse a full 'declaration', which consists of
-/// declaration-specifiers, some number of declarators, and a semicolon.
-/// 'Context' should be a DeclaratorContext value.  This returns the
-/// location of the semicolon in DeclEnd.
-///
-///       declaration: [C99 6.7]
-///         block-declaration ->
-///           simple-declaration
-///           others                   [FIXME]
-/// [C++]   template-declaration
-/// [C++]   namespace-definition
-/// [C++]   using-directive
-/// [C++]   using-declaration
-/// [C++11/C11] static_assert-declaration
-///         others... [FIXME]
-///
-Parser::DeclGroupPtrTy Parser::ParseDeclaration(DeclaratorContext Context,
-                                                SourceLocation &DeclEnd,
-                                          ParsedAttributesWithRange &attrs) {
-  Variablity::PresenceCondition* pc = getConditional(); 
-  if(StateStack.top()){
-    pc = Tok.getConditional();
-    StateStack.top() = 0;
-    if(Tok.is(tok::split))
-      ConsumeToken();
-  }
-
-  getCurScope()->setConditional(pc);
-  DeclGroupPtrTy Result = SplitableParseDeclaration(Context, DeclEnd, attrs);
-  getCurScope()->setConditional(Tok.getConditional());
-
-  if(Result.get().isSingleDecl()){
-    Result.get().getSingleDecl()->setConditional(pc);
-  }else{
-    for(unsigned int i = 0; i < Result.get().getDeclGroup().size(); i++){
-      Result.get().getDeclGroup()[i]->setConditional(pc);
-    }
-  }
-  return Result;
 }
 
 ///       simple-declaration: [C99 6.7: declaration] [C++ 7p1: dcl.dcl]

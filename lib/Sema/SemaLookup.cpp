@@ -1747,6 +1747,7 @@ bool Sema::LookupName(LookupResult &R, Scope *S, bool AllowBuiltinCreation) {
 
   bool res = VariableLookupName(R, S, AllowBuiltinCreation);
 
+  //R.print(llvm::outs()); llvm::outs() << S->getConditional()->toString() << "\n";
   R.clearForCondition(S->getConditional());
   if(!R.empty()){
     R.TryAndResolveContextualAmbiguity();
@@ -2063,7 +2064,7 @@ static bool HasOnlyStaticMembers(InputIterator First, InputIterator Last) {
 /// occurs as part of unqualified name lookup.
 ///
 /// \returns true if lookup succeeded, false if it failed.
-bool Sema::LookupQualifiedName(LookupResult &R, DeclContext *LookupCtx,
+bool Sema::VariableLookupQualifiedName(LookupResult &R, DeclContext *LookupCtx,
                                bool InUnqualifiedLookup) {
   assert(LookupCtx && "Sema::LookupQualifiedName requires a lookup context");
 
@@ -2265,6 +2266,20 @@ bool Sema::LookupQualifiedName(LookupResult &R, DeclContext *LookupCtx,
   return true;
 }
 
+bool Sema::LookupQualifiedName(LookupResult &R, DeclContext *LookupCtx,
+                               bool InUnqualifiedLookup) {
+  bool res = VariableLookupQualifiedName(R, LookupCtx, InUnqualifiedLookup);
+
+  //LookupCtx->dumpDeclContext();
+  //llvm::outs() << LookupCtx->getDeclKindName() << "\n";
+  //R.clearForCondition(S->getConditional());
+  if(!R.empty()){
+    R.TryAndResolveContextualAmbiguity();
+    //R.print(llvm::outs()); llvm::outs() << "\n";
+  }
+
+  return res && !R.empty(); 
+}
 /// \brief Performs qualified name lookup or special type of lookup for
 /// "__super::" scope specifier.
 ///

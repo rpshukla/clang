@@ -563,7 +563,7 @@ bool Parser::ParseFirstTopLevelDecl(DeclGroupPtrTy &Result) {
 
 /// SplitableParseTopLevelDecl - Parse one top-level declaration, return whatever the
 /// action tells us to.  This returns true if the EOF was encountered.
-bool Parser::SplitableParseTopLevelDecl(DeclGroupPtrTy &Result) {
+bool Parser::ParseTopLevelDecl(DeclGroupPtrTy &Result) {
   DestroyTemplateIdAnnotationsRAIIObj CleanupRAII(TemplateIds);
 
   // Skip over the EOF token, flagging end of previous input for incremental
@@ -630,22 +630,22 @@ bool Parser::SplitableParseTopLevelDecl(DeclGroupPtrTy &Result) {
   Result = ParseExternalDeclaration(attrs);
   return false;
 }
-/// ParseTopLevelDecl - Parse one top-level declaration, return whatever the
-/// action tells us to.  This returns true if the EOF was encountered.
-bool Parser::ParseTopLevelDecl(DeclGroupPtrTy &Result) {
+
+
+Parser::DeclGroupPtrTy
+Parser::ParseExternalDeclaration(ParsedAttributesWithRange &attrs,
+                                 ParsingDeclSpec *DS) {
   if(StateStack.top()){
     StateStack.top() = 0;
-    while(Tok.is(tok::split)){
+    while(Tok.is(tok::split))
       ConsumeToken();
-    }
   }
 
-  Variablity::PresenceCondition* pc = Tok.getConditional(); 
+  Variablity::PresenceCondition* pc = Tok.getConditional();
+    
   getCurScope()->setConditional(pc);
-  bool res = SplitableParseTopLevelDecl(Result);
+  DeclGroupPtrTy Result = SplitableParseExternalDeclaration(attrs, DS);
   getCurScope()->setConditional(Tok.getConditional());
-  if(res)
-    return true;
 
   if(Result.get().isSingleDecl()){
     Result.get().getSingleDecl()->setConditional(pc);
@@ -654,9 +654,8 @@ bool Parser::ParseTopLevelDecl(DeclGroupPtrTy &Result) {
       Result.get().getDeclGroup()[i]->setConditional(pc);
     }
   }
-  return false;
+  return Result;
 }
-
 /// ParseExternalDeclaration:
 ///
 ///       external-declaration: [C99 6.9], declaration: [C++ dcl.dcl]
@@ -684,7 +683,7 @@ bool Parser::ParseTopLevelDecl(DeclGroupPtrTy &Result) {
 /// [Modules-TS] module-import-declaration
 ///
 Parser::DeclGroupPtrTy
-Parser::ParseExternalDeclaration(ParsedAttributesWithRange &attrs,
+Parser::SplitableParseExternalDeclaration(ParsedAttributesWithRange &attrs,
                                  ParsingDeclSpec *DS) {
   DestroyTemplateIdAnnotationsRAIIObj CleanupRAII(TemplateIds);
   ParenBraceBracketBalancer BalancerRAIIObj(*this);

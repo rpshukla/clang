@@ -317,7 +317,6 @@ public:
   /// ParseTopLevelDecl - Parse one top-level declaration. Returns true if
   /// the EOF was encountered.
   bool ParseTopLevelDecl(DeclGroupPtrTy &Result);
-  bool SplitableParseTopLevelDecl(DeclGroupPtrTy &Result);
   bool ParseTopLevelDecl() {
     DeclGroupPtrTy Result;
     return ParseTopLevelDecl(Result);
@@ -1330,6 +1329,9 @@ private:
     SourceRange Range;
   };
 
+  DeclGroupPtrTy SplitableParseExternalDeclaration(ParsedAttributesWithRange &attrs,
+                                          ParsingDeclSpec *DS = nullptr);
+
   DeclGroupPtrTy ParseExternalDeclaration(ParsedAttributesWithRange &attrs,
                                           ParsingDeclSpec *DS = nullptr);
   bool isDeclarationAfterDeclarator();
@@ -1941,9 +1943,6 @@ private:
     bool ParsedForRangeDecl() { return !ColonLoc.isInvalid(); }
   };
 
-  DeclGroupPtrTy SplitableParseDeclaration(DeclaratorContext Context,
-                                  SourceLocation &DeclEnd,
-                                  ParsedAttributesWithRange &attrs);
   DeclGroupPtrTy ParseDeclaration(DeclaratorContext Context,
                                   SourceLocation &DeclEnd,
                                   ParsedAttributesWithRange &attrs);

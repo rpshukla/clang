@@ -133,6 +133,7 @@ Parser::ParseStatementOrDeclaration(StmtVector &Stmts,
 
     this->condition = new Variablity::And(ctx, pc);
     //StmtResult sr = ParseStatementOrDeclaration(Stmts, Allowed, TrailingElseLoc); 
+    getCurScope()->setConditional(this->condition);
     StmtResult sr = ParseVariantBody(Stmts, Allowed, TrailingElseLoc);
 
 
@@ -142,12 +143,14 @@ Parser::ParseStatementOrDeclaration(StmtVector &Stmts,
     this->ConsumeAnyToken();
 
     //StmtResult sr2 = ParseStatementOrDeclaration(Stmts, Allowed, TrailingElseLoc); 
+    getCurScope()->setConditional(this->condition);
     StmtResult sr2 = ParseVariantBody(Stmts, Allowed, TrailingElseLoc);
 
-   StmtResult variant = Actions.ActOnVariantStmt(pc, sr.get()->getLocStart(), sr.get(), sr2.get(), sr2.get()->getLocStart());
+    StmtResult variant = Actions.ActOnVariantStmt(pc, sr.get()->getLocStart(), sr.get(), sr2.get(), sr2.get()->getLocStart());
 
     this->StateStack.pop();
     this->condition = ctx;
+    getCurScope()->setConditional(ctx);
 
     return variant;
     

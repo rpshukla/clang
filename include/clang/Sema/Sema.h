@@ -3156,6 +3156,8 @@ public:
                   bool AllowBuiltinCreation = false);
   bool LookupName(LookupResult &R, Scope *S,
                   bool AllowBuiltinCreation = false);
+  bool VariableLookupQualifiedName(LookupResult &R, DeclContext *LookupCtx,
+                           bool InUnqualifiedLookup = false);
   bool LookupQualifiedName(LookupResult &R, DeclContext *LookupCtx,
                            bool InUnqualifiedLookup = false);
   bool LookupQualifiedName(LookupResult &R, DeclContext *LookupCtx,
