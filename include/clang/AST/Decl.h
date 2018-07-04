@@ -46,6 +46,7 @@
 #include <cstddef>
 #include <cstdint>
 #include <string>
+#include <vector>
 #include <utility>
 
 namespace clang {
@@ -4075,6 +4076,22 @@ public:
   static ExportDecl *castFromDeclContext(const DeclContext *DC) {
     return static_cast<ExportDecl *>(const_cast<DeclContext*>(DC));
   }
+};
+
+/// \brief Represents an empty-declaration.
+class VariantDecl : public Decl {
+  VariantDecl(DeclContext *DC, SourceLocation L) : Decl(Variant, DC, L) {}
+
+  virtual void anchor();
+
+public:
+  std::vector<Decl*> choices;
+  static VariantDecl *Create(ASTContext &C, DeclContext *DC,
+                           SourceLocation L);
+  static VariantDecl *CreateDeserialized(ASTContext &C, unsigned ID);
+
+  static bool classof(const Decl *D) { return classofKind(D->getKind()); }
+  static bool classofKind(Kind K) { return K == Variant; }
 };
 
 /// \brief Represents an empty-declaration.

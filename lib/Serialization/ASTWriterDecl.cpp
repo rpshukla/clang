@@ -122,6 +122,7 @@ namespace clang {
     void VisitBlockDecl(BlockDecl *D);
     void VisitCapturedDecl(CapturedDecl *D);
     void VisitEmptyDecl(EmptyDecl *D);
+    void VisitVariantDecl(VariantDecl *D);
 
     void VisitDeclContext(DeclContext *DC);
     template <typename T> void VisitRedeclarable(Redeclarable<T> *D);
@@ -1071,6 +1072,11 @@ void ASTDeclWriter::VisitFileScopeAsmDecl(FileScopeAsmDecl *D) {
 void ASTDeclWriter::VisitEmptyDecl(EmptyDecl *D) {
   VisitDecl(D);
   Code = serialization::DECL_EMPTY;
+}
+
+void ASTDeclWriter::VisitVariantDecl(VariantDecl *D) {
+  VisitDecl(D); // TODO
+  Code = serialization::DECL_VARIANT;
 }
 
 void ASTDeclWriter::VisitBlockDecl(BlockDecl *D) {

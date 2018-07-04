@@ -2044,6 +2044,11 @@ public:
                               SourceLocation AsmLoc,
                               SourceLocation RParenLoc);
 
+  /// \brief Handle a variant-declaration and 
+  Decl *ActOnVariantDeclaration(Scope *S,
+                              AttributeList *AttrList,
+                              SourceLocation SemiLoc);
+
   /// \brief Handle a C++11 empty-declaration and attribute-declaration.
   Decl *ActOnEmptyDeclaration(Scope *S,
                               AttributeList *AttrList,

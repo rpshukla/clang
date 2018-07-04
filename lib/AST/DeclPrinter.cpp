@@ -22,6 +22,7 @@
 #include "clang/AST/PrettyPrinter.h"
 #include "clang/Basic/Module.h"
 #include "llvm/Support/raw_ostream.h"
+#include <vector>
 using namespace clang;
 
 namespace {
@@ -65,6 +66,7 @@ namespace {
     void VisitRecordDecl(RecordDecl *D);
     void VisitEnumConstantDecl(EnumConstantDecl *D);
     void VisitEmptyDecl(EmptyDecl *D);
+    void VisitVariantDecl(VariantDecl *D);
     void VisitFunctionDecl(FunctionDecl *D);
     void VisitFriendDecl(FriendDecl *D);
     void VisitFieldDecl(FieldDecl *D);
@@ -908,6 +910,13 @@ void DeclPrinter::VisitNamespaceAliasDecl(NamespaceAliasDecl *D) {
 
 void DeclPrinter::VisitEmptyDecl(EmptyDecl *D) {
   prettyPrintAttributes(D);
+}
+
+void DeclPrinter::VisitVariantDecl(VariantDecl *D) {
+  prettyPrintAttributes(D);
+  for(std::vector<Decl*>::iterator it=D->choices.begin(); it !=D->choices.end(); ++it) {
+    this->Visit(*it);
+  }
 }
 
 void DeclPrinter::VisitCXXRecordDecl(CXXRecordDecl *D) {

@@ -149,6 +149,7 @@ namespace clang {
     bool IsStructuralMatch(VarTemplateDecl *From, VarTemplateDecl *To);
     Decl *VisitDecl(Decl *D);
     Decl *VisitEmptyDecl(EmptyDecl *D);
+    Decl *VisitVariantDecl(VariantDecl *D);
     Decl *VisitAccessSpecDecl(AccessSpecDecl *D);
     Decl *VisitStaticAssertDecl(StaticAssertDecl *D);
     Decl *VisitTranslationUnitDecl(TranslationUnitDecl *D);
@@ -1338,6 +1339,29 @@ Decl *ASTNodeImporter::VisitDecl(Decl *D) {
   Importer.FromDiag(D->getLocation(), diag::err_unsupported_ast_node)
     << D->getDeclKindName();
   return nullptr;
+}
+
+Decl *ASTNodeImporter::VisitVariantDecl(VariantDecl *D) {
+  // Import the context of this declaration.
+  DeclContext *DC = Importer.ImportContext(D->getDeclContext());
+  if (!DC)
+    return nullptr;
+
+  DeclContext *LexicalDC = DC;
+  if (D->getDeclContext() != D->getLexicalDeclContext()) {
+    LexicalDC = Importer.ImportContext(D->getLexicalDeclContext());
+    if (!LexicalDC)
+      return nullptr;
+  }
+
+  // Import the location of this declaration.
+  SourceLocation Loc = Importer.Import(D->getLocation());
+
+  VariantDecl *ToD = VariantDecl::Create(Importer.getToContext(), DC, Loc);
+  ToD->setLexicalDeclContext(LexicalDC);
+  Importer.Imported(D, ToD);
+  LexicalDC->addDeclInternal(ToD);
+  return ToD;
 }
 
 Decl *ASTNodeImporter::VisitEmptyDecl(EmptyDecl *D) {

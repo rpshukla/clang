@@ -359,6 +359,7 @@ namespace clang {
     void VisitBlockDecl(BlockDecl *BD);
     void VisitCapturedDecl(CapturedDecl *CD);
     void VisitEmptyDecl(EmptyDecl *D);
+    void VisitVariantDecl(VariantDecl *D);
 
     std::pair<uint64_t, uint64_t> VisitDeclContext(DeclContext *DC);
 
@@ -2306,6 +2307,11 @@ void ASTDeclReader::VisitEmptyDecl(EmptyDecl *D) {
   VisitDecl(D);
 }
 
+void ASTDeclReader::VisitVariantDecl(VariantDecl *D) {
+  VisitDecl(D);
+  //TODO: serialize
+}
+
 std::pair<uint64_t, uint64_t>
 ASTDeclReader::VisitDeclContext(DeclContext *DC) {
   uint64_t LexicalOffset = ReadLocalOffset();
@@ -3623,6 +3629,9 @@ Decl *ASTReader::ReadDeclRecord(DeclID ID) {
     break;
   case DECL_EMPTY:
     D = EmptyDecl::CreateDeserialized(Context, ID);
+    break;
+  case DECL_VARIANT:
+    D = VariantDecl::CreateDeserialized(Context, ID);
     break;
   case DECL_OBJC_TYPE_PARAM:
     D = ObjCTypeParamDecl::CreateDeserialized(Context, ID);

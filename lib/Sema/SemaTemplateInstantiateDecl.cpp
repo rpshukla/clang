@@ -516,6 +516,13 @@ TemplateDeclInstantiator::VisitExternCContextDecl(ExternCContextDecl *D) {
 }
 
 Decl *
+TemplateDeclInstantiator::VisitVariantDecl(VariantDecl *D) {
+  VariantDecl *Inst = VariantDecl::Create(SemaRef.Context, Owner, D->getLocation());
+  Owner->addDecl(Inst);
+  return Inst;
+}
+
+Decl *
 TemplateDeclInstantiator::VisitLabelDecl(LabelDecl *D) {
   LabelDecl *Inst = LabelDecl::Create(SemaRef.Context, Owner, D->getLocation(),
                                       D->getIdentifier());

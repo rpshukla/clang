@@ -1419,6 +1419,9 @@ namespace serialization {
       /// \brief An EmptyDecl record.
       DECL_EMPTY,
 
+      /// \brief An VariantDecl record.
+      DECL_VARIANT,
+
       /// \brief An ObjCTypeParamDecl record.
       DECL_OBJC_TYPE_PARAM,
 

@@ -1415,6 +1415,7 @@ DEF_TRAVERSE_DECL(CapturedDecl, {
 })
 
 DEF_TRAVERSE_DECL(EmptyDecl, {})
+DEF_TRAVERSE_DECL(VariantDecl, {})
 
 DEF_TRAVERSE_DECL(FileScopeAsmDecl,
                   { TRY_TO(TraverseStmt(D->getAsmString())); })
