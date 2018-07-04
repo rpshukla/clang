@@ -1,4 +1,4 @@
-//===-- clang/Lex/conditional.h - Instruction class definition -------*- C++
+//===-- clang/Basic/conditional.h - Instruction class definition -------*- C++
 //-*-===//
 //
 //                     The LLVM Compiler Infrastructure
@@ -21,7 +21,7 @@
 #include <vector>
 #include <map>
 
-namespace Variablity {
+namespace Variability {
 
 enum PCType{
     TRUE, AND, OR, NOT, LIT,
@@ -135,6 +135,6 @@ public:
     friend And;
 };
 
-} // namespace Variablity
+} // namespace Variability
 
 #endif

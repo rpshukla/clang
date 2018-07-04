@@ -787,7 +787,7 @@ void MSAsmStmt::initialize(const ASTContext &C, StringRef asmstr,
                    return copyIntoContext(C, Clobber);
                  });
 }
-VariantStmt::VariantStmt(const ASTContext &C, Variablity::PresenceCondition* pc, SourceLocation IL,
+VariantStmt::VariantStmt(const ASTContext &C, Variability::PresenceCondition* pc, SourceLocation IL,
         Stmt *IP, Stmt *NP, SourceLocation NL) 
     : Stmt(VariantStmtClass), IfLoc(IL), NotLoc(NL){
   setCondition(pc);

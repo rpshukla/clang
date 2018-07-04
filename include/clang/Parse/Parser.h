@@ -272,7 +272,7 @@ class Parser : public CodeCompletionHandler {
   /// The condition of the current parser, this is later compared to the condition
   /// of each token it parses to see if it should parse that token, split at that
   /// token, or skip over it entirely.
-  Variablity::PresenceCondition* condition;
+  Variability::PresenceCondition* condition;
 
 public:
   Parser(Preprocessor &PP, Sema &Actions, bool SkipFunctionBodies);
@@ -284,8 +284,8 @@ public:
   Sema &getActions() const { return Actions; }
   AttributeFactory &getAttrFactory() { return AttrFactory; }
 
-  void setConditionalInfo(Variablity::PresenceCondition* pc){ this->condition = pc; }
-  Variablity::PresenceCondition* getConditional() { return this->condition; }
+  void setConditionalInfo(Variability::PresenceCondition* pc){ this->condition = pc; }
+  Variability::PresenceCondition* getConditional() { return this->condition; }
   std::string getConditionalInfoString() { return this->condition->toString(); }
 
   const Token &getCurToken() const { return Tok; }
@@ -2855,7 +2855,7 @@ private:
 };
 
 }  // end namespace clang
-namespace Variablity{
+namespace Variability{
   class Split : public std::runtime_error
   {
       std::string spelling;

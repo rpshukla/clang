@@ -205,7 +205,7 @@ private:
 
   void setFlags(Scope *Parent, unsigned F);
 
-  Variablity::PresenceCondition* Condition = nullptr;
+  Variability::PresenceCondition* Condition = nullptr;
 
 public:
   Scope(Scope *Parent, unsigned ScopeFlags, DiagnosticsEngine &Diag)
@@ -214,17 +214,17 @@ public:
   }
 
 
-  void setConditional(Variablity::PresenceCondition* Condition){
+  void setConditional(Variability::PresenceCondition* Condition){
       this->Condition = Condition;
   }
 
-  Variablity::PresenceCondition* getConditional(){
+  Variability::PresenceCondition* getConditional(){
       if(Condition != nullptr){
           return Condition;
       }else if(AnyParent != nullptr){
           return AnyParent->getConditional();
       }else{
-          return new Variablity::True();
+          return new Variability::True();
       }
   }
 

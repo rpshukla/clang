@@ -126,12 +126,12 @@ Parser::ParseStatementOrDeclaration(StmtVector &Stmts,
   if(this->StateStack.top()){
     this->StateStack.top()--;
     this->StateStack.push(0);
-    Variablity::PresenceCondition* ctx = this->getConditional();
-    Variablity::PresenceCondition* pc = this->Tok.getConditional();
+    Variability::PresenceCondition* ctx = this->getConditional();
+    Variability::PresenceCondition* pc = this->Tok.getConditional();
 
 
 
-    this->condition = new Variablity::And(ctx, pc);
+    this->condition = new Variability::And(ctx, pc);
     //StmtResult sr = ParseStatementOrDeclaration(Stmts, Allowed, TrailingElseLoc); 
     getCurScope()->setConditional(this->condition);
     StmtResult sr = ParseVariantBody(Stmts, Allowed, TrailingElseLoc);
@@ -139,7 +139,7 @@ Parser::ParseStatementOrDeclaration(StmtVector &Stmts,
 
 
     PP.Backtrack();
-    this->condition = new Variablity::And(ctx, new Variablity::Not(pc));
+    this->condition = new Variability::And(ctx, new Variability::Not(pc));
     this->ConsumeAnyToken();
 
     //StmtResult sr2 = ParseStatementOrDeclaration(Stmts, Allowed, TrailingElseLoc); 

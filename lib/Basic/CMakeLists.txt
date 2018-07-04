@@ -48,6 +48,7 @@ add_clang_library(clangBasic
   Attributes.cpp
   Builtins.cpp
   CharInfo.cpp
+  Conditional.cpp
   Cuda.cpp
   Diagnostic.cpp
   DiagnosticIDs.cpp

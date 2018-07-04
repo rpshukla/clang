@@ -1,8 +1,8 @@
-#include "clang/Lex/Conditional.h"
+#include "clang/Basic/Conditional.h"
 #include <ctype.h>
 #include <cryptominisat5/cryptominisat.h>
 
-using namespace Variablity;
+using namespace Variability;
 
 
 

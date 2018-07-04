@@ -1703,7 +1703,7 @@ NamedDecl *LookupResult::getAcceptableDeclSlow(NamedDecl *D) const {
   return findAcceptableDecl(getSema(), D);
 }
 
-void LookupResult::clearForCondition(Variablity::PresenceCondition* pc){
+void LookupResult::clearForCondition(Variability::PresenceCondition* pc){
 start:
   auto i = begin();
   while(i != end()){

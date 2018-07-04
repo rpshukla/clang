@@ -1245,7 +1245,7 @@ public:
   ///
   /// By default, performs semantic analysis to build the new statement.
   /// Subclasses may override this routine to provide different behavior.
-  StmtResult RebuildVariantStmt(Variablity::PresenceCondition* pc, 
+  StmtResult RebuildVariantStmt(Variability::PresenceCondition* pc, 
           SourceLocation IfLoc, Stmt *Then, SourceLocation ElseLoc, Stmt *Else) {
     return getSema().ActOnVariantStmt(pc, IfLoc, Then, Else, ElseLoc);
   }

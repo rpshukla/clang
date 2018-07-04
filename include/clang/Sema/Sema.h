@@ -3730,10 +3730,10 @@ public:
                          Stmt *InitStmt,
                          ConditionResult Cond, Stmt *ThenVal,
                          SourceLocation ElseLoc, Stmt *ElseVal);
-  StmtResult ActOnVariantStmt(Variablity::PresenceCondition* pc, 
+  StmtResult ActOnVariantStmt(Variability::PresenceCondition* pc, 
                   SourceLocation IfLoc,  Stmt *IfPresent,
                   Stmt *NotPresent, SourceLocation NotLoc);
-  StmtResult BuildVariantStmt(Variablity::PresenceCondition* pc, 
+  StmtResult BuildVariantStmt(Variability::PresenceCondition* pc, 
                   SourceLocation IfLoc,  Stmt *IfPresent,
                   Stmt *NotPresent, SourceLocation NotLoc);
   StmtResult ActOnStartOfSwitchStmt(SourceLocation SwitchLoc,

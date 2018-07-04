@@ -3099,11 +3099,11 @@ bool Lexer::Lex(Token &Result) {
         decls.push_back(isDef);
         names.push_back(PP->getSpelling(t));
       }
-      Variablity::PresenceCondition* pc;
+      Variability::PresenceCondition* pc;
       if(decls.size() > 0){
-          pc = Variablity::PresenceCondition::getList(decls, names);
+          pc = Variability::PresenceCondition::getList(decls, names);
       }else{
-          pc = new Variablity::True();
+          pc = new Variability::True();
       }
       Result.setConditionalInfo(pc);
   }

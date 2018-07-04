@@ -568,12 +568,12 @@ StmtResult Sema::BuildIfStmt(SourceLocation IfLoc, bool IsConstexpr,
 }
 
 StmtResult
-Sema::ActOnVariantStmt(Variablity::PresenceCondition* pc, SourceLocation IfLoc, Stmt *IfPresent,
+Sema::ActOnVariantStmt(Variability::PresenceCondition* pc, SourceLocation IfLoc, Stmt *IfPresent,
                   Stmt *NotPresent, SourceLocation NotLoc) {
   return BuildVariantStmt(pc, IfLoc, IfPresent, NotPresent, NotLoc);
 }
 
-StmtResult Sema::BuildVariantStmt(Variablity::PresenceCondition* pc, SourceLocation IfLoc, 
+StmtResult Sema::BuildVariantStmt(Variability::PresenceCondition* pc, SourceLocation IfLoc, 
         Stmt *IfPresent, Stmt *NotPresent, SourceLocation NotLoc) {
   return new (Context)
       VariantStmt(Context, pc, IfLoc, IfPresent, NotPresent, NotLoc);
