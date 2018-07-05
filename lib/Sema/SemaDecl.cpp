@@ -546,18 +546,6 @@ findRecordWithDependentBasesOfEnclosingMethod(const DeclContext *DC) {
   return nullptr;
 }
 
-Decl *Sema::ActOnVariantDeclaration(Scope *S,
-                                  AttributeList *AttrList,
-                                  SourceLocation SemiLoc) {
-  Decl *ED = VariantDecl::Create(Context, CurContext, SemiLoc);
-  // Attribute declarations appertain to empty declaration so we handle
-  // them here.
-  if (AttrList)
-    ProcessDeclAttributeList(S, ED, AttrList);
-
-  CurContext->addDecl(ED);
-  return ED;
-}
 
 
 ParsedType Sema::ActOnMSVCUnknownTypeName(const IdentifierInfo &II,

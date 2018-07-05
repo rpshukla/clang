@@ -712,6 +712,7 @@ unsigned Decl::getIdentifierNamespaceForKind(Kind DeclKind) {
     case CXXConversion:
     case EnumConstant:
     case Var:
+    case Variant:
     case ImplicitParam:
     case ParmVar:
     case ObjCMethod:

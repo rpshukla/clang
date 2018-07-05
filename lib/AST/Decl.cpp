@@ -4421,12 +4421,13 @@ FileScopeAsmDecl *FileScopeAsmDecl::CreateDeserialized(ASTContext &C,
 
 void VariantDecl::anchor() {}
 
-VariantDecl *VariantDecl::Create(ASTContext &C, DeclContext *DC, SourceLocation L) {
-  return new (C, DC) VariantDecl(DC, L);
+VariantDecl  *VariantDecl::Create(ASTContext &C, DeclContext *DC,
+                             SourceLocation IdentL, IdentifierInfo *II) {
+  return new (C, DC) VariantDecl(DC, IdentL, II);
 }
 
 VariantDecl *VariantDecl::CreateDeserialized(ASTContext &C, unsigned ID) {
-  return new (C, ID) VariantDecl(nullptr, SourceLocation());
+  return new (C, ID) VariantDecl(nullptr, SourceLocation(), nullptr);
 }
 
 void EmptyDecl::anchor() {}

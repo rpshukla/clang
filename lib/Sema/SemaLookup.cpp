@@ -1722,10 +1722,10 @@ start:
 void LookupResult::TryAndResolveContextualAmbiguity(){
 start:
   auto i = begin();
-  Decl* one = *(i++);
+  NamedDecl* one = *(i++);
   while(i != end()){
     if(one->getConditional()->ShouldSkipOnCondition(i->getConditional())
-        && one->getKind() == i->getKind()){
+            && one->getKind() == i->getKind()){
       if(one->getKind() == Decl::Kind::Var){
         if(reinterpret_cast<ValueDecl*>(*i)->getType() != 
             reinterpret_cast<ValueDecl*>(one)->getType()){
@@ -1740,6 +1740,18 @@ start:
   }
   if(Decls.size() == 1){
     ResultKind = Found;
+  } else if (Decls.size() > 1){
+    VariantDecl* d = VariantDecl::Create(one->getASTContext(), 
+        one->getDeclContext(), one->getLocation(), one->getIdentifier());
+      d->innerKind = one->getKind();
+      i = begin();
+      one = *(i++);
+      while(i != end()){
+        i++;
+        d->choices.push_back(*i);
+      }
+      Decls.clear();
+      addDecl(d);
   }
 }
 

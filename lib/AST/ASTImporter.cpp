@@ -1341,23 +1341,24 @@ Decl *ASTNodeImporter::VisitDecl(Decl *D) {
   return nullptr;
 }
 
+
 Decl *ASTNodeImporter::VisitVariantDecl(VariantDecl *D) {
-  // Import the context of this declaration.
-  DeclContext *DC = Importer.ImportContext(D->getDeclContext());
-  if (!DC)
+  // Import the major distinguishing characteristics of this label.
+  DeclContext *DC, *LexicalDC;
+  DeclarationName Name;
+  SourceLocation Loc;
+  NamedDecl *ToD;
+  if (ImportDeclParts(D, DC, LexicalDC, Name, ToD, Loc))
     return nullptr;
+  if (ToD)
+    return ToD;
 
-  DeclContext *LexicalDC = DC;
-  if (D->getDeclContext() != D->getLexicalDeclContext()) {
-    LexicalDC = Importer.ImportContext(D->getLexicalDeclContext());
-    if (!LexicalDC)
-      return nullptr;
-  }
+  assert(LexicalDC->isFunctionOrMethod());
 
-  // Import the location of this declaration.
-  SourceLocation Loc = Importer.Import(D->getLocation());
+  ToD  = VariantDecl::Create(Importer.getToContext(),
+              DC, Importer.Import(D->getLocation()),
+              Name.getAsIdentifierInfo());
 
-  VariantDecl *ToD = VariantDecl::Create(Importer.getToContext(), DC, Loc);
   ToD->setLexicalDeclContext(LexicalDC);
   Importer.Imported(D, ToD);
   LexicalDC->addDeclInternal(ToD);

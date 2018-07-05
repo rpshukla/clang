@@ -517,7 +517,8 @@ TemplateDeclInstantiator::VisitExternCContextDecl(ExternCContextDecl *D) {
 
 Decl *
 TemplateDeclInstantiator::VisitVariantDecl(VariantDecl *D) {
-  VariantDecl *Inst = VariantDecl::Create(SemaRef.Context, Owner, D->getLocation());
+  VariantDecl *Inst = VariantDecl::Create(SemaRef.Context, Owner, D->getLocation(),
+          D->getIdentifier());
   Owner->addDecl(Inst);
   return Inst;
 }

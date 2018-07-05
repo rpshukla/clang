@@ -4079,15 +4079,17 @@ public:
 };
 
 /// \brief Represents an empty-declaration.
-class VariantDecl : public Decl {
-  VariantDecl(DeclContext *DC, SourceLocation L) : Decl(Variant, DC, L) {}
+class VariantDecl : public NamedDecl {
+  VariantDecl(DeclContext *DC, SourceLocation IdentL, IdentifierInfo *II)
+      : NamedDecl(Variant, DC, IdentL, II) {}
 
   virtual void anchor();
 
 public:
-  std::vector<Decl*> choices;
+  std::vector<NamedDecl*> choices;
+  Kind innerKind;
   static VariantDecl *Create(ASTContext &C, DeclContext *DC,
-                           SourceLocation L);
+                           SourceLocation IdentL, IdentifierInfo *II);
   static VariantDecl *CreateDeserialized(ASTContext &C, unsigned ID);
 
   static bool classof(const Decl *D) { return classofKind(D->getKind()); }

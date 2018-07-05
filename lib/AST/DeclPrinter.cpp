@@ -914,7 +914,7 @@ void DeclPrinter::VisitEmptyDecl(EmptyDecl *D) {
 
 void DeclPrinter::VisitVariantDecl(VariantDecl *D) {
   prettyPrintAttributes(D);
-  for(std::vector<Decl*>::iterator it=D->choices.begin(); it !=D->choices.end(); ++it) {
+  for(std::vector<NamedDecl*>::iterator it=D->choices.begin(); it !=D->choices.end(); ++it) {
     this->Visit(*it);
   }
 }
