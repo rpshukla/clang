@@ -35,6 +35,7 @@ public:
   /// removes all results that occur in a nonapplicable presencecondition
   void clearForCondition(Variability::PresenceCondition* pc);
   void TryAndResolveContextualAmbiguity();
+  bool CoversWholeConditionalSpace(Variability::PresenceCondition* pc);
 
   enum LookupResultKind {
     /// @brief No entity found met the criteria.

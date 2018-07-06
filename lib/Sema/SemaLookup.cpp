@@ -1704,12 +1704,10 @@ NamedDecl *LookupResult::getAcceptableDeclSlow(NamedDecl *D) const {
 }
 
 void LookupResult::clearForCondition(Variability::PresenceCondition* pc){
-start:
   auto i = begin();
   while(i != end()){
     if(pc->ShouldSkipOnCondition(i->getConditional())){
-      Decls.erase(i);
-      goto start; // I can't figure out iterators
+      Decls.erase(i--);
     }
     i++;
   }
@@ -1720,7 +1718,6 @@ start:
 }
 
 void LookupResult::TryAndResolveContextualAmbiguity(){
-start:
   auto i = begin();
   NamedDecl* one = *(i++);
   while(i != end()){
@@ -1733,11 +1730,11 @@ start:
           continue;
         }
       }
-      Decls.erase(i);
-      goto start; // I can't figure out iterators
+      Decls.erase(i--);
     }
     i++;
   }
+
   if(Decls.size() == 1){
     ResultKind = Found;
   } else if (Decls.size() > 1){
@@ -1751,17 +1748,38 @@ start:
         d->choices.push_back(*i);
       }
       Decls.clear();
-      addDecl(d);
+      //addDecl(d);
+      addDecl(one); // Temporary, return first value
   }
+
+}
+
+bool LookupResult::CoversWholeConditionalSpace(Variability::PresenceCondition* pc){
+    // check if covers whole lookup space
+    Variability::PresenceCondition* sum = nullptr;
+    auto i = begin();
+    while(i != end()){
+      if(sum == nullptr){
+        sum = new Variability::Not(i->getConditional());
+      }else{
+        sum = new Variability::And(new Variability::Not(i->getConditional()), sum);
+      }
+      i++;
+    }
+    return !(new Variability::And(pc, sum))->isSatisfiable();
 }
 
 bool Sema::VariableLookupCommon(LookupResult &R, Scope* S, bool Result){
 
-  //R.print(llvm::outs()); llvm::outs() << S->getConditional()->toString() << "\n";
   R.clearForCondition(S->getConditional());
   if(!R.empty()){
+    if(R.CoversWholeConditionalSpace(S->getConditional())){
+      //llvm::outs() << "good\n";
+    }else{
+       Diag(R.getNameLoc(), diag::declaration_not_in_all_conditions)
+              << R.getLookupName().getAsString();
+    }
     R.TryAndResolveContextualAmbiguity();
-    //R.print(llvm::outs()); llvm::outs() << "\n";
   }
 
   return Result && !R.empty(); 
