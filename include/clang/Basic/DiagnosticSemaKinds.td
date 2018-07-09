@@ -18,9 +18,10 @@ def note_previous_decl : Note<"%0 declared here">;
 def note_entity_declared_at : Note<"%0 declared here">;
 def note_callee_decl : Note<"%0 declared here">;
 def note_defined_here : Note<"%0 defined here">;
+def note_in_context_x : Note<"In context %0">;
 
 // For variable issues
-def declaration_not_in_all_conditions : Error<"%0 is not defined in all contexts">; 
+def declaration_not_in_all_conditions : Error<"%0 is not defined in context %1">; 
 
 // For loop analysis
 def warn_variables_not_in_loop_body : Warning<

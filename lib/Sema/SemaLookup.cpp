@@ -1754,7 +1754,7 @@ void LookupResult::TryAndResolveContextualAmbiguity(){
 
 }
 
-bool LookupResult::CoversWholeConditionalSpace(Variability::PresenceCondition* pc){
+bool LookupResult::CoversWholeConditionalSpace(Variability::PresenceCondition* pc, std::string &msg){
     // check if covers whole lookup space
     Variability::PresenceCondition* sum = nullptr;
     auto i = begin();
@@ -1766,6 +1766,7 @@ bool LookupResult::CoversWholeConditionalSpace(Variability::PresenceCondition* p
       }
       i++;
     }
+    msg = sum->toString();
     return !(new Variability::And(pc, sum))->isSatisfiable();
 }
 
@@ -1773,11 +1774,10 @@ bool Sema::VariableLookupCommon(LookupResult &R, Scope* S, bool Result){
 
   R.clearForCondition(S->getConditional());
   if(!R.empty()){
-    if(R.CoversWholeConditionalSpace(S->getConditional())){
-      //llvm::outs() << "good\n";
-    }else{
+    std::string msg;
+    if(!(R.isForRedeclaration() || R.CoversWholeConditionalSpace(S->getConditional(), msg))){
        Diag(R.getNameLoc(), diag::declaration_not_in_all_conditions)
-              << R.getLookupName().getAsString();
+              << R.getLookupName().getAsString() << msg;
     }
     R.TryAndResolveContextualAmbiguity();
   }

@@ -3975,6 +3975,11 @@ void Sema::notePreviousDefinition(const NamedDecl *Old, SourceLocation New) {
   StringRef HdrFilename =
       SrcMgr.getFilename(SrcMgr.getSpellingLoc(Old->getLocation()));
 
+  // Show context
+  Diag(Old->getLocation(), diag::note_in_context_x) << 
+     (new Variability::And(Old->getConditional(), 
+                           getCurScope()->getConditional()))->toString();
+
   auto noteFromModuleOrInclude = [&](Module *Mod,
                                      SourceLocation IncLoc) -> bool {
     // Redefinition errors with modules are common with non modular mapped

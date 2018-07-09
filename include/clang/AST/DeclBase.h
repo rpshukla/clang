@@ -88,7 +88,7 @@ class LLVM_ALIGNAS(/*alignof(uint64_t)*/ 8) Decl {
   Variability::PresenceCondition* condition = new Variability::True(); // placeholder value til I fix things
 public:
   void setConditional(Variability::PresenceCondition* pc){ this->condition = pc; }
-  Variability::PresenceCondition* getConditional() { return this->condition; }
+  Variability::PresenceCondition* getConditional() const { return this->condition; }
   /// \brief Lists the kind of concrete classes of Decl.
   enum Kind {
 #define DECL(DERIVED, BASE) DERIVED,

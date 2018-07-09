@@ -21,6 +21,8 @@
 
 #include "llvm/ADT/Optional.h"
 
+#include <string>
+
 namespace clang {
 
 /// @brief Represents the results of name lookup.
@@ -35,7 +37,7 @@ public:
   /// removes all results that occur in a nonapplicable presencecondition
   void clearForCondition(Variability::PresenceCondition* pc);
   void TryAndResolveContextualAmbiguity();
-  bool CoversWholeConditionalSpace(Variability::PresenceCondition* pc);
+  bool CoversWholeConditionalSpace(Variability::PresenceCondition* pc, std::string &msg);
 
   enum LookupResultKind {
     /// @brief No entity found met the criteria.
