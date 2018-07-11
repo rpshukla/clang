@@ -3976,7 +3976,7 @@ void Sema::notePreviousDefinition(const NamedDecl *Old, SourceLocation New) {
       SrcMgr.getFilename(SrcMgr.getSpellingLoc(Old->getLocation()));
 
   // Show context
-  Diag(Old->getLocation(), diag::note_in_context_x) << 
+  Diag(New, diag::note_in_context_x) << 
      (new Variability::And(Old->getConditional(), 
                            getCurScope()->getConditional()))->toString();
 
