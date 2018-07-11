@@ -4,6 +4,10 @@
 
 using namespace Variability;
 
+const std::string NOT_SYM = "~";
+const std::string AND_SYM = "&&";
+const std::string OR_SYM = "||";
+
 
 
 bool PresenceCondition::ShouldSplitOnCondition(PresenceCondition* other) {
@@ -133,7 +137,23 @@ const std::string Literal::toString() {
 }
 
 const std::string And::toString() {
-    return "(" + this->left->toString() + " && " + this->right->toString() + ")";
+    return (this->left->typeOfPC == OR ? "(":"") + this->left->toString() 
+        + (this->left->typeOfPC == OR ? ")":"") + " "+ AND_SYM +" " 
+        + (this->right->typeOfPC == OR ? "(":"") + this->right->toString() 
+        + (this->right->typeOfPC == OR ? ")":"");
+}
+
+const std::string Or::toString() {
+    return this->left->toString() + " "+ OR_SYM +" " + this->right->toString();
+}
+
+const std::string Not::toString() {
+    if(this->right->typeOfPC == OR
+       || this->right->typeOfPC == AND){
+        return NOT_SYM+"(" + this->right->toString() +")";
+    }
+
+    return NOT_SYM + this->right->toString();
 }
 
 And::And(PresenceCondition* left_, PresenceCondition* right_) {
@@ -142,21 +162,12 @@ And::And(PresenceCondition* left_, PresenceCondition* right_) {
     this->typeOfPC = AND;
 }
 
-const std::string Or::toString() {
-    return "(" + this->left->toString() + " || " + this->right->toString() + ")";
-}
 
 Or::Or(PresenceCondition* left_, PresenceCondition* right_) {
     this->left = left_;
     this->right = right_;
     this->typeOfPC = OR;
 }
-
-
-const std::string Not::toString() {
-    return "~" + this->right->toString();
-}
-
 
 PresenceCondition* PresenceCondition::getList(std::vector<bool> declarations, std::vector<std::string> names) {
     // unpacks the vectors from the condition stack to form the current conditional
