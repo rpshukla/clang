@@ -635,10 +635,8 @@ bool Parser::ParseTopLevelDecl(DeclGroupPtrTy &Result) {
 Parser::DeclGroupPtrTy
 Parser::ParseExternalDeclaration(ParsedAttributesWithRange &attrs,
                                  ParsingDeclSpec *DS) {
-  if(StateStack.top()){
-    StateStack.top() = 0;
-    while(Tok.is(tok::split))
-      ConsumeToken();
+  while(Tok.is(tok::split)){
+    ConsumeToken();
   }
 
   Variability::PresenceCondition* pc = Tok.getConditional();

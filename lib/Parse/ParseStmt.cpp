@@ -123,9 +123,8 @@ StmtResult
 Parser::ParseStatementOrDeclaration(StmtVector &Stmts,
                                     AllowedConstructsKind Allowed,
                                     SourceLocation *TrailingElseLoc) {
-  if(this->StateStack.top()){
-    this->StateStack.top()--;
-    this->StateStack.push(0);
+  if(Tok.is(tok::split)) {
+    ConsumeToken();
     Variability::PresenceCondition* ctx = this->getConditional();
     Variability::PresenceCondition* pc = this->Tok.getConditional();
 
@@ -133,7 +132,6 @@ Parser::ParseStatementOrDeclaration(StmtVector &Stmts,
 
     this->condition = new Variability::And(ctx, pc);
     //StmtResult sr = ParseStatementOrDeclaration(Stmts, Allowed, TrailingElseLoc); 
-    getCurScope()->setConditional(this->condition);
     StmtResult sr = ParseVariantBody(Stmts, Allowed, TrailingElseLoc);
 
 
@@ -143,14 +141,11 @@ Parser::ParseStatementOrDeclaration(StmtVector &Stmts,
     this->ConsumeAnyToken();
 
     //StmtResult sr2 = ParseStatementOrDeclaration(Stmts, Allowed, TrailingElseLoc); 
-    getCurScope()->setConditional(this->condition);
     StmtResult sr2 = ParseVariantBody(Stmts, Allowed, TrailingElseLoc);
 
     StmtResult variant = Actions.ActOnVariantStmt(pc, sr.get()->getLocStart(), sr.get(), sr2.get(), sr2.get()->getLocStart());
 
-    this->StateStack.pop();
     this->condition = ctx;
-    getCurScope()->setConditional(ctx);
 
     return variant;
     
@@ -169,8 +164,9 @@ StmtResult Parser::ParseVariantBody(StmtVector &PrevStmts,
   StmtVector Stmts;
 
     
-  if(Tok.is(tok::split)) 
-      ConsumeToken();
+  if(Tok.is(tok::split)) {
+    ConsumeToken();
+  }
 
   //llvm::outs() << getConditional()->ShouldJoinOnCondition(Tok.getConditional())
       //<< getConditional()->toString() << "   "
@@ -182,10 +178,7 @@ StmtResult Parser::ParseVariantBody(StmtVector &PrevStmts,
 
     StmtResult R = ParseStatementOrDeclaration(Stmts, ACK_Any);
 
-    if (R.isInvalid()) {
-      SkipUntil(tok::semi);
-      continue;
-    }else if (R.isUsable()){
+    if (R.isUsable()){
       Stmts.push_back(R.get());
     }
 
