@@ -182,8 +182,13 @@ StmtResult Parser::ParseVariantBody(StmtVector &PrevStmts,
 
     StmtResult R = ParseStatementOrDeclaration(Stmts, ACK_Any);
 
-    if (R.isUsable())
+    if (R.isInvalid()) {
+      SkipUntil(tok::semi);
+      continue;
+    }else if (R.isUsable()){
       Stmts.push_back(R.get());
+    }
+
   }
 
   SourceLocation CloseLoc = Tok.getLocation();
