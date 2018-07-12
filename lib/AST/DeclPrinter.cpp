@@ -449,15 +449,8 @@ void DeclPrinter::VisitDeclContext(DeclContext *DC, bool Indent) {
       Terminator = ";";
 
     if (Terminator)
-      Out << Terminator;
-    if (!Policy.TerseOutput &&
-        ((isa<FunctionDecl>(*D) &&
-          cast<FunctionDecl>(*D)->doesThisDeclarationHaveABody()) ||
-         (isa<FunctionTemplateDecl>(*D) &&
-          cast<FunctionTemplateDecl>(*D)->getTemplatedDecl()->doesThisDeclarationHaveABody())))
-      ; // StmtPrinter already added '\n' after CompoundStmt.
-    else
-      Out << "\n";
+      Out << Terminator << " ";
+    Out << "// In context: " << D->getConditional()->toString() << "\n";
 
     // Declare target attribute is special one, natural spelling for the pragma
     // assumes "ending" construct so print it here.
@@ -851,11 +844,6 @@ void DeclPrinter::VisitVarDecl(VarDecl *D) {
     }
   }
   prettyPrintAttributes(D);
-
-  if(D->getConditional() != nullptr)
-      Out << "        /* In context: " << D->getConditional()->toString() << " */";
-  else
-      Out << "        /* In context: UNKNOWN */";
 }
 
 void DeclPrinter::VisitParmVarDecl(ParmVarDecl *D) {
