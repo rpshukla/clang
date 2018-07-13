@@ -58,7 +58,6 @@ void Parser::SplitOrConsume(Token &Result){
   }
   else if(this->getConditional()->ShouldSplitOnCondition(Result.getConditional())){
     //llvm::outs() << "SPLIT[" << PP.getSpelling(Result) << "]\n";
-    this->StateStack.top()++;
   }
   else if(this->getConditional()->ShouldSkipOnCondition(Result.getConditional())){
     //llvm::outs() << "SKIP[" << PP.getSpelling(Result) << "]\n";
@@ -78,7 +77,6 @@ Parser::Parser(Preprocessor &pp, Sema &actions, bool skipFunctionBodies)
   Actions.CurScope = nullptr;
   NumCachedScopes = 0;
   CurParsedObjCImpl = nullptr;
-  StateStack.push(0);
 
   // Add #pragma handlers. These are removed and destroyed in the
   // destructor.

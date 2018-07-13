@@ -63,10 +63,6 @@ class Parser : public CodeCompletionHandler {
   friend class ParenBraceBracketBalancer;
   friend class BalancedDelimiterTracker;
 
-  /// StateStack - Indicator of whether to split or not. When top is not zero,
-  /// it indicates we should split.
-  std::stack<char> StateStack;
-
   Preprocessor &PP;
 
   /// Tok - The current token we are peeking ahead.  All parsing methods assume
