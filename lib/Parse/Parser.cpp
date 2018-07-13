@@ -52,18 +52,14 @@ void Parser::SplitOrConsume(Token &Result){
   TryAgain:
   PP.EnableBacktrackAtThisPos();
   PP.Lex(Result);
-  if(this->getConditional()->ShouldContinueOnCondition(Result.getConditional())){
-    //llvm::outs() << "GOOD[" << PP.getSpelling(Result) << "]\n";
+
+  if(!this->getConditional()->ShouldSplitOnCondition(Result.getConditional())){
     PP.CommitBacktrackedTokens();
+    if(this->getConditional()->ShouldSkipOnCondition(Result.getConditional())){
+      goto TryAgain; // Avoid recursive tail call
+    }
   }
-  else if(this->getConditional()->ShouldSplitOnCondition(Result.getConditional())){
-    //llvm::outs() << "SPLIT[" << PP.getSpelling(Result) << "]\n";
-  }
-  else if(this->getConditional()->ShouldSkipOnCondition(Result.getConditional())){
-    //llvm::outs() << "SKIP[" << PP.getSpelling(Result) << "]\n";
-    PP.CommitBacktrackedTokens();
-    goto TryAgain; // Avoid recursive tail call
-  }
+
 }
 
 Parser::Parser(Preprocessor &pp, Sema &actions, bool skipFunctionBodies)
