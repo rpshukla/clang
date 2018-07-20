@@ -124,14 +124,12 @@ Parser::ParseStatementOrDeclaration(StmtVector &Stmts,
                                     AllowedConstructsKind Allowed,
                                     SourceLocation *TrailingElseLoc) {
   if(Tok.is(tok::split)) {
-    ConsumeToken();
     Variability::PresenceCondition* ctx = this->getConditional();
     Variability::PresenceCondition* pc = this->Tok.getConditional();
 
 
 
     this->condition = new Variability::And(ctx, pc);
-    //StmtResult sr = ParseStatementOrDeclaration(Stmts, Allowed, TrailingElseLoc); 
     StmtResult sr = ParseVariantBody(Stmts, Allowed, TrailingElseLoc);
 
 
@@ -140,7 +138,6 @@ Parser::ParseStatementOrDeclaration(StmtVector &Stmts,
     this->condition = new Variability::And(ctx, new Variability::Not(pc));
     this->ConsumeAnyToken();
 
-    //StmtResult sr2 = ParseStatementOrDeclaration(Stmts, Allowed, TrailingElseLoc); 
     StmtResult sr2 = ParseVariantBody(Stmts, Allowed, TrailingElseLoc);
 
     StmtResult variant = Actions.ActOnVariantStmt(pc, sr.get()->getLocStart(), sr.get(), sr2.get(), sr2.get()->getLocStart());
