@@ -24,7 +24,9 @@ public:
   unsigned ShowMacros : 1;         ///< Print macro definitions.
   unsigned ShowIncludeDirectives : 1;  ///< Print includes, imports etc. within preprocessed output.
   unsigned RewriteIncludes : 1;    ///< Preprocess include directives only.
-  unsigned RewriteImports  : 1;    ///< Include contents of transitively-imported modules.
+  unsigned RewriteImports : 1;    ///< Include contents of transitively-imported modules.
+  unsigned HasVarConfigFile  : 1;    ///< Has a config file for varibility-aware analysis
+  char* VarConfigFile;    ///< filepath
 
 public:
   PreprocessorOutputOptions() {
@@ -37,6 +39,7 @@ public:
     ShowIncludeDirectives = 0;
     RewriteIncludes = 0;
     RewriteImports = 0;
+    HasVarConfigFile = 0;
   }
 };
 

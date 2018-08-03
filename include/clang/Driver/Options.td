@@ -329,6 +329,9 @@ def ccc_ : Joined<["-"], "ccc-">, Group<internal_Group>, Flags<[Unsupported]>;
 
 // Standard Options
 
+def var_config : JoinedOrSeparate<["-"], "var-config=">, Group<Preprocessor_Group>,
+    Flags<[CC1Option,CC1AsOption]>, MetaVarName<"<dir>">,
+    HelpText<"Add filepath as config file">;
 def _HASH_HASH_HASH : Flag<["-"], "###">, Flags<[DriverOption, CoreOption]>,
     HelpText<"Print (but do not run) the commands to run for this compilation">;
 def _DASH_DASH : Option<["--"], "", KIND_REMAINING_ARGS>,

@@ -2702,6 +2702,15 @@ static void ParsePreprocessorOutputArgs(PreprocessorOutputOptions &Opts,
   Opts.RewriteIncludes = Args.hasArg(OPT_frewrite_includes);
   Opts.RewriteImports = Args.hasArg(OPT_frewrite_imports);
   Opts.UseLineDirectives = Args.hasArg(OPT_fuse_line_directives);
+  Opts.HasVarConfigFile = Args.hasArg(OPT_var_config);
+
+  if(Arg* a = Args.getLastArg(OPT_var_config)){
+      a->dump();
+  }else{
+      llvm::outs() << "NOTHING HERE\n";
+  }
+
+
 }
 
 static void ParseTargetArgs(TargetOptions &Opts, ArgList &Args,
@@ -2760,6 +2769,7 @@ bool CompilerInvocation::CreateFromArgs(CompilerInvocation &Res,
     Diags.Report(diag::err_drv_unknown_argument) << A->getAsString(Args);
     Success = false;
   }
+
 
   Success &= ParseAnalyzerArgs(*Res.getAnalyzerOpts(), Args, Diags);
   Success &= ParseMigratorArgs(Res.getMigratorOpts(), Args);
