@@ -55,6 +55,7 @@
 #include <string>
 #include <utility>
 #include <vector>
+#include <unordered_set>
 
 namespace llvm {
 
@@ -62,6 +63,7 @@ template<unsigned InternalLen> class SmallString;
 
 } // namespace llvm
 
+extern const char* VarConfigFile;
 namespace clang {
 
 class CodeCompletionHandler;
@@ -127,6 +129,8 @@ enum MacroUse {
 class Preprocessor {
   friend class VAOptDefinitionContext;
   friend class VariadicMacroScopeGuard;
+
+  std::unordered_set<std::string> VariabilityMacros;
 
   std::shared_ptr<PreprocessorOptions> PPOpts;
   DiagnosticsEngine        *Diags;
@@ -337,6 +341,11 @@ public:
           FoundNonSkipPortion(FoundNonSkipPortion), FoundElse(FoundElse),
           ElseLoc(ElseLoc) {}
   };
+
+  bool hasVarConfigFile() { return VarConfigFile != nullptr; }
+  bool isMacroVariability(std::string macroname) { 
+      return VariabilityMacros.find(macroname) != VariabilityMacros.end();
+  }
 
 private:
   friend class ASTReader;

@@ -71,6 +71,9 @@
 #include <string>
 #include <utility>
 #include <vector>
+#include <unordered_set>
+#include <iostream>
+#include <fstream>
 
 using namespace clang;
 
@@ -149,6 +152,21 @@ Preprocessor::Preprocessor(std::shared_ptr<PreprocessorOptions> PPOpts,
 
   if (this->PPOpts->GeneratePreamble)
     PreambleConditionalStack.startRecording();
+
+  if(VarConfigFile != nullptr){
+    std::ifstream infile;
+    infile.open (VarConfigFile);
+    std::string line;
+    while(!infile.eof())  {
+      getline(infile, line); 
+      if(line != ""){
+        //llvm::outs() << line << "|"; 
+        VariabilityMacros.insert(line);
+      }
+    }
+    //llvm::outs() << "\n"; 
+    infile.close();
+  }
 }
 
 Preprocessor::~Preprocessor() {

@@ -2684,6 +2684,7 @@ static void ParsePreprocessorArgs(PreprocessorOptions &Opts, ArgList &Args,
     Opts.LexEditorPlaceholders = false;
 }
 
+const char* VarConfigFile = nullptr;
 static void ParsePreprocessorOutputArgs(PreprocessorOutputOptions &Opts,
                                         ArgList &Args,
                                         frontend::ActionKind Action) {
@@ -2705,7 +2706,7 @@ static void ParsePreprocessorOutputArgs(PreprocessorOutputOptions &Opts,
   Opts.HasVarConfigFile = Args.hasArg(OPT_var_config);
 
   if(Arg* a = Args.getLastArg(OPT_var_config)){
-      Opts.VarConfigFile = a->getValue();
+      VarConfigFile = Opts.VarConfigFile = a->getValue();
   }else{
       llvm::outs() << "NOTHING HERE\n";
   }
