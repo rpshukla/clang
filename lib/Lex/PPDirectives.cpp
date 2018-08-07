@@ -2725,12 +2725,17 @@ void Preprocessor::HandleIfdefDirective(Token &Result,
     CurPPLexer->pushConditionalLevel(DirectiveTok.getLocation(),
                                      /*wasskip*/false, /*foundnonskip*/false,
                                      /*foundelse*/false);
-  } else{ // if (!MI == isIfndef) {
-    // this is now an else, because we want to assume every macro is defined for variable aware analysis
+  } else if ((!MI == isIfndef) || isMacroVariability(getSpelling(MacroNameTok))) {
     // Yes, remember that we are inside a conditional, then lex the next token.
     CurPPLexer->pushConditionalLevel(DirectiveTok.getLocation(),
                                      /*wasskip*/false, /*foundnonskip*/true,
                                      /*foundelse*/false);
+  }else{
+      // No, skip the contents of this block.
+     SkipExcludedConditionalBlock(HashToken.getLocation(),
+                                  DirectiveTok.getLocation(),
+                                  /*Foundnonskip*/ false,
+                                  /*FoundElse*/ false);
   }
 }
 
@@ -2741,12 +2746,14 @@ void Preprocessor::HandleIfDirective(Token &IfToken,
                                      bool ReadAnyTokensBeforeDirective) {
   ++NumIf;
 
+
   // Parse and evaluate the conditional expression.
   IdentifierInfo *IfNDefMacro = nullptr;
   const SourceLocation ConditionalBegin = CurPPLexer->getSourceLocation();
   const DirectiveEvalResult DER = EvaluateDirectiveExpression(IfNDefMacro);
   const bool ConditionalTrue = DER.Conditional;
   const SourceLocation ConditionalEnd = CurPPLexer->getSourceLocation();
+
 
   // If this condition is equivalent to #ifndef X, and if this is the first
   // directive seen, handle it for the multiple-include optimization.
@@ -2763,17 +2770,24 @@ void Preprocessor::HandleIfDirective(Token &IfToken,
                   SourceRange(ConditionalBegin, ConditionalEnd),
                   (ConditionalTrue ? PPCallbacks::CVK_True : PPCallbacks::CVK_False));
 
-  // Should we include the stuff contained by this directive?
-  if (PPOpts->SingleFileParseMode && DER.IncludedUndefinedIds) {
-    // In 'single-file-parse mode' undefined identifiers trigger parsing of all
-    // the directive blocks.
-    CurPPLexer->pushConditionalLevel(IfToken.getLocation(), /*wasskip*/false,
-                                     /*foundnonskip*/false, /*foundelse*/false);
-  } else { // if (ConditionalTrue) {
-    // Yes, remember that we are inside a conditional, then lex the next token.
-    CurPPLexer->pushConditionalLevel(IfToken.getLocation(), /*wasskip*/false,
-                                   /*foundnonskip*/true, /*foundelse*/false);
-  }
+   Token t;
+   getRawToken(IfToken.getLocation().getLocWithOffset(IfToken.getLength()+1), t);
+     // Should we include the stuff contained by this directive?
+   if (PPOpts->SingleFileParseMode && DER.IncludedUndefinedIds) {
+     // In 'single-file-parse mode' undefined identifiers trigger parsing of all
+     // the directive blocks.
+     CurPPLexer->pushConditionalLevel(IfToken.getLocation(), /*wasskip*/false,
+                                      /*foundnonskip*/false, /*foundelse*/false);
+   } else if (ConditionalTrue || isMacroVariability(getSpelling(t))) {
+     // Yes, remember that we are inside a conditional, then lex the next token.
+     CurPPLexer->pushConditionalLevel(IfToken.getLocation(), /*wasskip*/false,
+                                    /*foundnonskip*/true, /*foundelse*/false);
+   } else {
+     // No, skip the contents of this block.
+     SkipExcludedConditionalBlock(HashToken.getLocation(), IfToken.getLocation(),
+                                  /*Foundnonskip*/ false,
+                                  /*FoundElse*/ false);
+   }
 }
 
 /// HandleEndifDirective - Implements the \#endif directive.
@@ -2834,9 +2848,19 @@ void Preprocessor::HandleElseDirective(Token &Result, const Token &HashToken) {
     return;
   }
 
-  // Else, don't skip toalow analysis
-  CurPPLexer->pushConditionalLevel(CI.IfLoc, /*wasskip*/false,
+   Token t;
+   getRawToken(CI.IfLoc, t);
+   getRawToken(CI.IfLoc.getLocWithOffset(t.getLength()+1), t);
+   if (isMacroVariability(getSpelling(t))) {
+    // Else, don't skip toalow analysis
+    CurPPLexer->pushConditionalLevel(CI.IfLoc, /*wasskip*/false,
                                      /*foundnonskip*/false, /*foundelse*/true);
+   }else{
+     // Finally, skip the rest of the contents of this block.
+     SkipExcludedConditionalBlock(HashToken.getLocation(), CI.IfLoc,
+                                  /*Foundnonskip*/ true,
+                                  /*FoundElse*/ true, Result.getLocation());
+   }
 }
 
 /// HandleElifDirective - Implements the \#elif directive.
@@ -2878,6 +2902,17 @@ void Preprocessor::HandleElifDirective(Token &ElifToken,
     return;
   }
 
-  CurPPLexer->pushConditionalLevel(ElifToken.getLocation(), /*wasskip*/false,
+   Token t;
+   getRawToken(CI.IfLoc, t);
+   getRawToken(CI.IfLoc.getLocWithOffset(t.getLength()+1), t);
+   if (isMacroVariability(getSpelling(t))) {
+    // Else, don't skip toalow analysis
+    CurPPLexer->pushConditionalLevel(ElifToken.getLocation(), /*wasskip*/false,
                                      /*foundnonskip*/false, /*foundelse*/false);
+   }else{
+     // Finally, skip the rest of the contents of this block.
+     SkipExcludedConditionalBlock(ElifToken.getLocation(), CI.IfLoc,
+                                  /*Foundnonskip*/ true,
+                                  /*FoundElse*/ CI.FoundElse, ElifToken.getLocation());
+   }
 }

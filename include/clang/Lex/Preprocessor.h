@@ -344,7 +344,7 @@ public:
 
   bool hasVarConfigFile() { return VarConfigFile != nullptr; }
   bool isMacroVariability(std::string macroname) { 
-      return VariabilityMacros.find(macroname) != VariabilityMacros.end();
+      return !hasVarConfigFile() || (VariabilityMacros.find(macroname) != VariabilityMacros.end());
   }
 
 private:

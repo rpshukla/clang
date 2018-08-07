@@ -3899,10 +3899,14 @@ HandleDirective:
   if (!II) return false; // Not an identifier.
   if(II->getPPKeywordID() == tok::pp_if ||
      II->getPPKeywordID() == tok::pp_ifdef ||
-     II->getPPKeywordID() == tok::pp_ifndef){
-      // Return special split token
-      Result.setKind(tok::split);
-      return true;
+     II->getPPKeywordID() == tok::pp_ifndef) {
+      Token t;
+      PP->getRawToken(Result.getEndLoc().getLocWithOffset(1), t);
+      if(PP->isMacroVariability(PP->getSpelling(t))){
+        // Return special split token
+        Result.setKind(tok::split);
+        return true;
+      }
   }
 
   // We parsed the directive; lex a token with the new state.
