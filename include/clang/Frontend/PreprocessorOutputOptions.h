@@ -26,7 +26,7 @@ public:
   unsigned RewriteIncludes : 1;    ///< Preprocess include directives only.
   unsigned RewriteImports : 1;    ///< Include contents of transitively-imported modules.
   unsigned HasVarConfigFile  : 1;    ///< Has a config file for varibility-aware analysis
-  char* VarConfigFile;    ///< filepath
+  const char* VarConfigFile;    ///< filepath
 
 public:
   PreprocessorOutputOptions() {

@@ -2705,7 +2705,7 @@ static void ParsePreprocessorOutputArgs(PreprocessorOutputOptions &Opts,
   Opts.HasVarConfigFile = Args.hasArg(OPT_var_config);
 
   if(Arg* a = Args.getLastArg(OPT_var_config)){
-      a->dump();
+      Opts.VarConfigFile = a->getValue();
   }else{
       llvm::outs() << "NOTHING HERE\n";
   }
