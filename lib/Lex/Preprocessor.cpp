@@ -153,9 +153,9 @@ Preprocessor::Preprocessor(std::shared_ptr<PreprocessorOptions> PPOpts,
   if (this->PPOpts->GeneratePreamble)
     PreambleConditionalStack.startRecording();
 
-  if(VarConfigFile != nullptr){
+  if(Preprocessor::VarConfigFile != nullptr){
     std::ifstream infile;
-    infile.open (VarConfigFile);
+    infile.open (Preprocessor::VarConfigFile);
     std::string line;
     while(!infile.eof())  {
       getline(infile, line); 
@@ -967,6 +967,8 @@ bool Preprocessor::HandleComment(Token &result, SourceRange Comment) {
   Lex(result);
   return true;
 }
+
+const char* Preprocessor::VarConfigFile;
 
 ModuleLoader::~ModuleLoader() = default;
 

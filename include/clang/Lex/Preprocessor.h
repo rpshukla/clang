@@ -63,7 +63,6 @@ template<unsigned InternalLen> class SmallString;
 
 } // namespace llvm
 
-extern const char* VarConfigFile;
 namespace clang {
 
 class CodeCompletionHandler;
@@ -327,6 +326,7 @@ class Preprocessor {
   std::pair<int, bool> SkipMainFilePreamble;
 
 public:
+  static const char* VarConfigFile;
   struct PreambleSkipInfo {
     SourceLocation HashTokenLoc;
     SourceLocation IfTokenLoc;
@@ -2193,5 +2193,6 @@ public:
 using PragmaHandlerRegistry = llvm::Registry<PragmaHandler>;
 
 } // namespace clang
+
 
 #endif // LLVM_CLANG_LEX_PREPROCESSOR_H

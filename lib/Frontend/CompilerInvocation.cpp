@@ -20,6 +20,7 @@
 #include "clang/Frontend/LangStandard.h"
 #include "clang/Frontend/Utils.h"
 #include "clang/Lex/HeaderSearchOptions.h"
+#include "clang/Lex/Preprocessor.h"
 #include "clang/Lex/PreprocessorOptions.h"
 #include "clang/Serialization/ASTReader.h"
 #include "clang/Serialization/ModuleFileExtension.h"
@@ -2684,7 +2685,6 @@ static void ParsePreprocessorArgs(PreprocessorOptions &Opts, ArgList &Args,
     Opts.LexEditorPlaceholders = false;
 }
 
-const char* VarConfigFile = nullptr;
 static void ParsePreprocessorOutputArgs(PreprocessorOutputOptions &Opts,
                                         ArgList &Args,
                                         frontend::ActionKind Action) {
@@ -2703,12 +2703,11 @@ static void ParsePreprocessorOutputArgs(PreprocessorOutputOptions &Opts,
   Opts.RewriteIncludes = Args.hasArg(OPT_frewrite_includes);
   Opts.RewriteImports = Args.hasArg(OPT_frewrite_imports);
   Opts.UseLineDirectives = Args.hasArg(OPT_fuse_line_directives);
-  Opts.HasVarConfigFile = Args.hasArg(OPT_var_config);
 
   if(Arg* a = Args.getLastArg(OPT_var_config)){
-      VarConfigFile = Opts.VarConfigFile = a->getValue();
+      Preprocessor::VarConfigFile = a->getValue();
   }else{
-      llvm::outs() << "NOTHING HERE\n";
+      Preprocessor::VarConfigFile = nullptr;
   }
 
 
