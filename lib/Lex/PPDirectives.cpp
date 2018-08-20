@@ -2778,7 +2778,7 @@ void Preprocessor::HandleIfDirective(Token &IfToken,
      // the directive blocks.
      CurPPLexer->pushConditionalLevel(IfToken.getLocation(), /*wasskip*/false,
                                       /*foundnonskip*/false, /*foundelse*/false);
-   } else if (ConditionalTrue || isMacroVariability(getSpelling(t))) {
+   } else if (ConditionalTrue) {
      // Yes, remember that we are inside a conditional, then lex the next token.
      CurPPLexer->pushConditionalLevel(IfToken.getLocation(), /*wasskip*/false,
                                     /*foundnonskip*/true, /*foundelse*/false);
@@ -2902,17 +2902,8 @@ void Preprocessor::HandleElifDirective(Token &ElifToken,
     return;
   }
 
-   Token t;
-   getRawToken(CI.IfLoc, t);
-   getRawToken(CI.IfLoc.getLocWithOffset(t.getLength()+1), t);
-   if (isMacroVariability(getSpelling(t))) {
-    // Else, don't skip toalow analysis
-    CurPPLexer->pushConditionalLevel(ElifToken.getLocation(), /*wasskip*/false,
-                                     /*foundnonskip*/false, /*foundelse*/false);
-   }else{
      // Finally, skip the rest of the contents of this block.
      SkipExcludedConditionalBlock(ElifToken.getLocation(), CI.IfLoc,
                                   /*Foundnonskip*/ true,
                                   /*FoundElse*/ CI.FoundElse, ElifToken.getLocation());
-   }
 }

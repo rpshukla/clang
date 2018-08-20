@@ -3096,8 +3096,12 @@ bool Lexer::Lex(Token &Result) {
             isDef ^= true;
         }
         PP->getRawToken((*ci).IfLoc.getLocWithOffset(t.getLength()+1), t);
-        decls.push_back(isDef);
-        names.push_back(PP->getSpelling(t));
+        std::string name = PP->getSpelling(t);
+        //llvm::outs() << name << "\n";
+        if(PP->isMacroVariability(name)){
+          decls.push_back(isDef);
+          names.push_back(name);
+        }
       }
       Variability::PresenceCondition* pc;
       if(decls.size() > 0){
@@ -3897,11 +3901,11 @@ HandleDirective:
 
   IdentifierInfo *II = Result.getIdentifierInfo();
   if (!II) return false; // Not an identifier.
-  if(II->getPPKeywordID() == tok::pp_if ||
-     II->getPPKeywordID() == tok::pp_ifdef ||
+  if(II->getPPKeywordID() == tok::pp_ifdef ||
      II->getPPKeywordID() == tok::pp_ifndef) {
       Token t;
       PP->getRawToken(Result.getEndLoc().getLocWithOffset(1), t);
+      llvm::outs() << PP->getSpelling(t);
       if(PP->isMacroVariability(PP->getSpelling(t))){
         // Return special split token
         Result.setKind(tok::split);
