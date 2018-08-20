@@ -3091,6 +3091,9 @@ bool Lexer::Lex(Token &Result) {
       std::vector<std::string> names;
       for(Lexer::conditional_iterator ci = conditional_begin(); ci != conditional_end(); ++ci){
         PP->getRawToken((*ci).IfLoc, t);
+        if(t.getRawIdentifier() != "ifdef" && t.getRawIdentifier() != "ifndef"){
+            continue;
+        }
         bool isDef = t.getRawIdentifier() == "ifdef"; // ifdef or ifndef
         if((*ci).FoundElse){
             isDef ^= true;
@@ -3905,8 +3908,10 @@ HandleDirective:
      II->getPPKeywordID() == tok::pp_ifndef) {
       Token t;
       PP->getRawToken(Result.getEndLoc().getLocWithOffset(1), t);
-      llvm::outs() << PP->getSpelling(t);
-      if(PP->isMacroVariability(PP->getSpelling(t))){
+      if(PP->isMacroVariability(
+                  PP->getSourceManager()
+                  .getBufferName(Result.getEndLoc().
+                      getLocWithOffset(1)))){
         // Return special split token
         Result.setKind(tok::split);
         return true;

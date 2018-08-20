@@ -53,7 +53,7 @@
 using namespace clang;
 
 //===----------------------------------------------------------------------===//
-// Utility Methods for Preprocessor Directive Handling.
+//// Utility Methods for Preprocessor Directive Handling.
 //===----------------------------------------------------------------------===//
 
 MacroInfo *Preprocessor::AllocateMacroInfo(SourceLocation L) {
@@ -164,7 +164,7 @@ static bool warnByDefaultOnWrongCase(StringRef Include) {
       Ch += 'a' - 'A';
     // Normalize path separators for comparison purposes.
     else if (::llvm::sys::path::is_separator(Ch))
-      Ch = '/';
+              Ch = '/';
   }
 
   // The standard C/C++ and Posix headers
@@ -409,7 +409,7 @@ void Preprocessor::SkipExcludedConditionalBlock(SourceLocation HashTokenLoc,
     LexUnexpandedToken(Tok);
 
     // If this isn't an identifier directive (e.g. is "# 1\n" or "#\n", or
-    // something bogus), skip it.
+    //     // something bogus), skip it.
     if (Tok.isNot(tok::raw_identifier)) {
       CurPPLexer->ParsingPreprocessorDirective = false;
       // Restore comment saving mode.
@@ -894,7 +894,7 @@ void Preprocessor::HandleDirective(Token &Result) {
   Token SavedHash = Result;
 
   // Read the next token, the directive flavor.  This isn't expanded due to
-  // C99 6.10.3p8.
+  //   // C99 6.10.3p8.
   LexUnexpandedToken(Result);
 
   // C99 6.10.3p11: Is this preprocessor directive in macro invocation?  e.g.:
@@ -1214,7 +1214,7 @@ static bool ReadLineMarkerFlags(bool &IsFileEntry, bool &IsFileExit,
       SM.getDecomposedExpansionLoc(FlagTok.getLocation()).first;
     PresumedLoc PLoc = SM.getPresumedLoc(FlagTok.getLocation());
     if (PLoc.isInvalid())
-      return true;
+              return true;
 
     // If there is no include loc (main file) or if the include loc is in a
     // different physical file, then we aren't in a "1" line marker flag region.
@@ -1728,7 +1728,7 @@ void Preprocessor::HandleIncludeDirective(SourceLocation HashLoc,
     return;
   }
 
-  // Verify that there is nothing after the filename, other than EOD.  Note that
+    // Verify that there is nothing after the filename, other than EOD.  Note that
   // we allow macros that expand to nothing after the filename, because this
   // falls into the category of "#include pp-tokens new-line" specified in
   // C99 6.10.2p4.
@@ -2059,7 +2059,7 @@ void Preprocessor::HandleIncludeNextDirective(SourceLocation HashLoc,
   const FileEntry *LookupFromFile = nullptr;
   if (isInPrimaryFile() && LangOpts.IsHeaderFile) {
     // If the main file is a header, then it's either for PCH/AST generation,
-    // or libclang opened it. Either way, handle it as a normal include below
+    //     // or libclang opened it. Either way, handle it as a normal include below
     // and do not complain about include_next.
   } else if (isInPrimaryFile()) {
     Lookup = nullptr;
@@ -2348,7 +2348,7 @@ MacroInfo *Preprocessor::ReadOptionalMacroParameterListAndBody(
       isInvalid = true;
     else if (Tok.is(tok::unknown)) {
       // If we have an unknown token, it is something strange like "`".  Since
-      // all of valid characters would have lexed into a single character
+      //       // all of valid characters would have lexed into a single character
       // token of some sort, we know this is not a valid case.
       isInvalid = true;
     }
@@ -2462,7 +2462,7 @@ MacroInfo *Preprocessor::ReadOptionalMacroParameterListAndBody(
       // Get the next token of the macro.
       LexUnexpandedToken(Tok);
 
-      // Check for a valid macro arg identifier or __VA_OPT__.
+            // Check for a valid macro arg identifier or __VA_OPT__.
       if (!VAOCtx.isVAOptToken(Tok) &&
           (Tok.getIdentifierInfo() == nullptr ||
            MI->getParameterNum(Tok.getIdentifierInfo()) == -1)) {
@@ -2593,7 +2593,7 @@ void Preprocessor::HandleDefineDirective(
       // separation must be the same.  C99 6.10.3p2.
       else if (!OtherMI->isAllowRedefinitionsWithoutWarning() &&
                !MI->isIdenticalTo(*OtherMI, *this, /*Syntactic=*/LangOpts.MicrosoftExt)) {
-        Diag(MI->getDefinitionLoc(), diag::ext_pp_macro_redef)
+                  Diag(MI->getDefinitionLoc(), diag::ext_pp_macro_redef)
           << MacroNameTok.getIdentifierInfo();
         Diag(OtherMI->getDefinitionLoc(), diag::note_previous_definition);
       }
@@ -2725,17 +2725,23 @@ void Preprocessor::HandleIfdefDirective(Token &Result,
     CurPPLexer->pushConditionalLevel(DirectiveTok.getLocation(),
                                      /*wasskip*/false, /*foundnonskip*/false,
                                      /*foundelse*/false);
-  } else if ((!MI == isIfndef) || isMacroVariability(getSpelling(MacroNameTok))) {
+  } else if (!MI == isIfndef) {
     // Yes, remember that we are inside a conditional, then lex the next token.
     CurPPLexer->pushConditionalLevel(DirectiveTok.getLocation(),
                                      /*wasskip*/false, /*foundnonskip*/true,
                                      /*foundelse*/false);
-  }else{
-      // No, skip the contents of this block.
-     SkipExcludedConditionalBlock(HashToken.getLocation(),
-                                  DirectiveTok.getLocation(),
-                                  /*Foundnonskip*/ false,
-                                  /*FoundElse*/ false);
+  } else {
+    if(isMacroVariability(getSpelling(MacroNameTok))){
+        CurPPLexer->pushConditionalLevel(DirectiveTok.getLocation(),
+                                         /*wasskip*/false, /*foundnonskip*/true,
+                                         /*foundelse*/false);
+    }else{
+        // No, skip the contents of this block.
+        SkipExcludedConditionalBlock(HashToken.getLocation(),
+                                     DirectiveTok.getLocation(),
+                                     /*Foundnonskip*/ false,
+                                     /*FoundElse*/ false);
+    }
   }
 }
 
@@ -2746,14 +2752,12 @@ void Preprocessor::HandleIfDirective(Token &IfToken,
                                      bool ReadAnyTokensBeforeDirective) {
   ++NumIf;
 
-
   // Parse and evaluate the conditional expression.
   IdentifierInfo *IfNDefMacro = nullptr;
   const SourceLocation ConditionalBegin = CurPPLexer->getSourceLocation();
   const DirectiveEvalResult DER = EvaluateDirectiveExpression(IfNDefMacro);
   const bool ConditionalTrue = DER.Conditional;
   const SourceLocation ConditionalEnd = CurPPLexer->getSourceLocation();
-
 
   // If this condition is equivalent to #ifndef X, and if this is the first
   // directive seen, handle it for the multiple-include optimization.
@@ -2770,24 +2774,22 @@ void Preprocessor::HandleIfDirective(Token &IfToken,
                   SourceRange(ConditionalBegin, ConditionalEnd),
                   (ConditionalTrue ? PPCallbacks::CVK_True : PPCallbacks::CVK_False));
 
-   Token t;
-   getRawToken(IfToken.getLocation().getLocWithOffset(IfToken.getLength()+1), t);
-     // Should we include the stuff contained by this directive?
-   if (PPOpts->SingleFileParseMode && DER.IncludedUndefinedIds) {
-     // In 'single-file-parse mode' undefined identifiers trigger parsing of all
-     // the directive blocks.
-     CurPPLexer->pushConditionalLevel(IfToken.getLocation(), /*wasskip*/false,
-                                      /*foundnonskip*/false, /*foundelse*/false);
-   } else if (ConditionalTrue) {
-     // Yes, remember that we are inside a conditional, then lex the next token.
-     CurPPLexer->pushConditionalLevel(IfToken.getLocation(), /*wasskip*/false,
-                                    /*foundnonskip*/true, /*foundelse*/false);
-   } else {
-     // No, skip the contents of this block.
-     SkipExcludedConditionalBlock(HashToken.getLocation(), IfToken.getLocation(),
-                                  /*Foundnonskip*/ false,
-                                  /*FoundElse*/ false);
-   }
+  // Should we include the stuff contained by this directive?
+  if (PPOpts->SingleFileParseMode && DER.IncludedUndefinedIds) {
+    // In 'single-file-parse mode' undefined identifiers trigger parsing of all
+    // the directive blocks.
+    CurPPLexer->pushConditionalLevel(IfToken.getLocation(), /*wasskip*/false,
+                                     /*foundnonskip*/false, /*foundelse*/false);
+  } else if (ConditionalTrue) {
+    // Yes, remember that we are inside a conditional, then lex the next token.
+    CurPPLexer->pushConditionalLevel(IfToken.getLocation(), /*wasskip*/false,
+                                   /*foundnonskip*/true, /*foundelse*/false);
+  } else {
+    // No, skip the contents of this block.
+    SkipExcludedConditionalBlock(HashToken.getLocation(), IfToken.getLocation(),
+                                 /*Foundnonskip*/ false,
+                                 /*FoundElse*/ false);
+  }
 }
 
 /// HandleEndifDirective - Implements the \#endif directive.
@@ -2847,20 +2849,19 @@ void Preprocessor::HandleElseDirective(Token &Result, const Token &HashToken) {
                                      /*foundnonskip*/false, /*foundelse*/true);
     return;
   }
+  Token MacroNameTok;
+  getRawToken(CI.IfLoc, MacroNameTok);
+  getRawToken(MacroNameTok.getEndLoc().getLocWithOffset(1), MacroNameTok);
 
-   Token t;
-   getRawToken(CI.IfLoc, t);
-   getRawToken(CI.IfLoc.getLocWithOffset(t.getLength()+1), t);
-   if (isMacroVariability(getSpelling(t))) {
-    // Else, don't skip toalow analysis
+  if(!isMacroVariability(getSpelling(MacroNameTok))){
+    // Finally, skip the rest of the contents of this block.
+    SkipExcludedConditionalBlock(HashToken.getLocation(), CI.IfLoc,
+                                 /*Foundnonskip*/ true,
+                                 /*FoundElse*/ true, Result.getLocation());
+  }else{
     CurPPLexer->pushConditionalLevel(CI.IfLoc, /*wasskip*/false,
                                      /*foundnonskip*/false, /*foundelse*/true);
-   }else{
-     // Finally, skip the rest of the contents of this block.
-     SkipExcludedConditionalBlock(HashToken.getLocation(), CI.IfLoc,
-                                  /*Foundnonskip*/ true,
-                                  /*FoundElse*/ true, Result.getLocation());
-   }
+  }
 }
 
 /// HandleElifDirective - Implements the \#elif directive.
@@ -2882,7 +2883,7 @@ void Preprocessor::HandleElifDirective(Token &ElifToken,
     return;
   }
 
-  // If this is a top-level #elif, inform the MIOpt.
+    // If this is a top-level #elif, inform the MIOpt.
   if (CurPPLexer->getConditionalStackDepth() == 0)
     CurPPLexer->MIOpt.EnterTopLevelConditional();
 
@@ -2902,8 +2903,8 @@ void Preprocessor::HandleElifDirective(Token &ElifToken,
     return;
   }
 
-     // Finally, skip the rest of the contents of this block.
-     SkipExcludedConditionalBlock(ElifToken.getLocation(), CI.IfLoc,
-                                  /*Foundnonskip*/ true,
-                                  /*FoundElse*/ CI.FoundElse, ElifToken.getLocation());
+  // Finally, skip the rest of the contents of this block.
+  SkipExcludedConditionalBlock(
+      HashToken.getLocation(), CI.IfLoc, /*Foundnonskip*/ true,
+      /*FoundElse*/ CI.FoundElse, ElifToken.getLocation());
 }
