@@ -2731,17 +2731,16 @@ void Preprocessor::HandleIfdefDirective(Token &Result,
                                      /*wasskip*/false, /*foundnonskip*/true,
                                      /*foundelse*/false);
   } else {
-    if(isMacroVariability(getSpelling(MacroNameTok))){
+    if(isMacroVariability(getSpelling(MacroNameTok)))
         CurPPLexer->pushConditionalLevel(DirectiveTok.getLocation(),
                                          /*wasskip*/false, /*foundnonskip*/true,
                                          /*foundelse*/false);
-    }else{
+    else
         // No, skip the contents of this block.
         SkipExcludedConditionalBlock(HashToken.getLocation(),
                                      DirectiveTok.getLocation(),
                                      /*Foundnonskip*/ false,
                                      /*FoundElse*/ false);
-    }
   }
 }
 
