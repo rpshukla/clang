@@ -37,6 +37,15 @@ bool PresenceCondition::ShouldSkipOnCondition(PresenceCondition* other) {
 
 
 void PresenceCondition::solve(PresenceCondition* other){
+    if(toString() == other->toString()){
+        bool* ans = new bool[4];
+        ans[0] = true; // parser implies token
+        ans[1] = false; // parser implies not token
+        ans[2] = false; // not (token implies parser)
+        ans[3] = false; // not (parser implies token)
+        this->solve_map[other->toString()] = ans;
+        return;
+    }
     PresenceCondition* equ_1 = new And(this, (new Or(new Not(this), other)));
     PresenceCondition* equ_2 = new And(this, (new Or(new Not(this), new Not(other))));
 

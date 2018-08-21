@@ -3906,14 +3906,12 @@ HandleDirective:
   if (!II) return false; // Not an identifier.
   if(II->getPPKeywordID() == tok::pp_ifdef ||
      II->getPPKeywordID() == tok::pp_ifndef) {
-      Token t;
-      PP->getRawToken(Result.getEndLoc().getLocWithOffset(1), t);
-      if(PP->isMacroVariability(
-                  PP->getSourceManager()
-                  .getBufferName(Result.getEndLoc().
-                      getLocWithOffset(1)))){
+      std::string name = PP->getSourceManager().getBufferName(
+              Result.getEndLoc().getLocWithOffset(1));
+      if(PP->isMacroVariability(name)){
         // Return special split token
         Result.setKind(tok::split);
+        llvm::outs() << name << "\n";
         return true;
       }
   }
