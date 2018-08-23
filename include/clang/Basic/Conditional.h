@@ -24,7 +24,7 @@
 namespace Variability {
 
 enum PCType{
-    TRUE, AND, OR, NOT, LIT,
+    TRUE = 0, AND, OR, NOT, LIT,
 };
 
 class PresenceCondition;

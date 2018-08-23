@@ -9,7 +9,6 @@ const std::string AND_SYM = "&&";
 const std::string OR_SYM = "||";
 
 
-
 bool PresenceCondition::ShouldSplitOnCondition(PresenceCondition* other) {
     if(this->solve_map.find(other->toString()) == this->solve_map.end()){
         this->solve(other);
@@ -127,7 +126,7 @@ bool PresenceCondition::isSatisfiable() {
     }
     solver.add_clause(clause);
     clause.clear();
-    
+
     return solver.solve() == l_True;
 }
 
@@ -146,9 +145,9 @@ const std::string Literal::toString() {
 }
 
 const std::string And::toString() {
-    return (this->left->typeOfPC == OR ? "(":"") + this->left->toString() 
-        + (this->left->typeOfPC == OR ? ")":"") + " "+ AND_SYM +" " 
-        + (this->right->typeOfPC == OR ? "(":"") + this->right->toString() 
+    return (this->left->typeOfPC == OR ? "(":"") + this->left->toString()
+        + (this->left->typeOfPC == OR ? ")":"") + " "+ AND_SYM +" "
+        + (this->right->typeOfPC == OR ? "(":"") + this->right->toString()
         + (this->right->typeOfPC == OR ? ")":"");
 }
 
@@ -158,7 +157,7 @@ const std::string Or::toString() {
 
 const std::string Not::toString() {
     if(this->right->typeOfPC == OR
-       || this->right->typeOfPC == AND){
+            || this->right->typeOfPC == AND){
         return NOT_SYM+"(" + this->right->toString() +")";
     }
 
@@ -184,17 +183,17 @@ PresenceCondition* PresenceCondition::getList(std::vector<bool> declarations, st
         return new True();
     } else if (names.size() == 1) {
         return declarations[0] ?
-               static_cast<PresenceCondition*>(new Literal(names[0])) :
-               static_cast<PresenceCondition*>(new Not(new Literal(names[0])));
+            static_cast<PresenceCondition*>(new Literal(names[0])) :
+            static_cast<PresenceCondition*>(new Not(new Literal(names[0])));
     } else {
         PresenceCondition* pc = declarations[0] ?
-                                static_cast<PresenceCondition*>(new Literal(names[0])) :
-                                static_cast<PresenceCondition*>(new Not(new Literal(names[0])));
+            static_cast<PresenceCondition*>(new Literal(names[0])) :
+            static_cast<PresenceCondition*>(new Not(new Literal(names[0])));
 
         for (unsigned long i = 1, e = names.size(); i < e; ++i) {
             pc = new And(pc, declarations[i] ?
-                         static_cast<PresenceCondition*>(new Literal(names[i])) :
-                         static_cast<PresenceCondition*>(new Not(new Literal(names[i]))));
+                    static_cast<PresenceCondition*>(new Literal(names[i])) :
+                    static_cast<PresenceCondition*>(new Not(new Literal(names[i]))));
         }
         return pc;
     }
@@ -213,7 +212,7 @@ PresenceCondition* Or::toNegationNormal(){
     Or* pc = this;
     pc->left = pc->left->toNegationNormal();
     pc->right = pc->right->toNegationNormal();
-    
+
     if(pc->right->typeOfPC == TRUE){
         return pc->right;
     }

@@ -3085,6 +3085,8 @@ bool Lexer::Lex(Token &Result) {
   bool returnedToken = LexTokenInternal(Result, atPhysicalStartOfLine);
   // (After the LexTokenInternal call, the lexer might be destroyed.)
   assert((returnedToken || !isRawLex) && "Raw lex must succeed");
+  Variability::PresenceCondition* pc;
+  pc = new Variability::True();
   if(!isRawLex){
       Token t;
       std::vector<bool> decls;
@@ -3106,14 +3108,11 @@ bool Lexer::Lex(Token &Result) {
           names.push_back(name);
         }
       }
-      Variability::PresenceCondition* pc;
       if(decls.size() > 0){
           pc = Variability::PresenceCondition::getList(decls, names);
-      }else{
-          pc = new Variability::True();
       }
-      Result.setConditionalInfo(pc);
   }
+  Result.setConditionalInfo(pc);
   return returnedToken;
 }
 
