@@ -2850,7 +2850,7 @@ void Preprocessor::HandleElseDirective(Token &Result, const Token &HashToken) {
   }
   Token MacroNameTok;
   getRawToken(CI.IfLoc, MacroNameTok);
-  getRawToken(MacroNameTok.getEndLoc().getLocWithOffset(1), MacroNameTok);
+  getRawToken(MacroNameTok.getEndLoc().getLocWithOffset(1), MacroNameTok, true);
 
   if(!isMacroVariability(getSpelling(MacroNameTok))){
     // Finally, skip the rest of the contents of this block.
