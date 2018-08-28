@@ -3085,34 +3085,6 @@ bool Lexer::Lex(Token &Result) {
   bool returnedToken = LexTokenInternal(Result, atPhysicalStartOfLine);
   // (After the LexTokenInternal call, the lexer might be destroyed.)
   assert((returnedToken || !isRawLex) && "Raw lex must succeed");
-  Variability::PresenceCondition* pc;
-  pc = new Variability::True();
-  if(!isRawLex){
-      Token t;
-      std::vector<bool> decls;
-      std::vector<std::string> names;
-      for(Lexer::conditional_iterator ci = conditional_begin(); ci != conditional_end(); ++ci){
-        PP->getRawToken((*ci).IfLoc, t);
-        if(t.getRawIdentifier() != "ifdef" && t.getRawIdentifier() != "ifndef"){
-            continue;
-        }
-        bool isDef = t.getRawIdentifier() == "ifdef"; // ifdef or ifndef
-        if((*ci).FoundElse){
-            isDef ^= true;
-        }
-        PP->getRawToken((*ci).IfLoc.getLocWithOffset(t.getLength()+1), t);
-        std::string name = PP->getSpelling(t);
-        //llvm::outs() << name << "\n";
-        if(PP->isMacroVariability(name)){
-          decls.push_back(isDef);
-          names.push_back(name);
-        }
-      }
-      if(decls.size() > 0){
-          pc = Variability::PresenceCondition::getList(decls, names);
-      }
-  }
-  Result.setConditionalInfo(pc);
   return returnedToken;
 }
 

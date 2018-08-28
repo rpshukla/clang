@@ -85,7 +85,7 @@ enum AvailabilityResult {
 /// of all subclasses (not requiring more than the alignment of Decl) is
 /// asserted in DeclBase.cpp.
 class LLVM_ALIGNAS(/*alignof(uint64_t)*/ 8) Decl {
-  Variability::PresenceCondition* condition = new Variability::True(); // placeholder value til I fix things
+  Variability::PresenceCondition* condition = new Variability::True();
 public:
   void setConditional(Variability::PresenceCondition* pc){ this->condition = pc; }
   Variability::PresenceCondition* getConditional() const { return this->condition; }
@@ -306,7 +306,7 @@ private:
   /// global variable, etc.) that is lexically inside an objc container
   /// definition.
   unsigned TopLevelDeclInObjCContainer : 1;
-  
+
   /// \brief Whether statistic collection is enabled.
   static bool StatisticsEnabled;
 
@@ -632,7 +632,7 @@ protected:
     assert(isFromASTFile() && "Only works on a deserialized declaration");
     *((unsigned*)this - 2) = ID;
   }
-  
+
 public:
   /// \brief Determine the availability of the given declaration.
   ///
@@ -877,7 +877,7 @@ public:
 
   /// \brief Whether this particular Decl is a canonical one.
   bool isCanonicalDecl() const { return getCanonicalDecl() == this; }
-  
+
 protected:
   /// \brief Returns the next redeclaration or itself if this is the only decl.
   ///
@@ -954,10 +954,10 @@ public:
   /// \brief Retrieve the previous declaration that declares the same entity
   /// as this declaration, or NULL if there is no previous declaration.
   Decl *getPreviousDecl() { return getPreviousDeclImpl(); }
-  
+
   /// \brief Retrieve the most recent declaration that declares the same entity
   /// as this declaration, or NULL if there is no previous declaration.
-  const Decl *getPreviousDecl() const { 
+  const Decl *getPreviousDecl() const {
     return const_cast<Decl *>(this)->getPreviousDeclImpl();
   }
 
@@ -972,7 +972,7 @@ public:
 
   /// \brief Retrieve the most recent declaration that declares the same entity
   /// as this declaration (which may be this declaration).
-  const Decl *getMostRecentDecl() const { 
+  const Decl *getMostRecentDecl() const {
     return const_cast<Decl *>(this)->getMostRecentDeclImpl();
   }
 
@@ -1157,13 +1157,13 @@ protected:
 inline bool declaresSameEntity(const Decl *D1, const Decl *D2) {
   if (!D1 || !D2)
     return false;
-  
+
   if (D1 == D2)
     return true;
-  
+
   return D1->getCanonicalDecl() == D2->getCanonicalDecl();
 }
-  
+
 /// PrettyStackTraceDecl - If a crash occurs, indicate that it happened when
 /// doing something to a specific decl.
 class PrettyStackTraceDecl : public llvm::PrettyStackTraceEntry {
@@ -1515,7 +1515,7 @@ public:
   /// connected to this declaration context.
   ///
   /// For declaration contexts that have multiple semantically connected but
-  /// syntactically distinct contexts, such as C++ namespaces, this routine 
+  /// syntactically distinct contexts, such as C++ namespaces, this routine
   /// retrieves the complete set of such declaration contexts in source order.
   /// For example, given:
   ///
@@ -1777,7 +1777,7 @@ public:
 
   /// @brief Removes a declaration from this context.
   void removeDecl(Decl *D);
-    
+
   /// @brief Checks whether a declaration is in this context.
   bool containsDecl(Decl *D) const;
 
@@ -1913,7 +1913,7 @@ public:
   /// \brief Determine whether the given declaration is stored in the list of
   /// declarations lexically within this context.
   bool isDeclInLexicalTraversal(const Decl *D) const {
-    return D && (D->NextInContextAndBits.getPointer() || D == FirstDecl || 
+    return D && (D->NextInContextAndBits.getPointer() || D == FirstDecl ||
                  D == LastDecl);
   }
 

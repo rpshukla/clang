@@ -127,6 +127,9 @@ Parser::ParseStatementOrDeclaration(StmtVector &Stmts,
     Variability::PresenceCondition* ctx = this->getConditional();
     Variability::PresenceCondition* pc = this->Tok.getConditional();
 
+    pc->toString();
+    ctx->toString();
+
 
 
     this->condition = new Variability::And(ctx, pc);
@@ -145,7 +148,7 @@ Parser::ParseStatementOrDeclaration(StmtVector &Stmts,
     this->condition = ctx;
 
     return variant;
-    
+
   }else{
     return SplitableParseStatementOrDeclaration(Stmts, Allowed, TrailingElseLoc);
   }
@@ -160,7 +163,7 @@ StmtResult Parser::ParseVariantBody(StmtVector &PrevStmts,
   SourceLocation StartLoc = Tok.getLocation();
   StmtVector Stmts;
 
-    
+
   if(Tok.is(tok::split)) {
     ConsumeToken();
   }

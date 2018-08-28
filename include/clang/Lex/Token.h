@@ -75,7 +75,7 @@ public:
   enum TokenFlags {
     StartOfLine   = 0x01,  // At start of line or only after whitespace
                            // (considering the line after macro expansion).
-    LeadingSpace  = 0x02,  // Whitespace exists before this token (considering 
+    LeadingSpace  = 0x02,  // Whitespace exists before this token (considering
                            // whitespace after macro expansion).
     DisableExpand = 0x04,  // This identifier may never be macro expanded.
     NeedsCleaning = 0x08,  // Contained an escaped newline or trigraph.
@@ -174,6 +174,7 @@ public:
     PtrData = nullptr;
     UintData = 0;
     Loc = SourceLocation().getRawEncoding();
+    condition = nullptr;
   }
 
   IdentifierInfo *getIdentifierInfo() const {

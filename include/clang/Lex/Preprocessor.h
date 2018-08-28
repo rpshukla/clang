@@ -119,6 +119,12 @@ enum MacroUse {
   MU_Undef  = 2
 };
 
+struct VariabilityLocation{
+    bool isDef;
+    bool shouldUse;
+    std::string name;
+};
+
 /// \brief Engages in a tight little dance with the lexer to efficiently
 /// preprocess tokens.
 ///
@@ -130,6 +136,7 @@ class Preprocessor {
   friend class VariadicMacroScopeGuard;
 
   std::unordered_set<std::string> VariabilityMacros;
+  std::vector<VariabilityLocation> VariabilityStack;
 
   std::shared_ptr<PreprocessorOptions> PPOpts;
   DiagnosticsEngine        *Diags;
@@ -258,7 +265,7 @@ class Preprocessor {
   /// with this preprocessor.
   std::vector<CommentHandler *> CommentHandlers;
 
-  /// \brief True if we want to ignore EOF token and continue later on (thus 
+  /// \brief True if we want to ignore EOF token and continue later on (thus
   /// avoid tearing the Lexer and etc. down).
   bool IncrementalProcessing = false;
 
@@ -284,7 +291,7 @@ class Preprocessor {
   /// for preprocessing.
   SourceLocation CodeCompletionFileLoc;
 
-  /// \brief The source location of the \c import contextual keyword we just 
+  /// \brief The source location of the \c import contextual keyword we just
   /// lexed, if any.
   SourceLocation ModuleImportLoc;
 
@@ -297,7 +304,7 @@ class Preprocessor {
   /// \brief Whether the module import expects an identifier next. Otherwise,
   /// it expects a '.' or ';'.
   bool ModuleImportExpectsIdentifier = false;
-  
+
   /// \brief The source location of the currently-active
   /// \#pragma clang arc_cf_code_audited begin.
   SourceLocation PragmaARCCFCodeAuditedLoc;
@@ -343,7 +350,7 @@ public:
   };
 
   bool hasVarConfigFile() { return VarConfigFile != nullptr; }
-  bool isMacroVariability(std::string macroname) { 
+  bool isMacroVariability(std::string macroname) {
       return !hasVarConfigFile() || (VariabilityMacros.find(macroname) != VariabilityMacros.end());
   }
 
@@ -817,7 +824,7 @@ public:
   /// \brief Retrieve the preprocessor options used to initialize this
   /// preprocessor.
   PreprocessorOptions &getPreprocessorOpts() const { return *PPOpts; }
-  
+
   DiagnosticsEngine &getDiagnostics() const { return *Diags; }
   void setDiagnostics(DiagnosticsEngine &D) { Diags = &D; }
 
@@ -855,7 +862,7 @@ public:
   }
 
   /// \brief True if we are currently preprocessing a #if or #elif directive
-  bool isParsingIfOrElifDirective() const { 
+  bool isParsingIfOrElifDirective() const {
     return ParsingIfOrElifDirective;
   }
 
@@ -1248,6 +1255,10 @@ public:
   /// \brief Lex the next token for this preprocessor.
   void Lex(Token &Result);
 
+  void ManageMyStack(Token &Result);
+
+  void AssignConditional(Token &Result);
+
   void LexAfterModuleImport(Token &Result);
 
   void makeModuleVisible(Module *M, SourceLocation Loc);
@@ -1424,7 +1435,7 @@ public:
   void enableIncrementalProcessing(bool value = true) {
     IncrementalProcessing = value;
   }
-  
+
   /// \brief Specify the point at which code-completion will be performed.
   ///
   /// \param File the file in which code completion should occur. If
@@ -1615,7 +1626,7 @@ public:
   }
 
   /// \brief Plop the specified string into a scratch buffer and set the
-  /// specified token's location and length to it. 
+  /// specified token's location and length to it.
   ///
   /// If specified, the source location provides a location of the expansion
   /// point of the token.
@@ -1749,7 +1760,7 @@ public:
   void PoisonSEHIdentifiers(bool Poison = true); // Borland
 
   /// \brief Callback invoked when the lexer reads an identifier and has
-  /// filled in the tokens IdentifierInfo member. 
+  /// filled in the tokens IdentifierInfo member.
   ///
   /// This callback potentially macro expands it or turns it into a named
   /// token (like 'for').
@@ -1797,12 +1808,12 @@ public:
 
   /// \brief Retrieves the module that we're currently building, if any.
   Module *getCurrentModule();
-  
+
   /// \brief Allocate a new MacroInfo object with the provided SourceLocation.
   MacroInfo *AllocateMacroInfo(SourceLocation L);
 
   /// \brief Turn the specified lexer token into a fully checked and spelled
-  /// filename, e.g. as an operand of \#include. 
+  /// filename, e.g. as an operand of \#include.
   ///
   /// The caller is expected to provide a buffer that is large enough to hold
   /// the spelling of the filename, but is also expected to handle the case
@@ -1826,7 +1837,7 @@ public:
                               bool *IsMapped, bool SkipCache = false);
 
   /// \brief Get the DirectoryLookup structure used to find the current
-  /// FileEntry, if CurLexer is non-null and if applicable. 
+  /// FileEntry, if CurLexer is non-null and if applicable.
   ///
   /// This allows us to implement \#include_next and find directory-specific
   /// properties.
@@ -1836,7 +1847,7 @@ public:
   bool isInPrimaryFile() const;
 
   /// \brief Handle cases where the \#include name is expanded
-  /// from a macro as multiple tokens, which need to be glued together. 
+  /// from a macro as multiple tokens, which need to be glued together.
   ///
   /// This occurs for code like:
   /// \code
@@ -1919,7 +1930,7 @@ private:
   ///   - # (stringization) is followed by a macro parameter
   /// \param MacroNameTok - Token that represents the macro name
   /// \param ImmediatelyAfterHeaderGuard - Macro follows an #ifdef header guard
-  /// 
+  ///
   ///  Either returns a pointer to a MacroInfo object OR emits a diagnostic and
   ///  returns a nullptr if an invalid sequence of tokens is encountered.
   MacroInfo *ReadOptionalMacroParameterListAndBody(

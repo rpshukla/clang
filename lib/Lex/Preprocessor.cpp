@@ -96,12 +96,12 @@ Preprocessor::Preprocessor(std::shared_ptr<PreprocessorOptions> PPOpts,
       SkipMainFilePreamble(0, true),
       CurSubmoduleState(&NullSubmoduleState) {
   OwnsHeaderSearch = OwnsHeaders;
-  
+
   // Default to discarding comments.
   KeepComments = false;
   KeepMacroComments = false;
   SuppressIncludeNotFoundError = false;
-  
+
   // Macro expansion is enabled.
   DisableMacroExpansion = false;
   MacroExpansionInDirectivesOverride = false;
@@ -128,10 +128,10 @@ Preprocessor::Preprocessor(std::shared_ptr<PreprocessorOptions> PPOpts,
 
   // Initialize the pragma handlers.
   RegisterBuiltinPragmas();
-  
+
   // Initialize builtin macros like __LINE__ and friends.
   RegisterBuiltinMacros();
-  
+
   if(LangOpts.Borland) {
     Ident__exception_info        = getIdentifierInfo("_exception_info");
     Ident___exception_info       = getIdentifierInfo("__exception_info");
@@ -158,13 +158,13 @@ Preprocessor::Preprocessor(std::shared_ptr<PreprocessorOptions> PPOpts,
     infile.open (Preprocessor::VarConfigFile);
     std::string line;
     while(!infile.eof())  {
-      getline(infile, line); 
+      getline(infile, line);
       if(line != ""){
-        //llvm::outs() << line << "|"; 
+        //llvm::outs() << line << "|";
         VariabilityMacros.insert(line);
       }
     }
-    //llvm::outs() << "\n"; 
+    //llvm::outs() << "\n";
     infile.close();
   }
 }
@@ -387,7 +387,7 @@ void Preprocessor::recomputeCurLexerKind() {
     CurLexerKind = CLK_PTHLexer;
   else if (CurTokenLexer)
     CurLexerKind = CLK_TokenLexer;
-  else 
+  else
     CurLexerKind = CLK_CachingLexer;
 }
 
@@ -698,7 +698,7 @@ bool Preprocessor::HandleIdentifier(Token &Identifier) {
     if (IsSpecialVariadicMacro)
       II.setIsPoisoned(CurrentIsPoisoned);
   }
-  
+
   // If this identifier was poisoned, and if it was not produced from a macro
   // expansion, emit an error.
   if (II.isPoisoned() && CurPPLexer) {
@@ -744,7 +744,7 @@ bool Preprocessor::HandleIdentifier(Token &Identifier) {
   // like "#define TY typeof", "TY(1) x".
   if (II.isExtensionToken() && !DisableMacroExpansion)
     Diag(Identifier, diag::ext_token_used);
-  
+
   // If this is the 'import' contextual keyword following an '@', note
   // that the next token indicates a module name.
   //
@@ -789,12 +789,73 @@ void Preprocessor::Lex(Token &Result) {
       ReturnedToken = true;
       break;
     }
+    ManageMyStack(Result);
   } while (!ReturnedToken);
 
   if (Result.is(tok::code_completion))
     setCodeCompletionIdentifierInfo(Result.getIdentifierInfo());
 
   LastTokenWasAt = Result.is(tok::at);
+  AssignConditional(Result);
+}
+
+void Preprocessor::ManageMyStack(Token &Result){
+  if(!Result.is(tok::raw_identifier)){
+#define createName \
+    Token t;\
+    getRawToken(Result.getEndLoc().getLocWithOffset(1), t, true);\
+    std::string name; \
+    if(t.is(tok::raw_identifier)){ \
+      name = t.getRawIdentifier(); \
+    } else { \
+      name = getSpelling(t); \
+    }
+
+  IdentifierInfo *II = Result.getIdentifierInfo();
+    if (II){
+
+      if(II->getPPKeywordID() == tok::pp_ifdef){
+        createName
+        VariabilityStack.push_back({true, isMacroVariability(name), name});
+      }else if(II->getPPKeywordID() == tok::pp_ifndef){
+        createName
+        VariabilityStack.push_back({false, isMacroVariability(name), name});
+      }else if(II->getPPKeywordID() == tok::pp_else){
+        VariabilityStack.back().isDef ^= true;
+      }else if(II->getPPKeywordID() == tok::pp_endif){
+        VariabilityStack.pop_back();
+      }else if(II->getPPKeywordID() == tok::pp_if){
+        // not supported for variability aware analysis for now
+        createName
+        VariabilityStack.push_back({true, false, name});
+      }else if(II->getPPKeywordID() == tok::pp_elif){
+        // not supported for variability aware analysis for now
+        createName
+        VariabilityStack.pop_back(); // if this was supported, this value would need to be stored
+        // and taken into account when deciding what to push back onto the stack
+        VariabilityStack.push_back({true, false, name});
+      }
+    }
+  }
+
+#undef createName
+}
+
+void Preprocessor::AssignConditional(Token& Result){
+  Variability::PresenceCondition* pc = new Variability::True();
+  std::vector<bool> decls;
+  std::vector<std::string> names;
+  for(std::vector<VariabilityLocation>::iterator vLoc = VariabilityStack.begin(); vLoc != VariabilityStack.end(); ++vLoc) {
+    if(vLoc->shouldUse){
+      decls.push_back(vLoc->isDef);
+      names.push_back(vLoc->name);
+    }
+  }
+  if(decls.size() > 0){
+    delete pc;
+    pc = Variability::PresenceCondition::getList(decls, names);
+  }
+  Result.setConditionalInfo(pc);
 }
 
 /// \brief Lex a token following the 'import' contextual keyword.
@@ -802,15 +863,15 @@ void Preprocessor::Lex(Token &Result) {
 void Preprocessor::LexAfterModuleImport(Token &Result) {
   // Figure out what kind of lexer we actually have.
   recomputeCurLexerKind();
-  
+
   // Lex the next token.
   Lex(Result);
 
-  // The token sequence 
+  // The token sequence
   //
   //   import identifier (. identifier)*
   //
-  // indicates a module import directive. We already saw the 'import' 
+  // indicates a module import directive. We already saw the 'import'
   // contextual keyword, so now we're looking for the identifiers.
   if (ModuleImportExpectsIdentifier && Result.getKind() == tok::identifier) {
     // We expected to see an identifier here, and we did; continue handling
@@ -821,7 +882,7 @@ void Preprocessor::LexAfterModuleImport(Token &Result) {
     CurLexerKind = CLK_LexAfterModuleImport;
     return;
   }
-  
+
   // If we're expecting a '.' or a ';', and we got a '.', then wait until we
   // see the next identifier. (We can also see a '[[' that begins an
   // attribute-specifier-seq here under the C++ Modules TS.)
@@ -979,7 +1040,7 @@ CodeCompletionHandler::~CodeCompletionHandler() = default;
 void Preprocessor::createPreprocessingRecord() {
   if (Record)
     return;
-  
+
   Record = new PreprocessingRecord(getSourceManager());
   addPPCallbacks(std::unique_ptr<PPCallbacks>(Record));
 }
