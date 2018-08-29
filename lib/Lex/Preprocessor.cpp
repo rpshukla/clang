@@ -773,12 +773,15 @@ void Preprocessor::Lex(Token &Result) {
     switch (CurLexerKind) {
     case CLK_Lexer:
       ReturnedToken = CurLexer->Lex(Result);
+      AssignConditional(Result);
       break;
     case CLK_PTHLexer:
       ReturnedToken = CurPTHLexer->Lex(Result);
+      AssignConditional(Result);
       break;
     case CLK_TokenLexer:
       ReturnedToken = CurTokenLexer->Lex(Result);
+      AssignConditional(Result);
       break;
     case CLK_CachingLexer:
       CachingLex(Result);
@@ -787,6 +790,7 @@ void Preprocessor::Lex(Token &Result) {
     case CLK_LexAfterModuleImport:
       LexAfterModuleImport(Result);
       ReturnedToken = true;
+      AssignConditional(Result);
       break;
     }
     ManageMyStack(Result);
@@ -796,7 +800,7 @@ void Preprocessor::Lex(Token &Result) {
     setCodeCompletionIdentifierInfo(Result.getIdentifierInfo());
 
   LastTokenWasAt = Result.is(tok::at);
-  AssignConditional(Result);
+  //llvm::outs() << Result.getConditional()->toString() << "\n";
 }
 int death_count = 0;
 void Preprocessor::ManageMyStack(Token &Result){

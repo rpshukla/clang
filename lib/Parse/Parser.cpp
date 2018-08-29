@@ -644,11 +644,11 @@ Parser::ParseExternalDeclaration(ParsedAttributesWithRange &attrs,
 
   if(Result.get().isSingleDecl()){
     Result.get().getSingleDecl()->setConditional(pc);
-    Result.get().getSingleDecl()->dumpColor();
+    //Result.get().getSingleDecl()->dumpColor();
   }else{
     for(unsigned int i = 0; i < Result.get().getDeclGroup().size(); i++){
       Result.get().getDeclGroup()[i]->setConditional(pc);
-      Result.get().getDeclGroup()[i]->dumpColor();
+      //Result.get().getDeclGroup()[i]->dumpColor();
     }
   }
   return Result;

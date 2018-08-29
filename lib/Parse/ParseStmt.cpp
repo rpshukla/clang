@@ -128,9 +128,17 @@ Parser::ParseStatementOrDeclaration(StmtVector &Stmts,
     Variability::PresenceCondition* pc = this->Tok.getConditional();
 
 
+    Token t;
+    PP.getRawToken(Tok.getEndLoc().getLocWithOffset(1), t, true);
+    std::string name = PP.getSpelling(t);
+
+    //llvm::outs() << "Starting Split. CTX: " << ctx->toString()
+        //<< "    PC: " << pc->toString()
+        //<< " with: " << name
+        //<< "\n";
+
     this->condition = new Variability::And(ctx, pc);
     StmtResult sr = ParseVariantBody(Stmts, Allowed, TrailingElseLoc);
-
 
     PP.Backtrack();
     this->condition = new Variability::And(ctx, new Variability::Not(pc));
