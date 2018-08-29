@@ -52,7 +52,6 @@ void Parser::SplitOrConsume(Token &Result){
   TryAgain:
   PP.EnableBacktrackAtThisPos();
   PP.Lex(Result);
-  Result.getConditional()->toString();
 
   if(!this->getConditional()->ShouldSplitOnCondition(Result.getConditional())){
     PP.CommitBacktrackedTokens();
@@ -626,16 +625,18 @@ bool Parser::ParseTopLevelDecl(DeclGroupPtrTy &Result) {
   return false;
 }
 
+bool Token::IsASplitToken(){
+    return is(tok::split);
+}
 
 Parser::DeclGroupPtrTy
 Parser::ParseExternalDeclaration(ParsedAttributesWithRange &attrs,
                                  ParsingDeclSpec *DS) {
-  while(Tok.is(tok::split)){
+  while(Tok.IsASplitToken()){
     ConsumeToken();
   }
 
   Variability::PresenceCondition* pc = Tok.getConditional();
-  pc->toString();
 
   getCurScope()->setConditional(pc);
   DeclGroupPtrTy Result = SplitableParseExternalDeclaration(attrs, DS);
@@ -643,9 +644,11 @@ Parser::ParseExternalDeclaration(ParsedAttributesWithRange &attrs,
 
   if(Result.get().isSingleDecl()){
     Result.get().getSingleDecl()->setConditional(pc);
+    Result.get().getSingleDecl()->dumpColor();
   }else{
     for(unsigned int i = 0; i < Result.get().getDeclGroup().size(); i++){
       Result.get().getDeclGroup()[i]->setConditional(pc);
+      Result.get().getDeclGroup()[i]->dumpColor();
     }
   }
   return Result;

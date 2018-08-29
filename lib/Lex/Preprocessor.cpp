@@ -798,31 +798,37 @@ void Preprocessor::Lex(Token &Result) {
   LastTokenWasAt = Result.is(tok::at);
   AssignConditional(Result);
 }
-
+int death_count = 0;
 void Preprocessor::ManageMyStack(Token &Result){
-  if(!Result.is(tok::raw_identifier)){
+  static bool wasEndOfDirective = false;
+  //llvm::outs() << "DC:" << death_count++ << "\n";
+  if(!Result.is(tok::raw_identifier) && !Result.isAnnotation() && !Result.IsASplitToken()){
 #define createName \
     Token t;\
     getRawToken(Result.getEndLoc().getLocWithOffset(1), t, true);\
-    std::string name; \
-    if(t.is(tok::raw_identifier)){ \
-      name = t.getRawIdentifier(); \
-    } else { \
-      name = getSpelling(t); \
-    }
+    std::string name = getSpelling(t);
+
+
 
   IdentifierInfo *II = Result.getIdentifierInfo();
-    if (II){
-
+    if (II && !wasEndOfDirective && II->getPPKeywordID()){
+      //llvm::outs() << "Allowed   " << Result.getName() << ":" << getSpelling(Result)
+        //<< "   Flags: " << Result.getFlags()
+        //<< "   PPID: " << II->getPPKeywordID()
+        //<< "\n";
       if(II->getPPKeywordID() == tok::pp_ifdef){
         createName
+        //llvm::outs() << "Push: " << name << "\n";
         VariabilityStack.push_back({true, isMacroVariability(name), name});
       }else if(II->getPPKeywordID() == tok::pp_ifndef){
         createName
+        //llvm::outs() << "Push: ~" << name << "\n";
         VariabilityStack.push_back({false, isMacroVariability(name), name});
       }else if(II->getPPKeywordID() == tok::pp_else){
+        //llvm::outs() << "Flip\n";
         VariabilityStack.back().isDef ^= true;
       }else if(II->getPPKeywordID() == tok::pp_endif){
+        //llvm::outs() << "Pop\n";
         VariabilityStack.pop_back();
       }else if(II->getPPKeywordID() == tok::pp_if){
         // not supported for variability aware analysis for now
@@ -836,6 +842,7 @@ void Preprocessor::ManageMyStack(Token &Result){
         VariabilityStack.push_back({true, false, name});
       }
     }
+    wasEndOfDirective = Result.is(tok::eod);
   }
 
 #undef createName

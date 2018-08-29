@@ -3877,12 +3877,12 @@ HandleDirective:
   if (!II) return false; // Not an identifier.
   if(II->getPPKeywordID() == tok::pp_ifdef ||
      II->getPPKeywordID() == tok::pp_ifndef) {
-      std::string name = PP->getSourceManager().getBufferName(
-              Result.getEndLoc().getLocWithOffset(1));
+      Token t;
+      PP->getRawToken(Result.getEndLoc().getLocWithOffset(1), t, true);
+      std::string name = PP->getSpelling(t);
       if(PP->isMacroVariability(name)){
         // Return special split token
         Result.setKind(tok::split);
-        llvm::outs() << name << "\n";
         return true;
       }
   }

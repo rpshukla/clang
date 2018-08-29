@@ -123,18 +123,13 @@ StmtResult
 Parser::ParseStatementOrDeclaration(StmtVector &Stmts,
                                     AllowedConstructsKind Allowed,
                                     SourceLocation *TrailingElseLoc) {
-  if(Tok.is(tok::split)) {
+  if(Tok.IsASplitToken()) {
     Variability::PresenceCondition* ctx = this->getConditional();
     Variability::PresenceCondition* pc = this->Tok.getConditional();
-
-    pc->toString();
-    ctx->toString();
-
 
 
     this->condition = new Variability::And(ctx, pc);
     StmtResult sr = ParseVariantBody(Stmts, Allowed, TrailingElseLoc);
-
 
 
     PP.Backtrack();
@@ -150,7 +145,8 @@ Parser::ParseStatementOrDeclaration(StmtVector &Stmts,
     return variant;
 
   }else{
-    return SplitableParseStatementOrDeclaration(Stmts, Allowed, TrailingElseLoc);
+    StmtResult sr = SplitableParseStatementOrDeclaration(Stmts, Allowed, TrailingElseLoc);
+    return sr;
   }
 }
 /// ParseVariantBody
@@ -164,14 +160,14 @@ StmtResult Parser::ParseVariantBody(StmtVector &PrevStmts,
   StmtVector Stmts;
 
 
-  if(Tok.is(tok::split)) {
+  if(Tok.IsASplitToken()) {
     ConsumeToken();
   }
 
   //llvm::outs() << getConditional()->ShouldJoinOnCondition(Tok.getConditional())
       //<< getConditional()->toString() << "   "
       //<< Tok.getConditional()->toString() << "   "
-      //<< " " << PP.getSpelling(Tok) << "\n";
+      //<< " " << Tok.getName() << "\n";
 
   while (!getConditional()->ShouldJoinOnCondition(Tok.getConditional()) &&
          Tok.isNot(tok::eof)) {
