@@ -642,7 +642,8 @@ Parser::ParseExternalDeclaration(ParsedAttributesWithRange &attrs,
   DeclGroupPtrTy Result = SplitableParseExternalDeclaration(attrs, DS);
   getCurScope()->setConditional(Tok.getConditional());
 
-  if(Result.get().isSingleDecl()){
+  if(Result.get().isNull()){
+  }else if(Result.get().isSingleDecl()){
     Result.get().getSingleDecl()->setConditional(pc);
     //Result.get().getSingleDecl()->dumpColor();
   }else{
