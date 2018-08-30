@@ -1705,7 +1705,6 @@ NamedDecl *LookupResult::getAcceptableDeclSlow(NamedDecl *D) const {
 
 void LookupResult::clearForCondition(Variability::PresenceCondition* pc){
   auto i = begin();
-  int in = 0;
   while(i != end()){
     i->getConditional()->toString();
     if(pc->ShouldSkipOnCondition(i->getConditional())){

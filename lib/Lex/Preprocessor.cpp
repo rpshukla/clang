@@ -806,7 +806,7 @@ int death_count = 0;
 void Preprocessor::ManageMyStack(Token &Result){
   static bool wasEndOfDirective = false;
   //llvm::outs() << "DC:" << death_count++ << "\n";
-  if(!Result.is(tok::raw_identifier) && !Result.isAnnotation() && !Result.IsASplitToken()){
+  if(!Result.is(tok::raw_identifier) && !Result.isAnnotation() && !Result.is(tok::split)){
 #define createName \
     Token t;\
     getRawToken(Result.getEndLoc().getLocWithOffset(1), t, true);\

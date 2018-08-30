@@ -625,14 +625,11 @@ bool Parser::ParseTopLevelDecl(DeclGroupPtrTy &Result) {
   return false;
 }
 
-bool Token::IsASplitToken(){
-    return is(tok::split);
-}
 
 Parser::DeclGroupPtrTy
 Parser::ParseExternalDeclaration(ParsedAttributesWithRange &attrs,
                                  ParsingDeclSpec *DS) {
-  while(Tok.IsASplitToken()){
+  while(Tok.is(tok::split)){
     ConsumeToken();
   }
 

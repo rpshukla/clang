@@ -123,7 +123,7 @@ StmtResult
 Parser::ParseStatementOrDeclaration(StmtVector &Stmts,
                                     AllowedConstructsKind Allowed,
                                     SourceLocation *TrailingElseLoc) {
-  if(Tok.IsASplitToken()) {
+  if(Tok.is(tok::split)) {
     Variability::PresenceCondition* ctx = this->getConditional();
     Variability::PresenceCondition* pc = this->Tok.getConditional();
 
@@ -168,7 +168,7 @@ StmtResult Parser::ParseVariantBody(StmtVector &PrevStmts,
   StmtVector Stmts;
 
 
-  if(Tok.IsASplitToken()) {
+  if(Tok.is(tok::split)) {
     ConsumeToken();
   }
 
