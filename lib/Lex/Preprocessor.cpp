@@ -812,27 +812,30 @@ void Preprocessor::ManageMyStack(Token &Result){
     getRawToken(Result.getEndLoc().getLocWithOffset(1), t, true);\
     std::string name = getSpelling(t);
 
+      //llvm::outs() << "Attempted   " << Result.getName() << ":" << getSpelling(Result)
+        //<< "   Flags: " << Result.getFlags()
+        //<< "\n";
 
 
   IdentifierInfo *II = Result.getIdentifierInfo();
-    if (II && !wasEndOfDirective && II->getPPKeywordID()){
+    if (II && (!wasEndOfDirective || getSpelling(Result) == "ifdef" || getSpelling(Result) == "ifndef") && II->getPPKeywordID()){
       //llvm::outs() << "Allowed   " << Result.getName() << ":" << getSpelling(Result)
         //<< "   Flags: " << Result.getFlags()
         //<< "   PPID: " << II->getPPKeywordID()
         //<< "\n";
       if(II->getPPKeywordID() == tok::pp_ifdef){
         createName
-        //llvm::outs() << "Push: " << name << "\n";
+        //llvm::outs() << ")))Push: " << name << "\n";
         VariabilityStack.push_back({true, isMacroVariability(name), name});
       }else if(II->getPPKeywordID() == tok::pp_ifndef){
         createName
-        //llvm::outs() << "Push: ~" << name << "\n";
+        //llvm::outs() << ")))Push: ~" << name << "\n";
         VariabilityStack.push_back({false, isMacroVariability(name), name});
       }else if(II->getPPKeywordID() == tok::pp_else){
-        //llvm::outs() << "Flip\n";
+        //llvm::outs() << ")))Flip\n";
         VariabilityStack.back().isDef ^= true;
       }else if(II->getPPKeywordID() == tok::pp_endif){
-        //llvm::outs() << "Pop\n";
+        //llvm::outs() << ")))Pop\n";
         VariabilityStack.pop_back();
       }else if(II->getPPKeywordID() == tok::pp_if){
         // not supported for variability aware analysis for now
@@ -853,18 +856,22 @@ void Preprocessor::ManageMyStack(Token &Result){
 }
 
 void Preprocessor::AssignConditional(Token& Result){
-  Variability::PresenceCondition* pc = new Variability::True();
+  Variability::PresenceCondition* pc;
   std::vector<bool> decls;
   std::vector<std::string> names;
-  for(std::vector<VariabilityLocation>::iterator vLoc = VariabilityStack.begin(); vLoc != VariabilityStack.end(); ++vLoc) {
+  for(auto vLoc = VariabilityStack.begin(); vLoc != VariabilityStack.end(); ++vLoc) {
     if(vLoc->shouldUse){
+      //llvm::outs() << "Pushing decl:" << vLoc->isDef << "\n";;
       decls.push_back(vLoc->isDef);
+      //llvm::outs() << "Pushing name:" << vLoc->name << "\n";;
       names.push_back(vLoc->name);
+      //llvm::outs() << "Done Pushing\n";
     }
   }
   if(decls.size() > 0){
-    delete pc;
     pc = Variability::PresenceCondition::getList(decls, names);
+  }else{
+    pc = new Variability::True();
   }
   Result.setConditionalInfo(pc);
 }
