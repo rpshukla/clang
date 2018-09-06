@@ -1705,16 +1705,18 @@ NamedDecl *LookupResult::getAcceptableDeclSlow(NamedDecl *D) const {
 
 void LookupResult::clearForCondition(Variability::PresenceCondition* pc){
   auto i = begin();
+  bool removed;
   while(i != end()){
     i->getConditional()->toString();
     if(pc->ShouldSkipOnCondition(i->getConditional())){
       Decls.erase(i);
       i--;
+      removed = true;
     }
     i++;
   }
 
-  if(empty()){
+  if(empty() && removed){
     ResultKind = NotFound;
   }
 }
@@ -1722,6 +1724,7 @@ void LookupResult::clearForCondition(Variability::PresenceCondition* pc){
 void LookupResult::TryAndResolveContextualAmbiguity(){
   auto i = begin();
   NamedDecl* one = *(i++);
+  bool removed;
   while(i != end()){
     if(one->getConditional()->ShouldSkipOnCondition(i->getConditional())
             && one->getKind() == i->getKind()){
@@ -1733,25 +1736,29 @@ void LookupResult::TryAndResolveContextualAmbiguity(){
         }
       }
       Decls.erase(i--);
+      removed = true;
     }
     i++;
   }
 
-  if(Decls.size() == 1){
-    ResultKind = Found;
-  } else if (Decls.size() > 1){
-    VariantDecl* d = VariantDecl::Create(one->getASTContext(),
-        one->getDeclContext(), one->getLocation(), one->getIdentifier());
-      d->innerKind = one->getKind();
-      i = begin();
-      one = *(i++);
-      while(i != end()){
-        i++;
-        d->choices.push_back(*i);
-      }
-      Decls.clear();
-      //addDecl(d);
-      addDecl(one); // Temporary, return first value
+  if(removed){
+    // if adding this removed part fixes it, clearly this isn't correct
+    if(Decls.size() == 1){
+      ResultKind = Found;
+    } else if (Decls.size() > 1){
+      VariantDecl* d = VariantDecl::Create(one->getASTContext(),
+          one->getDeclContext(), one->getLocation(), one->getIdentifier());
+        d->innerKind = one->getKind();
+        i = begin();
+        one = *(i++);
+        while(i != end()){
+          i++;
+          d->choices.push_back(*i);
+        }
+        Decls.clear();
+        //addDecl(d);
+        addDecl(one); // Temporary, return first value
+    }
   }
 
 }
