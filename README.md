@@ -93,7 +93,6 @@ build/bin/clang++
 
 ## How to Improve
 Some know flaws:
-- Fails to get through most C++ header files
 - Certain programs cause it to crash
 
 Some things that could be improved:
