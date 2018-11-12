@@ -57,6 +57,11 @@ Since this is just a modified version of clang, the [official
 documentation](https://clang.llvm.org/get_started.html) is a
 great place to go for build options.
 
+The cmake command I used was 
+```
+CXX=clang++ CC=clang cmake -DCMAKE_BUILD_TYPE=DEBUG -DLLVM_INCLUDE_TESTS=OFF -DLLVM_USE_LINKER=lld -DLLVM_TARGETS_TO_BUILD=X86 -DCMAKE_EXPORT_COMPILE_COMMANDS=ON -DLLVM_INCLUDE_EXAMPLES=OFF -DLLVM_BUILD_EXAMPLES=OFF -DLLVM_BUILD_TESTS=OFF -G "Ninja" ../.llvm
+```
+
 ## How to Use
 Now that you have built the project. If you go into build/bin, there will be a
 whole bunch of binaries. For this, there are two important ones. clang and
