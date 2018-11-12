@@ -3,7 +3,7 @@ A variability-aware analysis tool built on top of the clang source code.
 <!-- Who, Where, When -->
 This was developed as part of [SMR](https://sarahnadi.org/smr/) in collaboration with [IBM](https://www-01.ibm.com/ibm/cas/canada/).
 
-Written by Jacob Reckhard and Sarah Nadi
+Written by Jacob Reckhard and Sarah Nadi<br>
 Emails: reckhard@ualberta.ca, nadi@ualberta.ca
 
 <!-- What -->
