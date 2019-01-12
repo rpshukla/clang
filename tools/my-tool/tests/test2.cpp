@@ -1,7 +1,7 @@
 #ifdef A
 int a = 3;
-a++;
-#ifdef B
-a += 3;
 #endif
+
+#ifdef B
+a++
 #endif

@@ -33,22 +33,6 @@ cl::list<std::string> DesiredNamesOpt(
     cl::desc("[Names of preprocessor variables which should be analyzed]"),
     cl::cat(MyToolCategory));
 
-// TODO: remove
-#ifdef FOO
-
-#ifdef B
-#ifdef C
-#endif
-#endif
-
-#ifdef D
-#endif
-
-#endif
-
-#ifdef BANG
-#endif
-
 /**
  * Stores names of preprocessor variables which we are interested in analyzing.
  */
@@ -228,10 +212,20 @@ int main(int argc, const char **argv) {
   // Traverse from each IfdefNode through its parents and print the conjuctions
   for (unsigned int i = 0; i < ifdefNodes.size(); i++) {
     IfdefNode currentNode = ifdefNodes[i];
-    outs() << ifdefNodes[i].name;
+
+    std::vector<std::string> names;
+    names.push_back(currentNode.name);
+
     while (currentNode.parent != nullptr) {
       currentNode = *(currentNode.parent);
-      outs() << " && " << currentNode.name;
+      names.push_back(currentNode.name);
+    }
+
+    // Print in reverse order (parents first)
+    outs() << names[names.size() - 1];
+    for (unsigned int i = 1; i < names.size(); i++) {
+      outs() << " && ";
+      outs() << names[names.size() - i - 1];
     }
     outs() << "\n";
   }

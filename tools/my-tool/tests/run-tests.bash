@@ -14,3 +14,27 @@ popd > /dev/null
 echo '-----test1-----'
 $BD/bin/my-tool A B test1.cpp -- clang++ test test1.cpp
 echo
+
+echo '-----test2-----'
+$BD/bin/my-tool A B test2.cpp -- clang++ test test2.cpp
+echo
+
+echo '-----test3-----'
+$BD/bin/my-tool A B test3.cpp -- clang++ test test3.cpp
+echo
+
+echo '-----test4-----'
+$BD/bin/my-tool A B test4.cpp -- clang++ test test4.cpp
+echo
+
+echo '-----test5-----'
+$BD/bin/my-tool A B C test5.cpp -- clang++ test test5.cpp
+echo
+
+echo '-----test6-----'
+$BD/bin/my-tool A B test6.cpp -- clang++ test test6.cpp
+echo
+
+echo '-----test7-----'
+$BD/bin/my-tool A B C D E test7.cpp -- clang++ test test7.cpp
+echo

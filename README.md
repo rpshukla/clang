@@ -1,5 +1,7 @@
 # Analysing ifdef conditions using clang
 
+This tool was built using the clang LibTooling library. My source code is located in tools/my-tool
+
 ## Build instructions
 Clone the llvm repository:
 ```bash
@@ -28,14 +30,22 @@ make
 ```
 
 ## Running Instructions
-TODO
 
-Usage:
+### Running tests
+I have placed test files in the "tests" directory of the tool. Simply run the "run-tests.bash" script to run the tool on all the test files.
 
 ``` bash
-$BD/bin/my-tool -p <build-directory> [desired preprocessor variable names] [sources]
+cd path/to/clang/tools/my-tool
+./run-tests.bash
 ```
-Note: "build-directory" refers to the build directory of the code being analyzed. "sources" refers to the source files to analyze.
+### Command line usage
 
-All the names of preprocessor variables to analyze need to be specified.
+``` bash
+export BD=path/to/build
+$BD/bin/my-tool [desired preprocessor variable names] [sources] -- [compile commands]
+```
+Note: "sources" refers to the source files to analyze.
 
+Note: compile commands are only required since all clang tools require them. However, since this tool only uses the preprocessor, it doesn't really matter what these commands are.
+
+Note: All the names of preprocessor variables to analyze need to be specified.
