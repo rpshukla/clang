@@ -23,6 +23,16 @@ static cl::OptionCategory MyToolCategory("my-tool options");
 // It's nice to have this help message in all tools.
 static cl::extrahelp CommonHelp(CommonOptionsParser::HelpMessage);
 
+// A help message for this specific tool can be added afterwards.
+static cl::extrahelp MoreHelp("\nMore help text...\n");
+
+// Declare command line option for list of desired preprocessor variable names
+// Add to MyToolCategory using cl::cat
+cl::list<std::string> DesiredNamesOpt(
+    cl::Positional,
+    cl::desc("[Names of preprocessor variables which should be analyzed]"),
+    cl::cat(MyToolCategory));
+
 // TODO: remove
 #ifdef FOO
 
@@ -39,10 +49,35 @@ static cl::extrahelp CommonHelp(CommonOptionsParser::HelpMessage);
 #ifdef BANG
 #endif
 
-// TODO: make not global
-class IfdefNode;
-std::vector<IfdefNode> ifdefNodes;
-std::unordered_set<std::string> desiredNames = {"FOO", "BANG", "B", "C", "D"};
+/**
+ * Stores names of preprocessor variables which we are interested in analyzing.
+ */
+class DesiredNames {
+public:
+  void insert(std::string name) {
+    names.insert(name);
+    predefines += "\n#define " + name;
+  }
+
+  /**
+   * Returns true if name in this->names
+   */
+  bool contains(std::string name) {
+    return names.find(name) != names.end();
+  }
+
+  /**
+   * Returns string which can be used as a predefine to define all of the
+   * desired names
+   */
+  std::string getPredefines() {
+    return predefines;
+  }
+
+private:
+  std::unordered_set<std::string> names;
+  std::string predefines;
+} desiredNames;
 
 
 /**
@@ -64,6 +99,8 @@ public:
 
   IfdefNode *parent;
 };
+// The global list of ifdefNodes
+std::vector<IfdefNode> ifdefNodes;
 
 /**
  * Checks to see if one Ifdefnode is nested inside another Ifdefnode. If so,
@@ -108,7 +145,7 @@ public:
 
     // Get the actual identifier string following #ifdef
     std::string name = MacroNameTok.getIdentifierInfo()->getName();
-    if (desiredNames.find(name) != desiredNames.end()) {
+    if (desiredNames.contains(name)) {
       IfdefNode node(name);
       node.startLocation = Loc;
       ifdefNodes.push_back(node);
@@ -119,7 +156,7 @@ public:
    * Called whenever and endif is seen.
    */
   virtual void Endif(clang::SourceLocation Loc, clang::SourceLocation IfLoc) {
-    // Check which Ifdefnode the endif corresponds to
+    // Check which IfdefNode the endif corresponds to
     for (unsigned int i = 0; i < ifdefNodes.size(); i++) {
       if(ifdefNodes[i].startLocation == IfLoc) {
         ifdefNodes[i].setEndLocation(Loc);
@@ -141,14 +178,11 @@ public:
     this->sourceManager = &(CI.getSourceManager());
     clang::Preprocessor &preprocessor = CI.getPreprocessor();
 
-    std::string predefines = preprocessor.getPredefines();
     // Defines all preprocessor variables we may want to check so that the
     // contents of any ifdefs are accessible
-    preprocessor.setPredefines(predefines + "\n#define FOO\n"
-                               "\n#define BANG\n"
-                               "\n#define B\n"
-                               "\n#define C\n"
-                               "\n#define D\n");
+    std::string predefines = preprocessor.getPredefines();
+    predefines += desiredNames.getPredefines();
+    preprocessor.setPredefines(predefines);
 
     std::unique_ptr<IfdefPPCallbacks> callbacks(new IfdefPPCallbacks);
     preprocessor.addPPCallbacks(std::move(callbacks));
@@ -166,9 +200,9 @@ private:
    * Construct tree of ifdef blocks
    */
   void constructIfdefTree() {
-    // TODO: optimize
     for (unsigned int i = 0; i < ifdefNodes.size(); i++) {
       for (unsigned int j = 0; j < ifdefNodes.size(); j++) {
+        if (i == j) continue;
         checkNested(ifdefNodes[i], ifdefNodes[j], *sourceManager);
       }
     }
@@ -177,17 +211,21 @@ private:
   clang::SourceManager *sourceManager;
 };
 
-// A help message for this specific tool can be added afterwards.
-static cl::extrahelp MoreHelp("\nMore help text...\n");
-
 int main(int argc, const char **argv) {
   CommonOptionsParser OptionsParser(argc, argv, MyToolCategory);
   ClangTool Tool(OptionsParser.getCompilations(),
                  OptionsParser.getSourcePathList());
 
+  // Get desired names from command line option and insert them into the global
+  // desiredNames object
+  for (unsigned int i = 0; i < DesiredNamesOpt.size(); i++) {
+    desiredNames.insert(DesiredNamesOpt[i]);
+  }
+
   // 0 on success, 1 if error occurred, 2 if some files skipped
   int result = Tool.run(newFrontendActionFactory<IfdefAnalysisAction>().get());
 
+  // Traverse from each IfdefNode through its parents and print the conjuctions
   for (unsigned int i = 0; i < ifdefNodes.size(); i++) {
     IfdefNode currentNode = ifdefNodes[i];
     outs() << ifdefNodes[i].name;
@@ -198,10 +236,5 @@ int main(int argc, const char **argv) {
     outs() << "\n";
   }
 
-  if (result != 0) {
-    errs() << "Uh oh, exit code " << result << "\n";
-    return result;
-  }
-  outs() << "No errors!\n";
   return result;
 }

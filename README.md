@@ -29,3 +29,13 @@ make
 
 ## Running Instructions
 TODO
+
+Usage:
+
+``` bash
+$BD/bin/my-tool -p <build-directory> [desired preprocessor variable names] [sources]
+```
+Note: "build-directory" refers to the build directory of the code being analyzed. "sources" refers to the source files to analyze.
+
+All the names of preprocessor variables to analyze need to be specified.
+
