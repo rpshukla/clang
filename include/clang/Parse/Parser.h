@@ -265,11 +265,6 @@ class Parser : public CodeCompletionHandler {
   /// just a regular sub-expression.
   SourceLocation ExprStatementTokLoc;
 
-  /// The condition of the current parser, this is later compared to the condition
-  /// of each token it parses to see if it should parse that token, split at that
-  /// token, or skip over it entirely.
-  Variability::PresenceCondition* condition;
-
 public:
   Parser(Preprocessor &PP, Sema &Actions, bool SkipFunctionBodies);
   ~Parser() override;
@@ -280,9 +275,21 @@ public:
   Sema &getActions() const { return Actions; }
   AttributeFactory &getAttrFactory() { return AttrFactory; }
 
-  void setConditionalInfo(Variability::PresenceCondition* pc){ this->condition = pc; }
-  Variability::PresenceCondition* getConditional() { return this->condition; }
-  std::string getConditionalInfoString() { return this->condition->toString(); }
+  // Variability
+
+  /// getConditional - Set the current presence condition of the parser.
+  /// this is later compared to the condition of each token it parses to see
+  /// if it should parse that token, split at that token,
+  /// or skip over it entirely.
+  void setConditional(Variability::PresenceCondition *pc) {
+    this->getCurScope()->setConditional(pc);
+  }
+
+  /// getConditional - get the current presence condition of the parser
+  Variability::PresenceCondition* getConditional() { return this->getCurScope()->getConditional(); }
+
+  /// getConditionalString
+  std::string getConditionalString() { return this->getCurScope()->getConditional()->toString(); }
 
   const Token &getCurToken() const { return Tok; }
   Scope *getCurScope() const { return Actions.getCurScope(); }

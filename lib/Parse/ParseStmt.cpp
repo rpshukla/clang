@@ -137,18 +137,18 @@ Parser::ParseStatementOrDeclaration(StmtVector &Stmts,
         //<< " with: " << name
         //<< "\n";
 
-    this->condition = new Variability::And(ctx, pc);
+    this->setConditional(new Variability::And(ctx, pc));
     StmtResult sr = ParseVariantBody(Stmts, Allowed, TrailingElseLoc);
 
     PP.Backtrack();
-    this->condition = new Variability::And(ctx, new Variability::Not(pc));
+    this->setConditional(new Variability::And(ctx, new Variability::Not(pc)));
     this->ConsumeAnyToken();
 
     StmtResult sr2 = ParseVariantBody(Stmts, Allowed, TrailingElseLoc);
 
     StmtResult variant = Actions.ActOnVariantStmt(pc, sr.get()->getLocStart(), sr.get(), sr2.get(), sr2.get()->getLocStart());
 
-    this->condition = ctx;
+    this->setConditional(ctx);
 
     return variant;
 
@@ -177,7 +177,7 @@ StmtResult Parser::ParseVariantBody(StmtVector &PrevStmts,
       //<< Tok.getConditional()->toString() << "   "
       //<< " " << Tok.getName() << "\n";
 
-  while (!getConditional()->ShouldJoinOnCondition(Tok.getConditional()) &&
+  while (!this->getConditional()->ShouldJoinOnCondition(Tok.getConditional()) &&
          Tok.isNot(tok::eof)) {
 
     StmtResult R = ParseStatementOrDeclaration(Stmts, ACK_Any);
