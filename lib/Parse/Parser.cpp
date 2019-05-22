@@ -635,10 +635,8 @@ Parser::ParseExternalDeclaration(ParsedAttributesWithRange &attrs,
 
   Variability::PresenceCondition* pc = Tok.getConditional();
 
-  this->setConditional(pc);
   getCurScope()->setConditional(pc);
   DeclGroupPtrTy Result = SplitableParseExternalDeclaration(attrs, DS);
-  this->setConditional(pc);
   getCurScope()->setConditional(Tok.getConditional());
 
 

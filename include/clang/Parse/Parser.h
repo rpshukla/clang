@@ -277,6 +277,9 @@ public:
 
   // Variability
 
+  /// Whether the parser should skip stuff or not
+  bool shouldSkip;
+
   /// The condition of the current parser, this is later compared to the condition
   /// of each token it parses to see if it should parse that token, split at that
   /// token, or skip over it entirely.

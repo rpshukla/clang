@@ -137,11 +137,16 @@ Parser::ParseStatementOrDeclaration(StmtVector &Stmts,
         //<< " with: " << name
         //<< "\n";
 
-    this->setConditional(new Variability::And(ctx, pc));
+    // Take into account the presence condition of the surrounding function
+    // declaration (held in CurScope) as well as the condition of Tok
+    this->setConditional(new Variability::And(
+        this->getCurScope()->getConditional(), new Variability::And(ctx, pc)));
     StmtResult sr = ParseVariantBody(Stmts, Allowed, TrailingElseLoc);
 
     PP.Backtrack();
-    this->setConditional(new Variability::And(ctx, new Variability::Not(pc)));
+    this->setConditional(new Variability::And(
+        this->getCurScope()->getConditional(),
+        new Variability::And(ctx, new Variability::Not(pc))));
     this->ConsumeAnyToken();
 
     StmtResult sr2 = ParseVariantBody(Stmts, Allowed, TrailingElseLoc);
