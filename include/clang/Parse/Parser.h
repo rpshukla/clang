@@ -277,19 +277,24 @@ public:
 
   // Variability
 
-  /// getConditional - Set the current presence condition of the parser.
-  /// this is later compared to the condition of each token it parses to see
-  /// if it should parse that token, split at that token,
-  /// or skip over it entirely.
+  /// The condition of the current parser, this is later compared to the condition
+  /// of each token it parses to see if it should parse that token, split at that
+  /// token, or skip over it entirely.
+  Variability::PresenceCondition* condition;
+
+
+  /// setConditional - Set the current presence condition of the parser.
   void setConditional(Variability::PresenceCondition *pc) {
-    this->getCurScope()->setConditional(pc);
+    this->condition = pc;
   }
 
   /// getConditional - get the current presence condition of the parser
-  Variability::PresenceCondition* getConditional() { return this->getCurScope()->getConditional(); }
+  Variability::PresenceCondition *getConditional() { return this->condition; }
 
   /// getConditionalString
-  std::string getConditionalString() { return this->getCurScope()->getConditional()->toString(); }
+  std::string getConditionalString() {
+    return this->getConditional()->toString();
+  }
 
   const Token &getCurToken() const { return Tok; }
   Scope *getCurScope() const { return Actions.getCurScope(); }
