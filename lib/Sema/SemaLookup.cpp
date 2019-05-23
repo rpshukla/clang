@@ -1759,6 +1759,11 @@ void LookupResult::TryAndResolveContextualAmbiguity(){
         //addDecl(d);
         addDecl(one); // Temporary, return first value
     }
+  } else {
+    // Ensure that if there is only one Decl, ResultKind is not Ambiguous
+    if (ResultKind == Ambiguous && Decls.size() == 1) {
+      ResultKind = Found;
+    }
   }
 
 }

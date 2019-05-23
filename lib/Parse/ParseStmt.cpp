@@ -139,21 +139,29 @@ Parser::ParseStatementOrDeclaration(StmtVector &Stmts,
 
     // Take into account the presence condition of the surrounding function
     // declaration (held in CurScope) as well as the condition of Tok
-    this->setConditional(new Variability::And(
-        this->getCurScope()->getConditional(), new Variability::And(ctx, pc)));
+    Variability::PresenceCondition *oldScopeCondition =
+        this->getCurScope()->getConditional();
+    Variability::PresenceCondition *newCtx =
+        new Variability::And(oldScopeCondition, new Variability::And(ctx, pc));
+    this->setConditional(newCtx);
+    this->getCurScope()->setConditional(newCtx);
     StmtResult sr = ParseVariantBody(Stmts, Allowed, TrailingElseLoc);
 
+    // Parse other branch of ifdef
     PP.Backtrack();
-    this->setConditional(new Variability::And(
-        this->getCurScope()->getConditional(),
-        new Variability::And(ctx, new Variability::Not(pc))));
+    newCtx = new Variability::And(
+        oldScopeCondition, new Variability::And(ctx, new Variability::Not(pc)));
+    this->setConditional(newCtx);
+    this->getCurScope()->setConditional(newCtx);
     this->ConsumeAnyToken();
 
     StmtResult sr2 = ParseVariantBody(Stmts, Allowed, TrailingElseLoc);
 
     StmtResult variant = Actions.ActOnVariantStmt(pc, sr.get()->getLocStart(), sr.get(), sr2.get(), sr2.get()->getLocStart());
 
+    // Restore parser and scope presence conditions
     this->setConditional(ctx);
+    this->getCurScope()->setConditional(oldScopeCondition);
 
     return variant;
 
