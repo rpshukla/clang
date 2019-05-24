@@ -187,7 +187,7 @@ StmtResult Parser::ParseVariantBody(StmtVector &PrevStmts,
       // other. In this case, the parser will encounter a split token, but
       // instead of splitting, it should join. This avoid the recursive call to
       // ParseStatementOrDeclaration
-      goto done;
+      goto Join;
     } else {
       ConsumeToken();
     }
@@ -209,7 +209,7 @@ StmtResult Parser::ParseVariantBody(StmtVector &PrevStmts,
 
   }
 
-done:
+Join:
   SourceLocation CloseLoc = Tok.getLocation();
   return Actions.ActOnCompoundStmt(StartLoc, CloseLoc,
                                    Stmts, false);
