@@ -182,7 +182,15 @@ StmtResult Parser::ParseVariantBody(StmtVector &PrevStmts,
 
 
   if(Tok.is(tok::split)) {
-    ConsumeToken();
+    if (this->getConditional()->ShouldJoinOnCondition(Tok.getConditional())) {
+      // This handles the case where there are 2 adjacent ifdefs next to each
+      // other. In this case, the parser will encounter a split token, but
+      // instead of splitting, it should join. This avoid the recursive call to
+      // ParseStatementOrDeclaration
+      goto done;
+    } else {
+      ConsumeToken();
+    }
   }
 
   //llvm::outs() << getConditional()->ShouldJoinOnCondition(Tok.getConditional())
@@ -201,6 +209,7 @@ StmtResult Parser::ParseVariantBody(StmtVector &PrevStmts,
 
   }
 
+done:
   SourceLocation CloseLoc = Tok.getLocation();
   return Actions.ActOnCompoundStmt(StartLoc, CloseLoc,
                                    Stmts, false);

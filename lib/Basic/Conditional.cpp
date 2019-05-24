@@ -19,7 +19,8 @@ bool PresenceCondition::ShouldJoinOnCondition(PresenceCondition* other) {
     if(this->solve_map.find(other->toString()) == this->solve_map.end()){
         this->solve(other);
     }
-    return this->solve_map[other->toString()][2] && !this->solve_map[other->toString()][3];
+    //return this->solve_map[other->toString()][2] && !this->solve_map[other->toString()][3];
+    return (new Variability::And(new Variability::Not(this), other))->isSatisfiable();
 }
 bool PresenceCondition::ShouldContinueOnCondition(PresenceCondition* other) {
     if(this->solve_map.find(other->toString()) == this->solve_map.end()){
