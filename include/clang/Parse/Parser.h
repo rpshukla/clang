@@ -265,11 +265,6 @@ class Parser : public CodeCompletionHandler {
   /// just a regular sub-expression.
   SourceLocation ExprStatementTokLoc;
 
-  /// The condition of the current parser, this is later compared to the condition
-  /// of each token it parses to see if it should parse that token, split at that
-  /// token, or skip over it entirely.
-  Variability::PresenceCondition* condition;
-
 public:
   Parser(Preprocessor &PP, Sema &Actions, bool SkipFunctionBodies);
   ~Parser() override;
@@ -280,9 +275,29 @@ public:
   Sema &getActions() const { return Actions; }
   AttributeFactory &getAttrFactory() { return AttrFactory; }
 
-  void setConditionalInfo(Variability::PresenceCondition* pc){ this->condition = pc; }
-  Variability::PresenceCondition* getConditional() { return this->condition; }
-  std::string getConditionalInfoString() { return this->condition->toString(); }
+  // Variability
+
+  /// Whether the parser should skip stuff or not
+  bool shouldSkip;
+
+  /// The condition of the current parser, this is later compared to the condition
+  /// of each token it parses to see if it should parse that token, split at that
+  /// token, or skip over it entirely.
+  Variability::PresenceCondition* condition;
+
+
+  /// setConditional - Set the current presence condition of the parser.
+  void setConditional(Variability::PresenceCondition *pc) {
+    this->condition = pc;
+  }
+
+  /// getConditional - get the current presence condition of the parser
+  Variability::PresenceCondition *getConditional() { return this->condition; }
+
+  /// getConditionalString
+  std::string getConditionalString() {
+    return this->getConditional()->toString();
+  }
 
   const Token &getCurToken() const { return Tok; }
   Scope *getCurScope() const { return Actions.getCurScope(); }
@@ -1938,6 +1953,10 @@ private:
 
     bool ParsedForRangeDecl() { return !ColonLoc.isInvalid(); }
   };
+
+  DeclGroupPtrTy SplittableParseDeclaration(DeclaratorContext Context,
+                                            SourceLocation &DeclEnd,
+                                            ParsedAttributesWithRange &attrs);
 
   DeclGroupPtrTy ParseDeclaration(DeclaratorContext Context,
                                   SourceLocation &DeclEnd,

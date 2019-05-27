@@ -137,18 +137,31 @@ Parser::ParseStatementOrDeclaration(StmtVector &Stmts,
         //<< " with: " << name
         //<< "\n";
 
-    this->condition = new Variability::And(ctx, pc);
+    // Take into account the presence condition of the surrounding function
+    // declaration (held in CurScope) as well as the condition of Tok
+    Variability::PresenceCondition *oldScopeCondition =
+        this->getCurScope()->getConditional();
+    Variability::PresenceCondition *newCtx =
+        new Variability::And(oldScopeCondition, new Variability::And(ctx, pc));
+    this->setConditional(newCtx);
+    this->getCurScope()->setConditional(newCtx);
     StmtResult sr = ParseVariantBody(Stmts, Allowed, TrailingElseLoc);
 
+    // Parse other branch of ifdef
     PP.Backtrack();
-    this->condition = new Variability::And(ctx, new Variability::Not(pc));
+    newCtx = new Variability::And(
+        oldScopeCondition, new Variability::And(ctx, new Variability::Not(pc)));
+    this->setConditional(newCtx);
+    this->getCurScope()->setConditional(newCtx);
     this->ConsumeAnyToken();
 
     StmtResult sr2 = ParseVariantBody(Stmts, Allowed, TrailingElseLoc);
 
     StmtResult variant = Actions.ActOnVariantStmt(pc, sr.get()->getLocStart(), sr.get(), sr2.get(), sr2.get()->getLocStart());
 
-    this->condition = ctx;
+    // Restore parser and scope presence conditions
+    this->setConditional(ctx);
+    this->getCurScope()->setConditional(oldScopeCondition);
 
     return variant;
 
@@ -177,7 +190,7 @@ StmtResult Parser::ParseVariantBody(StmtVector &PrevStmts,
       //<< Tok.getConditional()->toString() << "   "
       //<< " " << Tok.getName() << "\n";
 
-  while (!getConditional()->ShouldJoinOnCondition(Tok.getConditional()) &&
+  while (!this->getConditional()->ShouldJoinOnCondition(Tok.getConditional()) &&
          Tok.isNot(tok::eof)) {
 
     StmtResult R = ParseStatementOrDeclaration(Stmts, ACK_Any);
