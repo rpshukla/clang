@@ -52,6 +52,10 @@ public:
     bool ShouldContinueOnCondition(PresenceCondition* other);
     bool ShouldSkipOnCondition(PresenceCondition* other);
     bool ShouldJoinOnCondition(PresenceCondition* other);
+    // Returns true if this is logically equivalent to other
+    bool EquivalentTo(PresenceCondition* other);
+    // Returns true if this implies other is a tautology
+    bool Implies(PresenceCondition* other);
     void solve(PresenceCondition* other);
 
     virtual ~PresenceCondition() {}
