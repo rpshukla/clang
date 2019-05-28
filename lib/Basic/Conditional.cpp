@@ -13,60 +13,61 @@ bool PresenceCondition::ShouldSplitOnCondition(PresenceCondition* other) {
     if(this->solve_map.find(other->toString()) == this->solve_map.end()){
         this->solve(other);
     }
-    return this->solve_map[other->toString()][0] && this->solve_map[other->toString()][1];
+    return !this->solve_map[other->toString()][THIS_IMPLIES_OTHER]
+        && !this->solve_map[other->toString()][THIS_IMPLIES_NOT_OTHER];
 }
 bool PresenceCondition::ShouldJoinOnCondition(PresenceCondition* other) {
     if(this->solve_map.find(other->toString()) == this->solve_map.end()){
         this->solve(other);
     }
-    //return this->solve_map[other->toString()][2] && !this->solve_map[other->toString()][3];
-    return (new Variability::And(new Variability::Not(this), other))->isSatisfiable();
+    return !this->solve_map[other->toString()][OTHER_IMPLIES_THIS];
 }
 bool PresenceCondition::ShouldContinueOnCondition(PresenceCondition* other) {
     if(this->solve_map.find(other->toString()) == this->solve_map.end()){
         this->solve(other);
     }
-    return this->solve_map[other->toString()][0] && !this->solve_map[other->toString()][1];
+    return this->solve_map[other->toString()][THIS_IMPLIES_OTHER];
 }
 bool PresenceCondition::ShouldSkipOnCondition(PresenceCondition* other) {
     if(this->solve_map.find(other->toString()) == this->solve_map.end()){
         this->solve(other);
+    } else {
     }
-    return !this->solve_map[other->toString()][0] && this->solve_map[other->toString()][1];
+    return this->solve_map[other->toString()][THIS_IMPLIES_NOT_OTHER];
 }
 
 bool PresenceCondition::EquivalentTo(PresenceCondition* other) {
-  return this->Implies(other) && other->Implies(this);
+    if(this->solve_map.find(other->toString()) == this->solve_map.end()){
+        this->solve(other);
+    }
+    return this->solve_map[other->toString()][THIS_IMPLIES_OTHER]
+        && this->solve_map[other->toString()][OTHER_IMPLIES_THIS];
 }
 
 bool PresenceCondition::Implies(PresenceCondition* other) {
-  PresenceCondition *equ = new And(this, new Not(other));
-  return !equ->isSatisfiable();
+    if(this->solve_map.find(other->toString()) == this->solve_map.end()){
+        this->solve(other);
+    }
+    return this->solve_map[other->toString()][THIS_IMPLIES_OTHER];
 }
 
 void PresenceCondition::solve(PresenceCondition* other){
     if(toString() == other->toString()){
-        bool* ans = new bool[4];
-        ans[0] = true; // parser implies token
-        ans[1] = false; // parser implies not token
-        ans[2] = false; // not (token implies parser)
-        ans[3] = false; // not (parser implies token)
+        bool* ans = new bool[3];
+        ans[THIS_IMPLIES_OTHER] = true;
+        ans[THIS_IMPLIES_NOT_OTHER] = false;
+        ans[OTHER_IMPLIES_THIS] = true;
         this->solve_map[other->toString()] = ans;
         return;
     }
-    PresenceCondition* equ_1 = new And(this, (new Or(new Not(this), other)));
-    PresenceCondition* equ_2 = new And(this, (new Or(new Not(this), new Not(other))));
+    PresenceCondition* notThisImpliesOther = new And(this, new Not(other));
+    PresenceCondition* notThisImpliesNotOther = new And(this, other);
+    PresenceCondition* notOtherImpliesThis = new And(other, new Not(this));
 
-    PresenceCondition* equ_3 = new And(other, new Not(this));
-    PresenceCondition* equ_4 = new And(this, new Not(other));
-
-
-
-    bool* ans = new bool[4];
-    ans[0] = equ_1->isSatisfiable(); // parser implies token
-    ans[1] = equ_2->isSatisfiable(); // parser implies not token
-    ans[2] = equ_3->isSatisfiable(); // not (token implies parser)
-    ans[3] = equ_4->isSatisfiable(); // not (parser implies token)
+    bool* ans = new bool[3];
+    ans[THIS_IMPLIES_OTHER] = !notThisImpliesOther->isSatisfiable();
+    ans[THIS_IMPLIES_NOT_OTHER] = !notThisImpliesNotOther->isSatisfiable();
+    ans[OTHER_IMPLIES_THIS] = !notOtherImpliesThis->isSatisfiable();
     this->solve_map[other->toString()] = ans;
 
 #if 0
@@ -81,10 +82,9 @@ void PresenceCondition::solve(PresenceCondition* other){
 
 
 
-    delete equ_1;
-    delete equ_2;
-    delete equ_3;
-    delete equ_4;
+    delete notThisImpliesOther;
+    delete notThisImpliesNotOther;
+    delete notOtherImpliesThis;
 }
 
 
