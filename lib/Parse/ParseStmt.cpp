@@ -123,7 +123,7 @@ StmtResult
 Parser::ParseStatementOrDeclaration(StmtVector &Stmts,
                                     AllowedConstructsKind Allowed,
                                     SourceLocation *TrailingElseLoc) {
-  if(Tok.is(tok::split)) {
+  if (Tok.is(tok::split) && !this->getConditional()->EquivalentTo(Tok.getConditional())) {
     Variability::PresenceCondition* ctx = this->getConditional();
     Variability::PresenceCondition* pc = this->Tok.getConditional();
 
@@ -165,6 +165,18 @@ Parser::ParseStatementOrDeclaration(StmtVector &Stmts,
 
     return variant;
 
+  } else if (Tok.is(tok::split) && this->getConditional()->EquivalentTo(Tok.getConditional())) {
+    // If the new split token is equivalent to the current parser condition,
+    // no need to split.
+    // This may occur if there are 2 adjacent ifdefs with equivalent presence
+    // conditions.
+
+    // Consume the split token
+    ConsumeToken();
+
+    // Parse a statement, allowing for further nested ifdefs
+    StmtResult sr = ParseStatementOrDeclaration(Stmts, Allowed, TrailingElseLoc);
+    return sr;
   }else{
     StmtResult sr = SplitableParseStatementOrDeclaration(Stmts, Allowed, TrailingElseLoc);
     return sr;
