@@ -53,7 +53,11 @@ void Parser::SplitOrConsume(Token &Result){
   PP.EnableBacktrackAtThisPos();
   PP.Lex(Result);
 
-  if(!this->getConditional()->ShouldSplitOnCondition(Result.getConditional())){
+  // If the presence condition of the next token doesn't indicate a split, or if
+  // the token is not a split token, we shouldn't enable a backtrack position
+  // here
+  if (!this->getConditional()->ShouldSplitOnCondition(Result.getConditional()) ||
+      !Result.is(tok::split)) {
     PP.CommitBacktrackedTokens();
     if(this->getConditional()->ShouldSkipOnCondition(Result.getConditional())){
       goto TryAgain; // Avoid recursive tail call
@@ -630,6 +634,9 @@ Parser::DeclGroupPtrTy
 Parser::ParseExternalDeclaration(ParsedAttributesWithRange &attrs,
                                  ParsingDeclSpec *DS) {
   while(Tok.is(tok::split)){
+    // When parsing external declarations, we don't backtrack, so cancel
+    // any backtrack positions that were set here
+    PP.CommitBacktrackedTokens();
     ConsumeToken();
   }
 
