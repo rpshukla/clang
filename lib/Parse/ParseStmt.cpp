@@ -200,7 +200,8 @@ StmtResult Parser::ParseVariantBody(StmtVector &PrevStmts,
       // instead of splitting, it should join. This avoid the recursive call to
       // ParseStatementOrDeclaration
       goto Join;
-    } else {
+    } else if (!this->getConditional()->ShouldSplitOnCondition(Tok.getConditional())) {
+      // Consume the split token if we don't need to split on it
       ConsumeToken();
     }
   }
