@@ -34,9 +34,19 @@ class True;
 class Not;
 class Literal;
 
+// This class is for holding the conditonal
 class PresenceCondition {
+    // For caching SAT solutions
     std::map<std::string, bool*> solve_map;
-    // This class is for holding the conditonal
+    // For indexing the bool array in solve_map
+    // Example: solve_map(other->toString())[THIS_IMPLIES_OTHER] == true
+    //   if "this implies other" is a tautology
+    enum SolutionType {
+        THIS_IMPLIES_OTHER = 0,
+        THIS_IMPLIES_NOT_OTHER,
+        OTHER_IMPLIES_THIS,
+    };
+
 public:
     PCType typeOfPC;
     const virtual std::string toString();
