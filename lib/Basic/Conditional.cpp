@@ -120,9 +120,16 @@ bool PresenceCondition::isSatisfiable() {
             clause.clear();
         }else if(cnf[i] == '~'){
             isNeg = !isNeg;
-        }else if(isalpha(cnf[i])){
+        }else{
+            // Accept any characters other than '(', ')', ' ', '|', or '&'
+            // as part of a macro name
             std::string name = "";
-            while(isalpha(cnf[i])){
+            while(cnf[i] != '(' &&
+                  cnf[i] != ')' &&
+                  cnf[i] != ' ' &&
+                  cnf[i] != '|' &&
+                  cnf[i] != '&' &&
+                  cnf[i] != '\0'){
                 name += cnf[i++];
             }
             if(map.find(name) == map.end()){
