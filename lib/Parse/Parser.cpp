@@ -56,8 +56,9 @@ void Parser::SplitOrConsume(Token &Result){
   // If the presence condition of the next token doesn't indicate a split, or if
   // the token is not a split token, we shouldn't enable a backtrack position
   // here
-  if (!this->getConditional()->ShouldSplitOnCondition(Result.getConditional()) ||
-      !Result.is(tok::split)) {
+
+  if (!Result.is(tok::split) ||
+      !this->getConditional()->ShouldSplitOnCondition(Result.getConditional())) {
     PP.CommitBacktrackedTokens();
     if(this->getConditional()->ShouldSkipOnCondition(Result.getConditional())){
       goto TryAgain; // Avoid recursive tail call
