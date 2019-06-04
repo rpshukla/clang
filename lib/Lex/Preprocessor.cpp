@@ -793,7 +793,6 @@ void Preprocessor::Lex(Token &Result) {
       AssignConditional(Result);
       break;
     }
-    ManageMyStack(Result);
   } while (!ReturnedToken);
 
   if (Result.is(tok::code_completion))
