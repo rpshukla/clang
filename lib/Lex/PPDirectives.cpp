@@ -927,9 +927,6 @@ void Preprocessor::HandleDirective(Token &Result) {
   // and reset to previous state when returning from this function.
   ResetMacroExpansionHelper helper(this);
 
-  // Manage VariabiltyStack (push/pop) if necessary
-  ManageMyStack(Result);
-
   switch (Result.getKind()) {
   case tok::eod:
     return;   // null directive.
