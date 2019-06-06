@@ -1653,7 +1653,7 @@ void Parser::stripTypeAttributesOffDeclSpec(ParsedAttributesWithRange &Attrs,
 /// [C++11/C11] static_assert-declaration
 ///         others... [FIXME]
 ///
-Parser::DeclGroupPtrTy Parser::SplittableParseDeclaration(DeclaratorContext Context,
+Parser::DeclGroupPtrTy Parser::ParseDeclaration(DeclaratorContext Context,
                                                 SourceLocation &DeclEnd,
                                           ParsedAttributesWithRange &attrs) {
   ParenBraceBracketBalancer BalancerRAIIObj(*this);
@@ -1695,24 +1695,6 @@ Parser::DeclGroupPtrTy Parser::SplittableParseDeclaration(DeclaratorContext Cont
   // This routine returns a DeclGroup, if the thing we parsed only contains a
   // single decl, convert it now.
   return Actions.ConvertDeclToDeclGroup(SingleDecl);
-}
-
-Parser::DeclGroupPtrTy Parser::ParseDeclaration(DeclaratorContext Context,
-                                        SourceLocation &DeclEnd,
-                                        ParsedAttributesWithRange &attrs) {
-  DeclGroupPtrTy Result = SplittableParseDeclaration(Context, DeclEnd, attrs);
-
-  // Attach presence condition to the declaration so that it can be taken into
-  // account during lookup
-  if (Result.get().isNull()) {
-  } else if (Result.get().isSingleDecl()) {
-    Result.get().getSingleDecl()->setConditional(this->getConditional());
-  } else {
-    for(unsigned int i = 0; i < Result.get().getDeclGroup().size(); i++){
-      Result.get().getDeclGroup()[i]->setConditional(this->getConditional());
-    }
-  }
-  return Result;
 }
 
 ///       simple-declaration: [C99 6.7: declaration] [C++ 7p1: dcl.dcl]
