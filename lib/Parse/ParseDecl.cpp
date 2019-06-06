@@ -3791,7 +3791,6 @@ void Parser::ParseDeclarationSpecifiers(DeclSpec &DS,
                                         AccessSpecifier AS,
                                         DeclSpecContext DSContext,
                                         LateParsedAttrList *LateAttrs) {
-  llvm::outs() << "ParseDeclarationSpecifiers: ";
   while (Tok.is(tok::split)) {
     // When parsing external declarations or member declarations in the body of
     // a class definitions, we don't backtrack, so cancel any backtrack
@@ -3799,7 +3798,6 @@ void Parser::ParseDeclarationSpecifiers(DeclSpec &DS,
     // When parsing declarations inside a function body, the method for parsing
     // statements should already have consumed any split tokens, so they won't
     // appear here
-    llvm::outs() << "ate a split ";
     PP.CommitBacktrackedTokens();
     ConsumeToken();
   }
@@ -3808,8 +3806,6 @@ void Parser::ParseDeclarationSpecifiers(DeclSpec &DS,
   // condition of the next token
   Variability::PresenceCondition *pc = Tok.getConditional();
   getCurScope()->setConditional(pc);
-  llvm::outs() << "set ctx to " << pc->toString()
-               << " based on " << Tok.getName() << "\n";
 
   SplittableParseDeclarationSpecifiers(DS, TemplateInfo, AS, DSContext, LateAttrs);
 }

@@ -1771,7 +1771,7 @@ private:
     /// \brief Allow statements and all executable OpenMP directives
     ACK_StatementsOpenMPAnyExecutable
   };
-  StmtResult SplittableParseStatementOrDeclaration(StmtVector &Stmts, 
+  StmtResult SplittableParseStatementOrDeclaration(StmtVector &Stmts,
           AllowedConstructsKind Allowed, SourceLocation *TrailingElseLoc = nullptr);
   StmtResult
   ParseStatementOrDeclaration(StmtVector &Stmts, AllowedConstructsKind Allowed,
