@@ -1980,6 +1980,11 @@ public:
   void SetDeclDeleted(Decl *dcl, SourceLocation DelLoc);
   void SetDeclDefaulted(Decl *dcl, SourceLocation DefaultLoc);
   void FinalizeDeclaration(Decl *D);
+  /// Renamed from the original FinalizeDeclaratorGroup
+  DeclGroupPtrTy SplittableFinalizeDeclaratorGroup(Scope *S, const DeclSpec &DS,
+                                                   ArrayRef<Decl *> Group);
+  /// Wrapper around the original FinalizeDeclaratorGroup
+  /// Attaches presence condition to each Decl in the group
   DeclGroupPtrTy FinalizeDeclaratorGroup(Scope *S, const DeclSpec &DS,
                                          ArrayRef<Decl *> Group);
   DeclGroupPtrTy BuildDeclaratorGroup(MutableArrayRef<Decl *> Group);
