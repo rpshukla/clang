@@ -1340,9 +1340,6 @@ private:
     SourceRange Range;
   };
 
-  DeclGroupPtrTy SplitableParseExternalDeclaration(ParsedAttributesWithRange &attrs,
-                                          ParsingDeclSpec *DS = nullptr);
-
   DeclGroupPtrTy ParseExternalDeclaration(ParsedAttributesWithRange &attrs,
                                           ParsingDeclSpec *DS = nullptr);
   bool isDeclarationAfterDeclarator();
