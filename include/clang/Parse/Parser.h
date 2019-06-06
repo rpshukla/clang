@@ -1992,18 +1992,23 @@ private:
                         ParsedAttributesWithRange &Attrs);
   DeclSpecContext
   getDeclSpecContextFromDeclaratorContext(DeclaratorContext Context);
+
+  /// Renamed from the original ParseDeclarationSpecifiers
   void SplittableParseDeclarationSpecifiers(
       DeclSpec &DS,
       const ParsedTemplateInfo &TemplateInfo = ParsedTemplateInfo(),
       AccessSpecifier AS = AS_none,
       DeclSpecContext DSC = DeclSpecContext::DSC_normal,
       LateParsedAttrList *LateAttrs = nullptr);
+  /// A wrapper around the original ParseDeclarationSpecifiers which consumes
+  /// any split tokens and updates the presence condition of the current scope
   void ParseDeclarationSpecifiers(
       DeclSpec &DS,
       const ParsedTemplateInfo &TemplateInfo = ParsedTemplateInfo(),
       AccessSpecifier AS = AS_none,
       DeclSpecContext DSC = DeclSpecContext::DSC_normal,
       LateParsedAttrList *LateAttrs = nullptr);
+
   bool DiagnoseMissingSemiAfterTagDefinition(
       DeclSpec &DS, AccessSpecifier AS, DeclSpecContext DSContext,
       LateParsedAttrList *LateAttrs = nullptr);

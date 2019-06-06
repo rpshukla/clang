@@ -1674,6 +1674,11 @@ public:
     NamedDecl *New;
   };
 
+  /// Renamed from the original ConvertDeclToDeclGroup
+  DeclGroupPtrTy SplittableConvertDeclToDeclGroup(Decl *Ptr, Decl *OwnedType = nullptr);
+
+  /// A wrapper around the original ConvertDeclToDeclGroup which attaches a
+  /// presence condition to each Decl in the group
   DeclGroupPtrTy ConvertDeclToDeclGroup(Decl *Ptr, Decl *OwnedType = nullptr);
 
   void DiagnoseUseOfUnimplementedSelectors();
