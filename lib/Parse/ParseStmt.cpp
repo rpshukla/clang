@@ -2062,7 +2062,7 @@ StmtResult Parser::ParsePragmaLoopHint(StmtVector &Stmts,
   return S;
 }
 
-Decl *Parser::ParseFunctionStatementBody(Decl *Decl, ParseScope &BodyScope) {
+Decl *Parser::SplittableParseFunctionStatementBody(Decl *Decl, ParseScope &BodyScope) {
   assert(Tok.is(tok::l_brace));
   SourceLocation LBraceLoc = Tok.getLocation();
 
@@ -2088,6 +2088,16 @@ Decl *Parser::ParseFunctionStatementBody(Decl *Decl, ParseScope &BodyScope) {
 
   BodyScope.Exit();
   return Actions.ActOnFinishFunctionBody(Decl, FnBody.get());
+}
+
+Decl *Parser::ParseFunctionStatementBody(Decl *Decl, ParseScope &BodyScope) {
+  // Can't declare type Decl* so use NamedDecl* instead
+  NamedDecl *Result =
+      cast<NamedDecl>(SplittableParseFunctionStatementBody(Decl, BodyScope));
+  // Set presence condition of the parsed Decl
+  Result->setConditional(getCurScope()->getConditional());
+
+  return Result;
 }
 
 /// ParseFunctionTryBlock - Parse a C++ function-try-block.

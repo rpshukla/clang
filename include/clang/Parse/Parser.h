@@ -1977,6 +1977,10 @@ private:
       Declarator &D,
       const ParsedTemplateInfo &TemplateInfo = ParsedTemplateInfo(),
       ForRangeInit *FRI = nullptr);
+  /// Renamed from original ParseFunctionStatementBody
+  Decl *SplittableParseFunctionStatementBody(Decl *Decl, ParseScope &BodyScope);
+  /// Wrapper around original ParseFunctionStatementBody
+  /// Assigns presence condition to the Decl before it is returned
   Decl *ParseFunctionStatementBody(Decl *Decl, ParseScope &BodyScope);
   Decl *ParseFunctionTryBlock(Decl *Decl, ParseScope &BodyScope);
 
