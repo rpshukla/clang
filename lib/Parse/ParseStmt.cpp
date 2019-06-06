@@ -96,7 +96,7 @@ StmtResult Parser::ParseStatement(SourceLocation *TrailingElseLoc,
 /// [OBC]   '@' 'throw' ';'
 ///
 StmtResult
-Parser::SplitableParseStatementOrDeclaration(StmtVector &Stmts,
+Parser::SplittableParseStatementOrDeclaration(StmtVector &Stmts,
                                     AllowedConstructsKind Allowed,
                                     SourceLocation *TrailingElseLoc) {
 
@@ -178,7 +178,7 @@ Parser::ParseStatementOrDeclaration(StmtVector &Stmts,
     StmtResult sr = ParseStatementOrDeclaration(Stmts, Allowed, TrailingElseLoc);
     return sr;
   }else{
-    StmtResult sr = SplitableParseStatementOrDeclaration(Stmts, Allowed, TrailingElseLoc);
+    StmtResult sr = SplittableParseStatementOrDeclaration(Stmts, Allowed, TrailingElseLoc);
     return sr;
   }
 }

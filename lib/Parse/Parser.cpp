@@ -560,7 +560,7 @@ bool Parser::ParseFirstTopLevelDecl(DeclGroupPtrTy &Result) {
   return NoTopLevelDecls;
 }
 
-/// SplitableParseTopLevelDecl - Parse one top-level declaration, return whatever the
+/// ParseTopLevelDecl - Parse one top-level declaration, return whatever the
 /// action tells us to.  This returns true if the EOF was encountered.
 bool Parser::ParseTopLevelDecl(DeclGroupPtrTy &Result) {
   DestroyTemplateIdAnnotationsRAIIObj CleanupRAII(TemplateIds);
