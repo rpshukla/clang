@@ -2896,11 +2896,11 @@ Parser::DiagnoseMissingSemiAfterTagDefinition(DeclSpec &DS, AccessSpecifier AS,
 /// [OpenCL] '__kernel'
 ///       'friend': [C++ dcl.friend]
 ///       'constexpr': [C++0x dcl.constexpr]
-void Parser::ParseDeclarationSpecifiers(DeclSpec &DS,
-                                        const ParsedTemplateInfo &TemplateInfo,
-                                        AccessSpecifier AS,
-                                        DeclSpecContext DSContext,
-                                        LateParsedAttrList *LateAttrs) {
+void Parser::SplittableParseDeclarationSpecifiers(DeclSpec &DS,
+                                                  const ParsedTemplateInfo &TemplateInfo,
+                                                  AccessSpecifier AS,
+                                                  DeclSpecContext DSContext,
+                                                  LateParsedAttrList *LateAttrs) {
   if (DS.getSourceRange().isInvalid()) {
     // Start the range at the current token but make the end of the range
     // invalid.  This will make the entire range invalid unless we successfully
@@ -3803,6 +3803,35 @@ void Parser::ParseDeclarationSpecifiers(DeclSpec &DS,
     AttrsLastTime = false;
   }
 }
+
+void Parser::ParseDeclarationSpecifiers(DeclSpec &DS,
+                                        const ParsedTemplateInfo &TemplateInfo,
+                                        AccessSpecifier AS,
+                                        DeclSpecContext DSContext,
+                                        LateParsedAttrList *LateAttrs) {
+  llvm::outs() << "ParseDeclarationSpecifiers: ";
+  while (Tok.is(tok::split)) {
+    // When parsing external declarations or member declarations in the body of
+    // a class definitions, we don't backtrack, so cancel any backtrack
+    // positions that were set here.
+    // When parsing declarations inside a function body, the method for parsing
+    // statements should already have consumed any split tokens, so they won't
+    // appear here
+    llvm::outs() << "ate a split ";
+    PP.CommitBacktrackedTokens();
+    ConsumeToken();
+  }
+
+  // Set the presence condition of the current scope to be the presence
+  // condition of the next token
+  Variability::PresenceCondition *pc = Tok.getConditional();
+  getCurScope()->setConditional(pc);
+  llvm::outs() << "set ctx to " << pc->toString()
+               << " based on " << Tok.getName() << "\n";
+
+  SplittableParseDeclarationSpecifiers(DS, TemplateInfo, AS, DSContext, LateAttrs);
+}
+
 
 /// ParseStructDeclaration - Parse a struct declaration without the terminating
 /// semicolon.
