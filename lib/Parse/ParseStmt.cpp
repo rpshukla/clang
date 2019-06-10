@@ -2091,11 +2091,16 @@ Decl *Parser::SplittableParseFunctionStatementBody(Decl *Decl, ParseScope &BodyS
 }
 
 Decl *Parser::ParseFunctionStatementBody(Decl *Decl, ParseScope &BodyScope) {
+  // Get the presence condition that the function was defined in.
+  // If this is a late-parsed method, this will not be the same as the presence
+  // condition of the current scope. However, the first token in the function
+  // body should always have the correct presence condition.
+  Variability::PresenceCondition *pc = Tok.getConditional();
   // Can't declare type Decl* so use NamedDecl* instead
   NamedDecl *Result =
       cast<NamedDecl>(SplittableParseFunctionStatementBody(Decl, BodyScope));
   // Set presence condition of the parsed Decl
-  Result->setConditional(getCurScope()->getConditional());
+  Result->setConditional(pc);
 
   return Result;
 }

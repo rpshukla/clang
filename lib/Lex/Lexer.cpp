@@ -3883,6 +3883,10 @@ HandleDirective:
       if(PP->isMacroVariability(name)){
         // Return special split token
         Result.setKind(tok::split);
+        // Set the presence condition of the split token to null.
+        // The Preprocessor will attach the correct presence condition, but only
+        // if it sees that the token's current presence condition is null.
+        Result.setConditionalInfo(nullptr);
         return true;
       }
   }
