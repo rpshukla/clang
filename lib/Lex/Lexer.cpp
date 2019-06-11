@@ -3887,6 +3887,10 @@ HandleDirective:
         // The Preprocessor will attach the correct presence condition, but only
         // if it sees that the token's current presence condition is null.
         Result.setConditionalInfo(nullptr);
+        // Since a split token is not an identifier, set IdentiferInfo to
+        // nullptr so that it doesn't get treated as an identifier later. (For
+        // example when re-lexed by a TokenLexer)
+        Result.setIdentifierInfo(nullptr);
         return true;
       }
   }
