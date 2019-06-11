@@ -127,7 +127,6 @@ Parser::ParseStatementOrDeclaration(StmtVector &Stmts,
     Variability::PresenceCondition* ctx = this->getConditional();
     Variability::PresenceCondition* pc = this->Tok.getConditional();
 
-
     Token t;
     PP.getRawToken(Tok.getEndLoc().getLocWithOffset(1), t, true);
     std::string name = PP.getSpelling(t);
@@ -2096,6 +2095,12 @@ Decl *Parser::ParseFunctionStatementBody(Decl *Decl, ParseScope &BodyScope) {
   // condition of the current scope. However, the first token in the function
   // body should always have the correct presence condition.
   Variability::PresenceCondition *pc = Tok.getConditional();
+  // Set the presence condition of the current scope to match the current token.
+  // Note: although setting the condition of the scope is usually handled by
+  // ParseDeclarationSpecifiers, a different scope object may be created when
+  // parsing the body of a function so we need to set it again.
+  getCurScope()->setConditional(pc);
+
   // Can't declare type Decl* so use NamedDecl* instead
   NamedDecl *Result =
       cast<NamedDecl>(SplittableParseFunctionStatementBody(Decl, BodyScope));
