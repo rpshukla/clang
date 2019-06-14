@@ -96,7 +96,7 @@ StmtResult Parser::ParseStatement(SourceLocation *TrailingElseLoc,
 /// [OBC]   '@' 'throw' ';'
 ///
 StmtResult
-Parser::SplitableParseStatementOrDeclaration(StmtVector &Stmts,
+Parser::SplittableParseStatementOrDeclaration(StmtVector &Stmts,
                                     AllowedConstructsKind Allowed,
                                     SourceLocation *TrailingElseLoc) {
 
@@ -126,7 +126,6 @@ Parser::ParseStatementOrDeclaration(StmtVector &Stmts,
   if (Tok.is(tok::split) && !this->getConditional()->EquivalentTo(Tok.getConditional())) {
     Variability::PresenceCondition* ctx = this->getConditional();
     Variability::PresenceCondition* pc = this->Tok.getConditional();
-
 
     Token t;
     PP.getRawToken(Tok.getEndLoc().getLocWithOffset(1), t, true);
@@ -178,7 +177,7 @@ Parser::ParseStatementOrDeclaration(StmtVector &Stmts,
     StmtResult sr = ParseStatementOrDeclaration(Stmts, Allowed, TrailingElseLoc);
     return sr;
   }else{
-    StmtResult sr = SplitableParseStatementOrDeclaration(Stmts, Allowed, TrailingElseLoc);
+    StmtResult sr = SplittableParseStatementOrDeclaration(Stmts, Allowed, TrailingElseLoc);
     return sr;
   }
 }
@@ -2062,7 +2061,7 @@ StmtResult Parser::ParsePragmaLoopHint(StmtVector &Stmts,
   return S;
 }
 
-Decl *Parser::ParseFunctionStatementBody(Decl *Decl, ParseScope &BodyScope) {
+Decl *Parser::SplittableParseFunctionStatementBody(Decl *Decl, ParseScope &BodyScope) {
   assert(Tok.is(tok::l_brace));
   SourceLocation LBraceLoc = Tok.getLocation();
 
@@ -2088,6 +2087,27 @@ Decl *Parser::ParseFunctionStatementBody(Decl *Decl, ParseScope &BodyScope) {
 
   BodyScope.Exit();
   return Actions.ActOnFinishFunctionBody(Decl, FnBody.get());
+}
+
+Decl *Parser::ParseFunctionStatementBody(Decl *Decl, ParseScope &BodyScope) {
+  // Get the presence condition that the function was defined in.
+  // If this is a late-parsed method, this will not be the same as the presence
+  // condition of the current scope. However, the first token in the function
+  // body should always have the correct presence condition.
+  Variability::PresenceCondition *pc = Tok.getConditional();
+  // Set the presence condition of the current scope to match the current token.
+  // Note: although setting the condition of the scope is usually handled by
+  // ParseDeclarationSpecifiers, a different scope object may be created when
+  // parsing the body of a function so we need to set it again.
+  getCurScope()->setConditional(pc);
+
+  // Can't declare type Decl* so use NamedDecl* instead
+  NamedDecl *Result =
+      cast<NamedDecl>(SplittableParseFunctionStatementBody(Decl, BodyScope));
+  // Set presence condition of the parsed Decl
+  Result->setConditional(pc);
+
+  return Result;
 }
 
 /// ParseFunctionTryBlock - Parse a C++ function-try-block.

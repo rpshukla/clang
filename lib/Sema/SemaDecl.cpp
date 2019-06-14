@@ -51,13 +51,30 @@
 using namespace clang;
 using namespace sema;
 
-Sema::DeclGroupPtrTy Sema::ConvertDeclToDeclGroup(Decl *Ptr, Decl *OwnedType) {
+Sema::DeclGroupPtrTy Sema::SplittableConvertDeclToDeclGroup(Decl *Ptr, Decl *OwnedType) {
   if (OwnedType) {
     Decl *Group[2] = { OwnedType, Ptr };
     return DeclGroupPtrTy::make(DeclGroupRef::Create(Context, Group, 2));
   }
 
   return DeclGroupPtrTy::make(DeclGroupRef(Ptr));
+}
+
+Sema::DeclGroupPtrTy Sema::ConvertDeclToDeclGroup(Decl *Ptr, Decl *OwnedType) {
+  DeclGroupPtrTy Result = SplittableConvertDeclToDeclGroup(Ptr, OwnedType);
+
+  // Attach presence condition to each Decl in the group
+  Variability::PresenceCondition *pc = getCurScope()->getConditional();
+  if(Result.get().isNull()){
+  }else if(Result.get().isSingleDecl()){
+    Result.get().getSingleDecl()->setConditional(pc);
+  }else{
+    for(unsigned int i = 0; i < Result.get().getDeclGroup().size(); i++){
+      Result.get().getDeclGroup()[i]->setConditional(pc);
+    }
+  }
+
+  return Result;
 }
 
 namespace {
@@ -11383,8 +11400,8 @@ static bool hasDeducedAuto(DeclaratorDecl *DD) {
   return VD && !VD->getType()->hasAutoForTrailingReturnType();
 }
 
-Sema::DeclGroupPtrTy Sema::FinalizeDeclaratorGroup(Scope *S, const DeclSpec &DS,
-                                                   ArrayRef<Decl *> Group) {
+Sema::DeclGroupPtrTy Sema::SplittableFinalizeDeclaratorGroup(Scope *S, const DeclSpec &DS,
+                                                             ArrayRef<Decl *> Group) {
   SmallVector<Decl*, 8> Decls;
 
   if (DS.isTypeSpecOwned())
@@ -11449,6 +11466,24 @@ Sema::DeclGroupPtrTy Sema::FinalizeDeclaratorGroup(Scope *S, const DeclSpec &DS,
   }
 
   return BuildDeclaratorGroup(Decls);
+}
+
+Sema::DeclGroupPtrTy Sema::FinalizeDeclaratorGroup(Scope *S, const DeclSpec &DS,
+                                                   ArrayRef<Decl *> Group) {
+  DeclGroupPtrTy Result = SplittableFinalizeDeclaratorGroup(S, DS, Group);
+
+  // Attach presence condition to each Decl in the group
+  Variability::PresenceCondition *pc = getCurScope()->getConditional();
+  if(Result.get().isNull()){
+  }else if(Result.get().isSingleDecl()){
+    Result.get().getSingleDecl()->setConditional(pc);
+  }else{
+    for(unsigned int i = 0; i < Result.get().getDeclGroup().size(); i++){
+      Result.get().getDeclGroup()[i]->setConditional(pc);
+    }
+  }
+
+  return Result;
 }
 
 /// BuildDeclaratorGroup - convert a list of declarations into a declaration

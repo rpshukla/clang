@@ -855,6 +855,9 @@ void Preprocessor::ManageMyStack(Token &Result){
 }
 
 void Preprocessor::AssignConditional(Token& Result){
+  if (Result.getConditional() != nullptr) {
+    return;
+  }
   Variability::PresenceCondition* pc;
   std::vector<bool> decls;
   std::vector<std::string> names;

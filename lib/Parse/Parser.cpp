@@ -560,7 +560,7 @@ bool Parser::ParseFirstTopLevelDecl(DeclGroupPtrTy &Result) {
   return NoTopLevelDecls;
 }
 
-/// SplitableParseTopLevelDecl - Parse one top-level declaration, return whatever the
+/// ParseTopLevelDecl - Parse one top-level declaration, return whatever the
 /// action tells us to.  This returns true if the EOF was encountered.
 bool Parser::ParseTopLevelDecl(DeclGroupPtrTy &Result) {
   DestroyTemplateIdAnnotationsRAIIObj CleanupRAII(TemplateIds);
@@ -630,36 +630,6 @@ bool Parser::ParseTopLevelDecl(DeclGroupPtrTy &Result) {
   return false;
 }
 
-
-Parser::DeclGroupPtrTy
-Parser::ParseExternalDeclaration(ParsedAttributesWithRange &attrs,
-                                 ParsingDeclSpec *DS) {
-  while(Tok.is(tok::split)){
-    // When parsing external declarations, we don't backtrack, so cancel
-    // any backtrack positions that were set here
-    PP.CommitBacktrackedTokens();
-    ConsumeToken();
-  }
-
-  Variability::PresenceCondition* pc = Tok.getConditional();
-
-  getCurScope()->setConditional(pc);
-  DeclGroupPtrTy Result = SplitableParseExternalDeclaration(attrs, DS);
-  getCurScope()->setConditional(Tok.getConditional());
-
-
-  if(Result.get().isNull()){
-  }else if(Result.get().isSingleDecl()){
-    Result.get().getSingleDecl()->setConditional(pc);
-    //Result.get().getSingleDecl()->dumpColor();
-  }else{
-    for(unsigned int i = 0; i < Result.get().getDeclGroup().size(); i++){
-      Result.get().getDeclGroup()[i]->setConditional(pc);
-      //Result.get().getDeclGroup()[i]->dumpColor();
-    }
-  }
-  return Result;
-}
 /// ParseExternalDeclaration:
 ///
 ///       external-declaration: [C99 6.9], declaration: [C++ dcl.dcl]
@@ -687,7 +657,7 @@ Parser::ParseExternalDeclaration(ParsedAttributesWithRange &attrs,
 /// [Modules-TS] module-import-declaration
 ///
 Parser::DeclGroupPtrTy
-Parser::SplitableParseExternalDeclaration(ParsedAttributesWithRange &attrs,
+Parser::ParseExternalDeclaration(ParsedAttributesWithRange &attrs,
                                  ParsingDeclSpec *DS) {
   DestroyTemplateIdAnnotationsRAIIObj CleanupRAII(TemplateIds);
   ParenBraceBracketBalancer BalancerRAIIObj(*this);

@@ -1340,9 +1340,6 @@ private:
     SourceRange Range;
   };
 
-  DeclGroupPtrTy SplitableParseExternalDeclaration(ParsedAttributesWithRange &attrs,
-                                          ParsingDeclSpec *DS = nullptr);
-
   DeclGroupPtrTy ParseExternalDeclaration(ParsedAttributesWithRange &attrs,
                                           ParsingDeclSpec *DS = nullptr);
   bool isDeclarationAfterDeclarator();
@@ -1774,7 +1771,7 @@ private:
     /// \brief Allow statements and all executable OpenMP directives
     ACK_StatementsOpenMPAnyExecutable
   };
-  StmtResult SplitableParseStatementOrDeclaration(StmtVector &Stmts, 
+  StmtResult SplittableParseStatementOrDeclaration(StmtVector &Stmts,
           AllowedConstructsKind Allowed, SourceLocation *TrailingElseLoc = nullptr);
   StmtResult
   ParseStatementOrDeclaration(StmtVector &Stmts, AllowedConstructsKind Allowed,
@@ -1954,10 +1951,6 @@ private:
     bool ParsedForRangeDecl() { return !ColonLoc.isInvalid(); }
   };
 
-  DeclGroupPtrTy SplittableParseDeclaration(DeclaratorContext Context,
-                                            SourceLocation &DeclEnd,
-                                            ParsedAttributesWithRange &attrs);
-
   DeclGroupPtrTy ParseDeclaration(DeclaratorContext Context,
                                   SourceLocation &DeclEnd,
                                   ParsedAttributesWithRange &attrs);
@@ -1977,6 +1970,10 @@ private:
       Declarator &D,
       const ParsedTemplateInfo &TemplateInfo = ParsedTemplateInfo(),
       ForRangeInit *FRI = nullptr);
+  /// Renamed from original ParseFunctionStatementBody
+  Decl *SplittableParseFunctionStatementBody(Decl *Decl, ParseScope &BodyScope);
+  /// Wrapper around original ParseFunctionStatementBody
+  /// Assigns presence condition to the Decl before it is returned
   Decl *ParseFunctionStatementBody(Decl *Decl, ParseScope &BodyScope);
   Decl *ParseFunctionTryBlock(Decl *Decl, ParseScope &BodyScope);
 
@@ -1992,12 +1989,23 @@ private:
                         ParsedAttributesWithRange &Attrs);
   DeclSpecContext
   getDeclSpecContextFromDeclaratorContext(DeclaratorContext Context);
+
+  /// Renamed from the original ParseDeclarationSpecifiers
+  void SplittableParseDeclarationSpecifiers(
+      DeclSpec &DS,
+      const ParsedTemplateInfo &TemplateInfo = ParsedTemplateInfo(),
+      AccessSpecifier AS = AS_none,
+      DeclSpecContext DSC = DeclSpecContext::DSC_normal,
+      LateParsedAttrList *LateAttrs = nullptr);
+  /// A wrapper around the original ParseDeclarationSpecifiers which consumes
+  /// any split tokens and updates the presence condition of the current scope
   void ParseDeclarationSpecifiers(
       DeclSpec &DS,
       const ParsedTemplateInfo &TemplateInfo = ParsedTemplateInfo(),
       AccessSpecifier AS = AS_none,
       DeclSpecContext DSC = DeclSpecContext::DSC_normal,
       LateParsedAttrList *LateAttrs = nullptr);
+
   bool DiagnoseMissingSemiAfterTagDefinition(
       DeclSpec &DS, AccessSpecifier AS, DeclSpecContext DSContext,
       LateParsedAttrList *LateAttrs = nullptr);
