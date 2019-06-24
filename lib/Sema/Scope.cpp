@@ -93,6 +93,15 @@ void Scope::Init(Scope *parent, unsigned flags) {
   Entity = nullptr;
   ErrorTrap.reset();
   NRVO.setPointerAndInt(nullptr, 0);
+
+  // Set the condition of the new scope to be the same as the parent scope.
+  // This is important. Since scopes are cached we need to ensure that when
+  // cached scopes are retrieved, they aren't left with old conditions
+  if (parent) {
+    setConditional(parent->getConditional());
+  } else {
+    setConditional(new Variability::True);
+  }
 }
 
 bool Scope::containedInPrototypeScope() const {
