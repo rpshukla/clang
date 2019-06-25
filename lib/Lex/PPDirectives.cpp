@@ -2738,16 +2738,12 @@ void Preprocessor::HandleIfdefDirective(Token &Result,
         CurPPLexer->pushConditionalLevel(DirectiveTok.getLocation(),
                                          /*wasskip*/false, /*foundnonskip*/true,
                                          /*foundelse*/false);
-    else {
-        // Normally, we would pop from VariabilityStack when an #endif token is
-        // encountered. However, since the #endif will be skipped, we must pop here.
-        VariabilityStack.pop_back();
+    else
         // No, skip the contents of this block.
         SkipExcludedConditionalBlock(HashToken.getLocation(),
                                      DirectiveTok.getLocation(),
                                      /*Foundnonskip*/ false,
                                      /*FoundElse*/ false);
-    }
   }
 }
 
@@ -2791,9 +2787,6 @@ void Preprocessor::HandleIfDirective(Token &IfToken,
     CurPPLexer->pushConditionalLevel(IfToken.getLocation(), /*wasskip*/false,
                                    /*foundnonskip*/true, /*foundelse*/false);
   } else {
-    // Normally, we would pop from VariabilityStack when an #endif token is
-    // encountered. However, since the #endif will be skipped, we must pop here.
-    VariabilityStack.pop_back();
     // No, skip the contents of this block.
     SkipExcludedConditionalBlock(HashToken.getLocation(), IfToken.getLocation(),
                                  /*Foundnonskip*/ false,
