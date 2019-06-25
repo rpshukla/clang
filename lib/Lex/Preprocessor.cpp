@@ -824,28 +824,20 @@ void Preprocessor::ManageMyStack(Token &Result){
         //<< "\n";
       if(II->getPPKeywordID() == tok::pp_ifdef){
         createName
-        //llvm::outs() << ")))Push: " << name << "\n";
-        VariabilityStack.push_back({true, isMacroVariability(name), name});
+        if (isMacroVariability(name)) {
+          VariabilityIfLocations.insert(Result.getLocation());
+          VariabilityStack.push_back({true, isMacroVariability(name), name});
+        }
       }else if(II->getPPKeywordID() == tok::pp_ifndef){
         createName
-        //llvm::outs() << ")))Push: ~" << name << "\n";
-        VariabilityStack.push_back({false, isMacroVariability(name), name});
-      }else if(II->getPPKeywordID() == tok::pp_else){
-        //llvm::outs() << ")))Flip\n";
-        VariabilityStack.back().isDef ^= true;
-      }else if(II->getPPKeywordID() == tok::pp_endif){
-        //llvm::outs() << ")))Pop\n";
-        VariabilityStack.pop_back();
+        if (isMacroVariability(name)) {
+          VariabilityIfLocations.insert(Result.getLocation());
+          VariabilityStack.push_back({false, isMacroVariability(name), name});
+        }
       }else if(II->getPPKeywordID() == tok::pp_if){
         // not supported for variability aware analysis for now
-        createName
-        VariabilityStack.push_back({true, false, name});
       }else if(II->getPPKeywordID() == tok::pp_elif){
         // not supported for variability aware analysis for now
-        createName
-        VariabilityStack.pop_back(); // if this was supported, this value would need to be stored
-        // and taken into account when deciding what to push back onto the stack
-        VariabilityStack.push_back({true, false, name});
       }
     }
     wasEndOfDirective = Result.is(tok::eod);

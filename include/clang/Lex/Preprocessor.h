@@ -138,6 +138,19 @@ class Preprocessor {
   std::unordered_set<std::string> VariabilityMacros;
   std::vector<VariabilityLocation> VariabilityStack;
 
+  // Define hash function for SourceLocation so that it can be used in a
+  // std::unordered_set
+  class SourceLocationHash {
+  public:
+    size_t operator()(const SourceLocation &loc) const {
+      return (size_t)loc.getRawEncoding();
+    }
+  };
+  // A set to store SourceLocations of #if or #ifdef's that have been used for
+  // variability-aware analysis. This helps decided whether or not we need to
+  // pop from VariabilityStack when an #endif is encountered
+  std::unordered_set<SourceLocation, SourceLocationHash> VariabilityIfLocations;
+
   std::shared_ptr<PreprocessorOptions> PPOpts;
   DiagnosticsEngine        *Diags;
   LangOptions       &LangOpts;

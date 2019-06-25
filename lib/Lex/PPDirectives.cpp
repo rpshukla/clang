@@ -2816,6 +2816,11 @@ void Preprocessor::HandleEndifDirective(Token &EndifToken) {
   assert(!CondInfo.WasSkipping && !CurPPLexer->LexingRawMode &&
          "This code should only be reachable in the non-skipping case!");
 
+  // If this #endif corresponds to an #if or #ifdef used in variability-aware analysis,
+  // we must pop an item from VariabilityStack
+  if (VariabilityIfLocations.find(CondInfo.IfLoc) != VariabilityIfLocations.end())
+    VariabilityStack.pop_back();
+
   if (Callbacks)
     Callbacks->Endif(EndifToken.getLocation(), CondInfo.IfLoc);
 }
@@ -2855,12 +2860,18 @@ void Preprocessor::HandleElseDirective(Token &Result, const Token &HashToken) {
   getRawToken(CI.IfLoc, MacroNameTok);
   getRawToken(MacroNameTok.getEndLoc().getLocWithOffset(1), MacroNameTok, true);
 
-  if(!isMacroVariability(getSpelling(MacroNameTok))){
+  // Only skip the rest of this block if we are not performing variability-aware
+  // analysis on it
+  if (VariabilityIfLocations.find(CI.IfLoc) == VariabilityIfLocations.end()) {
     // Finally, skip the rest of the contents of this block.
     SkipExcludedConditionalBlock(HashToken.getLocation(), CI.IfLoc,
                                  /*Foundnonskip*/ true,
                                  /*FoundElse*/ true, Result.getLocation());
   }else{
+    // We are performing variability-aware analysis on this block.
+    // Since we have encountered an #else, we must "flip" the condition at the
+    // top of the stack.
+    VariabilityStack.back().isDef ^= true;
     CurPPLexer->pushConditionalLevel(CI.IfLoc, /*wasskip*/false,
                                      /*foundnonskip*/false, /*foundelse*/true);
   }
@@ -2902,6 +2913,13 @@ void Preprocessor::HandleElifDirective(Token &ElifToken,
     // the directive blocks.
     CurPPLexer->pushConditionalLevel(ElifToken.getLocation(), /*wasskip*/false,
                                      /*foundnonskip*/false, /*foundelse*/false);
+    return;
+  }
+
+  // If we are performing variability-aware analysis on this block, don't skip it
+  if (VariabilityIfLocations.find(CI.IfLoc) != VariabilityIfLocations.end()) {
+    // Push CI back on the stack
+    CurPPLexer->pushConditionalLevel(CI);
     return;
   }
 
