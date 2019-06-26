@@ -2731,11 +2731,10 @@ void Preprocessor::HandleIfdefDirective(Token &Result,
                                      /*wasskip*/false, /*foundnonskip*/true,
                                      /*foundelse*/false);
     std::string name = getSpelling(MacroNameTok);
-    VariabilityIfLocations.insert(DirectiveTok.getLocation());
     if (isIfndef)
-      VariabilityStack.push_back({false, true, name});
+      VariabilityStack.push_back({false, DirectiveTok.getLocation(), name});
     else
-      VariabilityStack.push_back({true, true, name});
+      VariabilityStack.push_back({true, DirectiveTok.getLocation(), name});
   } else if (!MI == isIfndef) {
     // Yes, remember that we are inside a conditional, then lex the next token.
     CurPPLexer->pushConditionalLevel(DirectiveTok.getLocation(),
@@ -2821,7 +2820,8 @@ void Preprocessor::HandleEndifDirective(Token &EndifToken) {
 
   // If this #endif corresponds to an #if or #ifdef used in variability-aware analysis,
   // we must pop an item from VariabilityStack
-  if (VariabilityIfLocations.find(CondInfo.IfLoc) != VariabilityIfLocations.end())
+  //if (VariabilityIfLocations.find(CondInfo.IfLoc) != VariabilityIfLocations.end())
+  if (isVariabilityIfLoc(CondInfo.IfLoc))
     VariabilityStack.pop_back();
 
   if (Callbacks)
@@ -2865,7 +2865,8 @@ void Preprocessor::HandleElseDirective(Token &Result, const Token &HashToken) {
 
   // Only skip the rest of this block if we are not performing variability-aware
   // analysis on it
-  if (VariabilityIfLocations.find(CI.IfLoc) == VariabilityIfLocations.end()) {
+  //if (VariabilityIfLocations.find(CI.IfLoc) == VariabilityIfLocations.end()) {
+  if (!isVariabilityIfLoc(CI.IfLoc)) {
     // Finally, skip the rest of the contents of this block.
     SkipExcludedConditionalBlock(HashToken.getLocation(), CI.IfLoc,
                                  /*Foundnonskip*/ true,
@@ -2921,7 +2922,8 @@ void Preprocessor::HandleElifDirective(Token &ElifToken,
 
   // For now, if we are performing variability-aware analysis on a block but
   // an #elif is encountered, just skip it
-  if (VariabilityIfLocations.find(CI.IfLoc) != VariabilityIfLocations.end())
+  //if (VariabilityIfLocations.find(CI.IfLoc) != VariabilityIfLocations.end())
+  if (isVariabilityIfLoc(CI.IfLoc))
     VariabilityStack.pop_back();
 
   // Finally, skip the rest of the contents of this block.

@@ -121,7 +121,7 @@ enum MacroUse {
 
 struct VariabilityLocation{
     bool isDef;
-    bool shouldUse;
+    SourceLocation IfLoc;
     std::string name;
 };
 
@@ -137,19 +137,6 @@ class Preprocessor {
 
   std::unordered_set<std::string> VariabilityMacros;
   std::vector<VariabilityLocation> VariabilityStack;
-
-  // Define hash function for SourceLocation so that it can be used in a
-  // std::unordered_set
-  class SourceLocationHash {
-  public:
-    size_t operator()(const SourceLocation &loc) const {
-      return (size_t)loc.getRawEncoding();
-    }
-  };
-  // A set to store SourceLocations of #if or #ifdef's that have been used for
-  // variability-aware analysis. This helps decided whether or not we need to
-  // pop from VariabilityStack when an #endif is encountered
-  std::unordered_set<SourceLocation, SourceLocationHash> VariabilityIfLocations;
 
   std::shared_ptr<PreprocessorOptions> PPOpts;
   DiagnosticsEngine        *Diags;
@@ -365,6 +352,14 @@ public:
   bool hasVarConfigFile() { return VarConfigFile != nullptr; }
   bool isMacroVariability(std::string macroname) {
       return !hasVarConfigFile() || (VariabilityMacros.find(macroname) != VariabilityMacros.end());
+  }
+
+private:
+  /// \brief Returns true if IfLoc is the location of the last #if or #ifdef
+  /// used for variability-aware analysis.
+  bool isVariabilityIfLoc(SourceLocation IfLoc) {
+    return VariabilityStack.size() > 0 &&
+           IfLoc == VariabilityStack.back().IfLoc;
   }
 
 private:

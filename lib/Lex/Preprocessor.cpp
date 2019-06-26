@@ -810,13 +810,11 @@ void Preprocessor::AssignConditional(Token& Result){
   std::vector<bool> decls;
   std::vector<std::string> names;
   for(auto vLoc = VariabilityStack.begin(); vLoc != VariabilityStack.end(); ++vLoc) {
-    if(vLoc->shouldUse){
-      //llvm::outs() << "Pushing decl:" << vLoc->isDef << "\n";;
-      decls.push_back(vLoc->isDef);
-      //llvm::outs() << "Pushing name:" << vLoc->name << "\n";;
-      names.push_back(vLoc->name);
-      //llvm::outs() << "Done Pushing\n";
-    }
+    //llvm::outs() << "Pushing decl:" << vLoc->isDef << "\n";;
+    decls.push_back(vLoc->isDef);
+    //llvm::outs() << "Pushing name:" << vLoc->name << "\n";;
+    names.push_back(vLoc->name);
+    //llvm::outs() << "Done Pushing\n";
   }
   if(decls.size() > 0){
     pc = Variability::PresenceCondition::getList(decls, names);
