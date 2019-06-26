@@ -2820,7 +2820,6 @@ void Preprocessor::HandleEndifDirective(Token &EndifToken) {
 
   // If this #endif corresponds to an #if or #ifdef used in variability-aware analysis,
   // we must pop an item from VariabilityStack
-  //if (VariabilityIfLocations.find(CondInfo.IfLoc) != VariabilityIfLocations.end())
   if (isVariabilityIfLoc(CondInfo.IfLoc))
     VariabilityStack.pop_back();
 
@@ -2865,7 +2864,6 @@ void Preprocessor::HandleElseDirective(Token &Result, const Token &HashToken) {
 
   // Only skip the rest of this block if we are not performing variability-aware
   // analysis on it
-  //if (VariabilityIfLocations.find(CI.IfLoc) == VariabilityIfLocations.end()) {
   if (!isVariabilityIfLoc(CI.IfLoc)) {
     // Finally, skip the rest of the contents of this block.
     SkipExcludedConditionalBlock(HashToken.getLocation(), CI.IfLoc,
@@ -2922,7 +2920,6 @@ void Preprocessor::HandleElifDirective(Token &ElifToken,
 
   // For now, if we are performing variability-aware analysis on a block but
   // an #elif is encountered, just skip it
-  //if (VariabilityIfLocations.find(CI.IfLoc) != VariabilityIfLocations.end())
   if (isVariabilityIfLoc(CI.IfLoc))
     VariabilityStack.pop_back();
 
