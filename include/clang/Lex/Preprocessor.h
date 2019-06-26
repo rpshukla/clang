@@ -1268,8 +1268,6 @@ public:
   /// \brief Lex the next token for this preprocessor.
   void Lex(Token &Result);
 
-  void ManageMyStack(Token &Result);
-
   void AssignConditional(Token &Result);
 
   void LexAfterModuleImport(Token &Result);
