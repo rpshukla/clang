@@ -927,9 +927,6 @@ void Preprocessor::HandleDirective(Token &Result) {
   // and reset to previous state when returning from this function.
   ResetMacroExpansionHelper helper(this);
 
-  // Manage VariabiltyStack (push/pop) if necessary
-  ManageMyStack(Result);
-
   switch (Result.getKind()) {
   case tok::eod:
     return;   // null directive.
@@ -2728,26 +2725,27 @@ void Preprocessor::HandleIfdefDirective(Token &Result,
     CurPPLexer->pushConditionalLevel(DirectiveTok.getLocation(),
                                      /*wasskip*/false, /*foundnonskip*/false,
                                      /*foundelse*/false);
+  } else if (isMacroVariability(getSpelling(MacroNameTok))) {
+    // Yes, this #ifdef/#ifndef will be used for variability-aware analysis
+    CurPPLexer->pushConditionalLevel(DirectiveTok.getLocation(),
+                                     /*wasskip*/false, /*foundnonskip*/true,
+                                     /*foundelse*/false);
+    std::string name = getSpelling(MacroNameTok);
+    if (isIfndef)
+      VariabilityStack.push_back({false, DirectiveTok.getLocation(), name});
+    else
+      VariabilityStack.push_back({true, DirectiveTok.getLocation(), name});
   } else if (!MI == isIfndef) {
     // Yes, remember that we are inside a conditional, then lex the next token.
     CurPPLexer->pushConditionalLevel(DirectiveTok.getLocation(),
                                      /*wasskip*/false, /*foundnonskip*/true,
                                      /*foundelse*/false);
   } else {
-    if(isMacroVariability(getSpelling(MacroNameTok)))
-        CurPPLexer->pushConditionalLevel(DirectiveTok.getLocation(),
-                                         /*wasskip*/false, /*foundnonskip*/true,
-                                         /*foundelse*/false);
-    else {
-        // Normally, we would pop from VariabilityStack when an #endif token is
-        // encountered. However, since the #endif will be skipped, we must pop here.
-        VariabilityStack.pop_back();
-        // No, skip the contents of this block.
-        SkipExcludedConditionalBlock(HashToken.getLocation(),
-                                     DirectiveTok.getLocation(),
-                                     /*Foundnonskip*/ false,
-                                     /*FoundElse*/ false);
-    }
+    // No, skip the contents of this block.
+    SkipExcludedConditionalBlock(HashToken.getLocation(),
+                                 DirectiveTok.getLocation(),
+                                 /*Foundnonskip*/ false,
+                                 /*FoundElse*/ false);
   }
 }
 
@@ -2791,9 +2789,6 @@ void Preprocessor::HandleIfDirective(Token &IfToken,
     CurPPLexer->pushConditionalLevel(IfToken.getLocation(), /*wasskip*/false,
                                    /*foundnonskip*/true, /*foundelse*/false);
   } else {
-    // Normally, we would pop from VariabilityStack when an #endif token is
-    // encountered. However, since the #endif will be skipped, we must pop here.
-    VariabilityStack.pop_back();
     // No, skip the contents of this block.
     SkipExcludedConditionalBlock(HashToken.getLocation(), IfToken.getLocation(),
                                  /*Foundnonskip*/ false,
@@ -2822,6 +2817,11 @@ void Preprocessor::HandleEndifDirective(Token &EndifToken) {
 
   assert(!CondInfo.WasSkipping && !CurPPLexer->LexingRawMode &&
          "This code should only be reachable in the non-skipping case!");
+
+  // If this #endif corresponds to an #if or #ifdef used in variability-aware analysis,
+  // we must pop an item from VariabilityStack
+  if (isVariabilityIfLoc(CondInfo.IfLoc))
+    VariabilityStack.pop_back();
 
   if (Callbacks)
     Callbacks->Endif(EndifToken.getLocation(), CondInfo.IfLoc);
@@ -2862,12 +2862,18 @@ void Preprocessor::HandleElseDirective(Token &Result, const Token &HashToken) {
   getRawToken(CI.IfLoc, MacroNameTok);
   getRawToken(MacroNameTok.getEndLoc().getLocWithOffset(1), MacroNameTok, true);
 
-  if(!isMacroVariability(getSpelling(MacroNameTok))){
+  // Only skip the rest of this block if we are not performing variability-aware
+  // analysis on it
+  if (!isVariabilityIfLoc(CI.IfLoc)) {
     // Finally, skip the rest of the contents of this block.
     SkipExcludedConditionalBlock(HashToken.getLocation(), CI.IfLoc,
                                  /*Foundnonskip*/ true,
                                  /*FoundElse*/ true, Result.getLocation());
   }else{
+    // We are performing variability-aware analysis on this block.
+    // Since we have encountered an #else, we must "flip" the condition at the
+    // top of the stack.
+    VariabilityStack.back().isDef ^= true;
     CurPPLexer->pushConditionalLevel(CI.IfLoc, /*wasskip*/false,
                                      /*foundnonskip*/false, /*foundelse*/true);
   }
@@ -2911,6 +2917,11 @@ void Preprocessor::HandleElifDirective(Token &ElifToken,
                                      /*foundnonskip*/false, /*foundelse*/false);
     return;
   }
+
+  // For now, if we are performing variability-aware analysis on a block but
+  // an #elif is encountered, just skip it
+  if (isVariabilityIfLoc(CI.IfLoc))
+    VariabilityStack.pop_back();
 
   // Finally, skip the rest of the contents of this block.
   SkipExcludedConditionalBlock(

@@ -801,58 +801,6 @@ void Preprocessor::Lex(Token &Result) {
   LastTokenWasAt = Result.is(tok::at);
   //llvm::outs() << Result.getConditional()->toString() << "\n";
 }
-int death_count = 0;
-void Preprocessor::ManageMyStack(Token &Result){
-  static bool wasEndOfDirective = false;
-  //llvm::outs() << "DC:" << death_count++ << "\n";
-  if(!Result.is(tok::raw_identifier) && !Result.isAnnotation() && !Result.is(tok::split)){
-#define createName \
-    Token t;\
-    getRawToken(Result.getEndLoc().getLocWithOffset(1), t, true);\
-    std::string name = getSpelling(t);
-
-      //llvm::outs() << "Attempted   " << Result.getName() << ":" << getSpelling(Result)
-        //<< "   Flags: " << Result.getFlags()
-        //<< "\n";
-
-
-  IdentifierInfo *II = Result.getIdentifierInfo();
-    if (II && (!wasEndOfDirective || getSpelling(Result) == "ifdef" || getSpelling(Result) == "ifndef") && II->getPPKeywordID()){
-      //llvm::outs() << "Allowed   " << Result.getName() << ":" << getSpelling(Result)
-        //<< "   Flags: " << Result.getFlags()
-        //<< "   PPID: " << II->getPPKeywordID()
-        //<< "\n";
-      if(II->getPPKeywordID() == tok::pp_ifdef){
-        createName
-        //llvm::outs() << ")))Push: " << name << "\n";
-        VariabilityStack.push_back({true, isMacroVariability(name), name});
-      }else if(II->getPPKeywordID() == tok::pp_ifndef){
-        createName
-        //llvm::outs() << ")))Push: ~" << name << "\n";
-        VariabilityStack.push_back({false, isMacroVariability(name), name});
-      }else if(II->getPPKeywordID() == tok::pp_else){
-        //llvm::outs() << ")))Flip\n";
-        VariabilityStack.back().isDef ^= true;
-      }else if(II->getPPKeywordID() == tok::pp_endif){
-        //llvm::outs() << ")))Pop\n";
-        VariabilityStack.pop_back();
-      }else if(II->getPPKeywordID() == tok::pp_if){
-        // not supported for variability aware analysis for now
-        createName
-        VariabilityStack.push_back({true, false, name});
-      }else if(II->getPPKeywordID() == tok::pp_elif){
-        // not supported for variability aware analysis for now
-        createName
-        VariabilityStack.pop_back(); // if this was supported, this value would need to be stored
-        // and taken into account when deciding what to push back onto the stack
-        VariabilityStack.push_back({true, false, name});
-      }
-    }
-    wasEndOfDirective = Result.is(tok::eod);
-  }
-
-#undef createName
-}
 
 void Preprocessor::AssignConditional(Token& Result){
   if (Result.getConditional() != nullptr) {
@@ -862,13 +810,11 @@ void Preprocessor::AssignConditional(Token& Result){
   std::vector<bool> decls;
   std::vector<std::string> names;
   for(auto vLoc = VariabilityStack.begin(); vLoc != VariabilityStack.end(); ++vLoc) {
-    if(vLoc->shouldUse){
-      //llvm::outs() << "Pushing decl:" << vLoc->isDef << "\n";;
-      decls.push_back(vLoc->isDef);
-      //llvm::outs() << "Pushing name:" << vLoc->name << "\n";;
-      names.push_back(vLoc->name);
-      //llvm::outs() << "Done Pushing\n";
-    }
+    //llvm::outs() << "Pushing decl:" << vLoc->isDef << "\n";;
+    decls.push_back(vLoc->isDef);
+    //llvm::outs() << "Pushing name:" << vLoc->name << "\n";;
+    names.push_back(vLoc->name);
+    //llvm::outs() << "Done Pushing\n";
   }
   if(decls.size() > 0){
     pc = Variability::PresenceCondition::getList(decls, names);

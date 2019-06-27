@@ -121,7 +121,7 @@ enum MacroUse {
 
 struct VariabilityLocation{
     bool isDef;
-    bool shouldUse;
+    SourceLocation IfLoc;
     std::string name;
 };
 
@@ -352,6 +352,14 @@ public:
   bool hasVarConfigFile() { return VarConfigFile != nullptr; }
   bool isMacroVariability(std::string macroname) {
       return !hasVarConfigFile() || (VariabilityMacros.find(macroname) != VariabilityMacros.end());
+  }
+
+private:
+  /// \brief Returns true if IfLoc is the location of the last #if or #ifdef
+  /// used for variability-aware analysis.
+  bool isVariabilityIfLoc(SourceLocation IfLoc) {
+    return VariabilityStack.size() > 0 &&
+           IfLoc == VariabilityStack.back().IfLoc;
   }
 
 private:
@@ -1254,8 +1262,6 @@ public:
 
   /// \brief Lex the next token for this preprocessor.
   void Lex(Token &Result);
-
-  void ManageMyStack(Token &Result);
 
   void AssignConditional(Token &Result);
 
