@@ -354,7 +354,6 @@ public:
       return !hasVarConfigFile() || (VariabilityMacros.find(macroname) != VariabilityMacros.end());
   }
 
-private:
   /// \brief Returns true if IfLoc is the location of the last #if or #ifdef
   /// used for variability-aware analysis.
   bool isVariabilityIfLoc(SourceLocation IfLoc) {

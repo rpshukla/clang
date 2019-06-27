@@ -3876,11 +3876,9 @@ HandleDirective:
   IdentifierInfo *II = Result.getIdentifierInfo();
   if (!II) return false; // Not an identifier.
   if(II->getPPKeywordID() == tok::pp_ifdef ||
-     II->getPPKeywordID() == tok::pp_ifndef) {
-      Token t;
-      PP->getRawToken(Result.getEndLoc().getLocWithOffset(1), t, true);
-      std::string name = PP->getSpelling(t);
-      if(PP->isMacroVariability(name)){
+     II->getPPKeywordID() == tok::pp_ifndef ||
+     II->getPPKeywordID() == tok::pp_if) {
+      if (PP->isVariabilityIfLoc(Result.getLocation())) {
         // Return special split token
         Result.setKind(tok::split);
         // Set the presence condition of the split token to null.
