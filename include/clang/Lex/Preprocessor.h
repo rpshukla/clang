@@ -122,7 +122,7 @@ enum MacroUse {
 struct VariabilityLocation{
     bool isDef;
     SourceLocation IfLoc;
-    std::string name;
+    Variability::PresenceCondition *condition;
 };
 
 /// \brief Engages in a tight little dance with the lexer to efficiently

@@ -54,8 +54,8 @@ public:
     virtual PresenceCondition* toCnf();
     virtual PresenceCondition* toNegationNormal();
     // This function returns the presence condition based on the stack given
-    static PresenceCondition* getList(std::vector<bool> declarations,
-        std::vector<std::string> names);
+    static PresenceCondition *getList(std::vector<bool> isDefVector,
+                                      std::vector<PresenceCondition *> conditionVector);
 
     // These three methods are called to determine if th parser should split
     bool ShouldSplitOnCondition(PresenceCondition* other);

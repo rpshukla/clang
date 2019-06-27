@@ -2732,9 +2732,11 @@ void Preprocessor::HandleIfdefDirective(Token &Result,
                                      /*foundelse*/false);
     std::string name = getSpelling(MacroNameTok);
     if (isIfndef)
-      VariabilityStack.push_back({false, DirectiveTok.getLocation(), name});
+      VariabilityStack.push_back(
+          {false, DirectiveTok.getLocation(), new Variability::Literal(name)});
     else
-      VariabilityStack.push_back({true, DirectiveTok.getLocation(), name});
+      VariabilityStack.push_back(
+          {true, DirectiveTok.getLocation(), new Variability::Literal(name)});
   } else if (!MI == isIfndef) {
     // Yes, remember that we are inside a conditional, then lex the next token.
     CurPPLexer->pushConditionalLevel(DirectiveTok.getLocation(),
@@ -2808,7 +2810,7 @@ void Preprocessor::HandleIfDirective(Token &IfToken,
     // Yes, perform variability-aware analysis on this block
     CurPPLexer->pushConditionalLevel(IfToken.getLocation(), /*wasskip*/false,
                                    /*foundnonskip*/true, /*foundelse*/false);
-    // TODO Push to VariabilityStack
+    VariabilityStack.push_back({true, IfToken.getLocation(), ParsedCondition});
   } else if (ConditionalTrue) {
     // Yes, remember that we are inside a conditional, then lex the next token.
     CurPPLexer->pushConditionalLevel(IfToken.getLocation(), /*wasskip*/false,

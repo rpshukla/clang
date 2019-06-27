@@ -193,27 +193,25 @@ Or::Or(PresenceCondition* left_, PresenceCondition* right_) {
     this->typeOfPC = OR;
 }
 
-PresenceCondition* PresenceCondition::getList(std::vector<bool> declarations, std::vector<std::string> names) {
-    // unpacks the vectors from the condition stack to form the current conditional
-    if (names.size() == 0) {
-        return new True();
-    } else if (names.size() == 1) {
-        return declarations[0] ?
-            static_cast<PresenceCondition*>(new Literal(names[0])) :
-            static_cast<PresenceCondition*>(new Not(new Literal(names[0])));
-    } else {
-        PresenceCondition* pc = declarations[0] ?
-            static_cast<PresenceCondition*>(new Literal(names[0])) :
-            static_cast<PresenceCondition*>(new Not(new Literal(names[0])));
+PresenceCondition *
+PresenceCondition::getList(std::vector<bool> isDefVector,
+                           std::vector<PresenceCondition *> conditionVector) {
+  // unpacks the vectors from the condition stack to form the current
+  // conditional
+  if (conditionVector.size() == 0) {
+    return new True();
+  } else if (conditionVector.size() == 1) {
+    return isDefVector[0] ? conditionVector[0] : new Not(conditionVector[0]);
+  } else {
+    PresenceCondition *pc =
+        isDefVector[0] ? conditionVector[0] : new Not(conditionVector[0]);
 
-        for (unsigned long i = 1, e = names.size(); i < e; ++i) {
-            pc = new And(pc, declarations[i] ?
-                    static_cast<PresenceCondition*>(new Literal(names[i])) :
-                    static_cast<PresenceCondition*>(new Not(new Literal(names[i]))));
-        }
-        return pc;
+    for (unsigned long i = 1, e = conditionVector.size(); i < e; ++i) {
+      pc = new And(pc, isDefVector[i] ? conditionVector[i]
+                                      : new Not(conditionVector[i]));
     }
-
+    return pc;
+  }
 }
 PresenceCondition* PresenceCondition::toNegationNormal(){
     // this should never be called
