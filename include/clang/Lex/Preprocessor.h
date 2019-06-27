@@ -1980,6 +1980,13 @@ private:
   /// If the expression is equivalent to "!defined(X)" return X in IfNDefMacro.
   DirectiveEvalResult EvaluateDirectiveExpression(IdentifierInfo *&IfNDefMacro);
 
+  /// \brief Tries to parse the expression after an "#if" directive and
+  /// construct a PresenceCondition.
+  ///
+  /// Returns pointer to the PresenceCondition parsed. Will return nullptr
+  /// on failure.
+  Variability::PresenceCondition *TryParsePresenceCondition();
+
   /// \brief Install the standard preprocessor pragmas:
   /// \#pragma GCC poison/system_header/dependency and \#pragma once.
   void RegisterBuiltinPragmas();

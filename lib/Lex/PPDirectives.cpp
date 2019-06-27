@@ -2756,11 +2756,27 @@ void Preprocessor::HandleIfDirective(Token &IfToken,
                                      bool ReadAnyTokensBeforeDirective) {
   ++NumIf;
 
-  // Parse and evaluate the conditional expression.
-  IdentifierInfo *IfNDefMacro = nullptr;
   const SourceLocation ConditionalBegin = CurPPLexer->getSourceLocation();
-  const DirectiveEvalResult DER = EvaluateDirectiveExpression(IfNDefMacro);
-  const bool ConditionalTrue = DER.Conditional;
+  EnableBacktrackAtThisPos();
+  Variability::PresenceCondition *ParsedCondition = TryParsePresenceCondition();
+  if (ParsedCondition) {
+    CommitBacktrackedTokens();
+  } else {
+    Backtrack();
+  }
+
+  // If the PresenceCondition was not successfully parsed, parse and evaluate
+  // the conditional expresssion the normal way
+  IdentifierInfo *IfNDefMacro = nullptr;
+  DirectiveEvalResult DER = {true, false};
+  bool ConditionalTrue = true;
+  if (!ParsedCondition) {
+    DER = EvaluateDirectiveExpression(IfNDefMacro);
+    ConditionalTrue = DER.Conditional;
+  }
+
+  // Exit caching mode so that CurPPLexer will not be null
+  ExitCachingLexMode();
   const SourceLocation ConditionalEnd = CurPPLexer->getSourceLocation();
 
   // If this condition is equivalent to #ifndef X, and if this is the first
@@ -2784,6 +2800,11 @@ void Preprocessor::HandleIfDirective(Token &IfToken,
     // the directive blocks.
     CurPPLexer->pushConditionalLevel(IfToken.getLocation(), /*wasskip*/false,
                                      /*foundnonskip*/false, /*foundelse*/false);
+  } else if (ParsedCondition) {
+    // Yes, perform variability-aware analysis on this block
+    CurPPLexer->pushConditionalLevel(IfToken.getLocation(), /*wasskip*/false,
+                                   /*foundnonskip*/true, /*foundelse*/false);
+    // TODO Push to VariabilityStack
   } else if (ConditionalTrue) {
     // Yes, remember that we are inside a conditional, then lex the next token.
     CurPPLexer->pushConditionalLevel(IfToken.getLocation(), /*wasskip*/false,

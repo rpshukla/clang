@@ -890,3 +890,34 @@ Preprocessor::EvaluateDirectiveExpression(IdentifierInfo *&IfNDefMacro) {
   DisableMacroExpansion = DisableMacroExpansionAtStartOfDirective;
   return {ResVal.Val != 0, DT.IncludedUndefinedIds};
 }
+
+Variability::PresenceCondition *Preprocessor::TryParsePresenceCondition() {
+  Token Tok;
+  LexNonComment(Tok);
+
+  // C99 6.10.1p3 - All expressions are evaluated as intmax_t or uintmax_t.
+  unsigned BitWidth = getTargetInfo().getIntMaxTWidth();
+
+  PPValue ResVal(BitWidth);
+  DefinedTracker DT;
+
+  EvaluateValue(ResVal, Tok, DT, true, *this);
+
+  // If we have not reached the end of the expression, something is wrong
+  if (Tok.isNot(tok::eod)) {
+    return nullptr;
+  }
+
+  if (DT.State == DefinedTracker::DefinedMacro &&
+      isMacroVariability(DT.TheMacro->getName())) {
+    // Parsed "defined(X)"
+    return new Variability::Literal(DT.TheMacro->getName());
+  } else if (DT.State == DefinedTracker::NotDefinedMacro &&
+             isMacroVariability(DT.TheMacro->getName())) {
+    // Parsed "!defined(X)"
+    return new Variability::Not(new Variability::Literal(DT.TheMacro->getName()));
+  } else {
+    // Parsed something other than a "defined(X)" or "!defined(X)" so return failure
+    return nullptr;
+  }
+}
