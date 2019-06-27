@@ -2775,8 +2775,12 @@ void Preprocessor::HandleIfDirective(Token &IfToken,
     ConditionalTrue = DER.Conditional;
   }
 
+  // Erase cached tokens from the conditional expression so they don't appear
+  // later when parsing statements
+  EraseCachedTokens(LastCachedTokenRange());
   // Exit caching mode so that CurPPLexer will not be null
   ExitCachingLexMode();
+
   const SourceLocation ConditionalEnd = CurPPLexer->getSourceLocation();
 
   // If this condition is equivalent to #ifndef X, and if this is the first
