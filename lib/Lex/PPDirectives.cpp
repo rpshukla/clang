@@ -2759,13 +2759,23 @@ void Preprocessor::HandleIfDirective(Token &IfToken,
   ++NumIf;
 
   const SourceLocation ConditionalBegin = CurPPLexer->getSourceLocation();
+
+  // Enable backtrack here in case TryParsePresenceCondition fails and we need
+  // to re-parse the conditional expression using EvaluateDirectiveExpression
   EnableBacktrackAtThisPos();
+
   Variability::PresenceCondition *ParsedCondition = TryParsePresenceCondition();
+
+  CachedTokensRange CachedTokenRange = LastCachedTokenRange();
   if (ParsedCondition) {
     CommitBacktrackedTokens();
   } else {
     Backtrack();
   }
+  // Erase tokens that were cached since we called EnableBacktrackAtThisPos
+  // since we don't want them to show up later when parsing real
+  // (non-preprocessor) statements
+  EraseCachedTokens(CachedTokenRange);
 
   // If the PresenceCondition was not successfully parsed, parse and evaluate
   // the conditional expresssion the normal way
@@ -2777,9 +2787,6 @@ void Preprocessor::HandleIfDirective(Token &IfToken,
     ConditionalTrue = DER.Conditional;
   }
 
-  // Erase cached tokens from the conditional expression so they don't appear
-  // later when parsing statements
-  EraseCachedTokens(LastCachedTokenRange());
   // Exit caching mode so that CurPPLexer will not be null
   ExitCachingLexMode();
 
