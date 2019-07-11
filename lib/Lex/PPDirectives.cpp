@@ -2773,7 +2773,6 @@ void Preprocessor::HandleIfDirective(Token &IfToken,
 
   Variability::PresenceCondition *ParsedCondition = TryParsePresenceCondition();
 
-  CachedTokensRange CachedTokenRange = LastCachedTokenRange();
   if (ParsedCondition) {
     CommitBacktrackedTokens();
   } else {
