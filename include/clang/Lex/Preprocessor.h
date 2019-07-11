@@ -122,7 +122,7 @@ enum MacroUse {
 struct VariabilityLocation{
     bool isDef;
     SourceLocation IfLoc;
-    std::string name;
+    Variability::PresenceCondition *condition;
 };
 
 /// \brief Engages in a tight little dance with the lexer to efficiently
@@ -354,7 +354,6 @@ public:
       return !hasVarConfigFile() || (VariabilityMacros.find(macroname) != VariabilityMacros.end());
   }
 
-private:
   /// \brief Returns true if IfLoc is the location of the last #if or #ifdef
   /// used for variability-aware analysis.
   bool isVariabilityIfLoc(SourceLocation IfLoc) {
@@ -1979,6 +1978,13 @@ private:
   ///
   /// If the expression is equivalent to "!defined(X)" return X in IfNDefMacro.
   DirectiveEvalResult EvaluateDirectiveExpression(IdentifierInfo *&IfNDefMacro);
+
+  /// \brief Tries to parse the expression after an "#if" directive and
+  /// construct a PresenceCondition.
+  ///
+  /// Returns pointer to the PresenceCondition parsed. Will return nullptr
+  /// on failure.
+  Variability::PresenceCondition *TryParsePresenceCondition();
 
   /// \brief Install the standard preprocessor pragmas:
   /// \#pragma GCC poison/system_header/dependency and \#pragma once.

@@ -807,18 +807,15 @@ void Preprocessor::AssignConditional(Token& Result){
     return;
   }
   Variability::PresenceCondition* pc;
-  std::vector<bool> decls;
-  std::vector<std::string> names;
+  std::vector<bool> isDefVector;
+  std::vector<Variability::PresenceCondition *> conditionVector;
   for(auto vLoc = VariabilityStack.begin(); vLoc != VariabilityStack.end(); ++vLoc) {
-    //llvm::outs() << "Pushing decl:" << vLoc->isDef << "\n";;
-    decls.push_back(vLoc->isDef);
-    //llvm::outs() << "Pushing name:" << vLoc->name << "\n";;
-    names.push_back(vLoc->name);
-    //llvm::outs() << "Done Pushing\n";
+    isDefVector.push_back(vLoc->isDef);
+    conditionVector.push_back(vLoc->condition);
   }
-  if(decls.size() > 0){
-    pc = Variability::PresenceCondition::getList(decls, names);
-  }else{
+  if (isDefVector.size() > 0) {
+    pc = Variability::PresenceCondition::getList(isDefVector, conditionVector);
+  } else {
     pc = new Variability::True();
   }
   Result.setConditionalInfo(pc);
