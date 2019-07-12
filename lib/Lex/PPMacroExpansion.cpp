@@ -584,6 +584,13 @@ bool Preprocessor::HandleMacroExpandedIdentifier(Token &Identifier,
     // Replace the result token.
     Identifier = MI->getReplacementToken(0);
 
+    // Assign a new presence condition to the replacement token to ensure its
+    // condition matches the expansion location and the the definition location.
+    // Eventually, we should also take into account the presence condition of
+    // the definition.
+    Variability::PresenceCondition *pc = ComputeConditional();
+    Identifier.setConditionalInfo(pc);
+
     // Restore the StartOfLine/LeadingSpace markers.
     Identifier.setFlagValue(Token::StartOfLine , isAtStartOfLine);
     Identifier.setFlagValue(Token::LeadingSpace, hasLeadingSpace);

@@ -817,22 +817,25 @@ void Preprocessor::Lex(Token &Result) {
   //llvm::outs() << Result.getConditional()->toString() << "\n";
 }
 
-void Preprocessor::AssignConditional(Token& Result){
-  if (Result.getConditional() != nullptr) {
-    return;
-  }
-  Variability::PresenceCondition* pc;
+Variability::PresenceCondition *Preprocessor::ComputeConditional() {
   std::vector<bool> isDefVector;
   std::vector<Variability::PresenceCondition *> conditionVector;
   for(auto vLoc = VariabilityStack.begin(); vLoc != VariabilityStack.end(); ++vLoc) {
     isDefVector.push_back(vLoc->isDef);
     conditionVector.push_back(vLoc->condition);
   }
-  if (isDefVector.size() > 0) {
-    pc = Variability::PresenceCondition::getList(isDefVector, conditionVector);
-  } else {
-    pc = new Variability::True();
-  }
+
+  if (isDefVector.size() > 0)
+    return Variability::PresenceCondition::getList(isDefVector, conditionVector);
+
+  return new Variability::True();
+}
+
+void Preprocessor::AssignConditional(Token &Result) {
+  if (Result.getConditional() != nullptr)
+    return;
+
+  Variability::PresenceCondition* pc = ComputeConditional();
   Result.setConditionalInfo(pc);
 }
 

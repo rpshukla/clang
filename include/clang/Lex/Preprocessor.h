@@ -1262,6 +1262,11 @@ public:
   /// \brief Lex the next token for this preprocessor.
   void Lex(Token &Result);
 
+  /// \brief Computes the current presence condition based on the state of
+  /// VariabilityStack
+  Variability::PresenceCondition *ComputeConditional();
+
+  /// \brief Assigns a presence condition to a Token
   void AssignConditional(Token &Result);
 
   void LexAfterModuleImport(Token &Result);
