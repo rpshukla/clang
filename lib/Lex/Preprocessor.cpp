@@ -779,10 +779,25 @@ void Preprocessor::Lex(Token &Result) {
       ReturnedToken = CurPTHLexer->Lex(Result);
       AssignConditional(Result);
       break;
-    case CLK_TokenLexer:
+    case CLK_TokenLexer: {
+      // Check if TokenLexer is being used to expand a macro.
+      // This must be done before calling Lex since CurTokenLexer could become
+      // null after that.
+      bool macro = CurTokenLexer->Macro;
+
       ReturnedToken = CurTokenLexer->Lex(Result);
+
+      if (macro)
+        // Reset the presence condition of expanded macro tokens so that
+        // AssignConditional can assign them a new presence condition (instead
+        // of keeping the presence condition from their definition location).
+        // Eventually, we should take also account the presence condition of the
+        // macro definition when assigning a presence condition to an expansion.
+        Result.setConditionalInfo(nullptr);
+
       AssignConditional(Result);
       break;
+    }
     case CLK_CachingLexer:
       CachingLex(Result);
       ReturnedToken = true;
@@ -802,22 +817,25 @@ void Preprocessor::Lex(Token &Result) {
   //llvm::outs() << Result.getConditional()->toString() << "\n";
 }
 
-void Preprocessor::AssignConditional(Token& Result){
-  if (Result.getConditional() != nullptr) {
-    return;
-  }
-  Variability::PresenceCondition* pc;
+Variability::PresenceCondition *Preprocessor::ComputeConditional() {
   std::vector<bool> isDefVector;
   std::vector<Variability::PresenceCondition *> conditionVector;
   for(auto vLoc = VariabilityStack.begin(); vLoc != VariabilityStack.end(); ++vLoc) {
     isDefVector.push_back(vLoc->isDef);
     conditionVector.push_back(vLoc->condition);
   }
-  if (isDefVector.size() > 0) {
-    pc = Variability::PresenceCondition::getList(isDefVector, conditionVector);
-  } else {
-    pc = new Variability::True();
-  }
+
+  if (isDefVector.size() > 0)
+    return Variability::PresenceCondition::getList(isDefVector, conditionVector);
+
+  return new Variability::True();
+}
+
+void Preprocessor::AssignConditional(Token &Result) {
+  if (Result.getConditional() != nullptr)
+    return;
+
+  Variability::PresenceCondition* pc = ComputeConditional();
   Result.setConditionalInfo(pc);
 }
 
