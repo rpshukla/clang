@@ -779,10 +779,25 @@ void Preprocessor::Lex(Token &Result) {
       ReturnedToken = CurPTHLexer->Lex(Result);
       AssignConditional(Result);
       break;
-    case CLK_TokenLexer:
+    case CLK_TokenLexer: {
+      // Check if TokenLexer is being used to expand a macro.
+      // This must be done before calling Lex since CurTokenLexer could become
+      // null after that.
+      bool macro = CurTokenLexer->Macro;
+
       ReturnedToken = CurTokenLexer->Lex(Result);
+
+      if (macro)
+        // Reset the presence condition of expanded macro tokens so that
+        // AssignConditional can assign them a new presence condition (instead
+        // of keeping the presence condition from their definition location).
+        // Eventually, we should take also account the presence condition of the
+        // macro definition when assigning a presence condition to an expansion.
+        Result.setConditionalInfo(nullptr);
+
       AssignConditional(Result);
       break;
+    }
     case CLK_CachingLexer:
       CachingLex(Result);
       ReturnedToken = true;
