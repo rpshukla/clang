@@ -662,6 +662,22 @@ Parser::ParseExternalDeclaration(ParsedAttributesWithRange &attrs,
   DestroyTemplateIdAnnotationsRAIIObj CleanupRAII(TemplateIds);
   ParenBraceBracketBalancer BalancerRAIIObj(*this);
 
+  while (Tok.is(tok::split)) {
+    // When parsing external declarations, we don't backtrack, so cancel any
+    // backtrack positions that were set here and consume any split tokens.
+    //
+    // Consuming split tokens is usually done later by
+    // ParseDeclarationSpecifiers, however, the switch statement below needs to
+    // know what the next non-split token is, so we must consume split tokens
+    // here.
+    PP.CommitBacktrackedTokens();
+    ConsumeToken();
+  }
+  // Set the presence condition of the current scope to be the presence
+  // condition of the next token
+  Variability::PresenceCondition *pc = Tok.getConditional();
+  getCurScope()->setConditional(pc);
+
   if (PP.isCodeCompletionReached()) {
     cutOffParsing();
     return nullptr;
