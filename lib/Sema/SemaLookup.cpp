@@ -1785,6 +1785,11 @@ bool LookupResult::CoversWholeConditionalSpace(Variability::PresenceCondition* p
 }
 
 bool Sema::VariableLookupCommon(LookupResult &R, Scope* S, bool Result){
+  // If Result is false, then either LookupName or LookupQualifiedName failed,
+  // so don't perform further analysis
+  if (!Result)
+    return false;
+
   S->getConditional()->toString();
   R.clearForCondition(S->getConditional());
   if(!R.empty()){
