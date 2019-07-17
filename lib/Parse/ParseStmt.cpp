@@ -2102,10 +2102,12 @@ Decl *Parser::ParseFunctionStatementBody(Decl *Decl, ParseScope &BodyScope) {
   getCurScope()->setConditional(pc);
 
   // Can't declare type Decl* so use NamedDecl* instead
-  NamedDecl *Result =
-      cast<NamedDecl>(SplittableParseFunctionStatementBody(Decl, BodyScope));
-  // Set presence condition of the parsed Decl
-  Result->setConditional(pc);
+  // Result could be null so cast_or_null is used
+  NamedDecl *Result = cast_or_null<NamedDecl>(
+      SplittableParseFunctionStatementBody(Decl, BodyScope));
+  if (Result)
+    // Set presence condition of the parsed Decl
+    Result->setConditional(pc);
 
   return Result;
 }
