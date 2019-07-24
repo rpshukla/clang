@@ -3,8 +3,8 @@ A variability-aware analysis tool built on top of the clang source code.
 <!-- Who, Where, When -->
 This was developed as part of [SMR](https://sarahnadi.org/smr/) in collaboration with [IBM](https://www-01.ibm.com/ibm/cas/canada/).
 
-Team: Jacob Reckhard and Sarah Nadi<br>
-Emails: reckhard@ualberta.ca, nadi@ualberta.ca
+Team: Jacob Reckhard, Ryan Shukla, and Sarah Nadi<br>
+Emails: reckhard@ualberta.ca, rpshukla@ualberta.ca, nadi@ualberta.ca
 
 <!-- What -->
 ## What it is
@@ -91,18 +91,10 @@ It is important that the flag -Xclang immediately precedes the -var-config flag.
 For C programs, it is the same, except you use build/bin/clang instead of
 build/bin/clang++
 
-## How it Works
+## See the wiki for more info
 
-
-## How to Improve
-Some know flaws:
-- Certain programs cause it to crash
-
-Some things that could be improved:
-- Simplifying boolean expressions
-- Expanding to allow analysis on #if and #elif
-
-
+The wiki contains an overview on what was modified from the original clang
+codebase. It also documents design decisions and known limitations.
 
 ## Info on clang
 Information on Clang:             http://clang.llvm.org/
