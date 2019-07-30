@@ -1266,6 +1266,14 @@ public:
   /// VariabilityStack
   Variability::PresenceCondition *ComputeConditional();
 
+  /// \brief Creates a presence condition to represent the given macro name in
+  /// terms of only macros which are considered points of variability. Also
+  /// takes into account previous #define's and #undef's for the macro.
+  /// \param MacroNameTok The token that holds the name of the macro.
+  /// \returns The normalized presence condition.
+  Variability::PresenceCondition *
+  NormalizedPresenceConditionFromMacroName(const Token &MacroNameTok);
+
   /// \brief Assigns a presence condition to a Token
   void AssignConditional(Token &Result);
 

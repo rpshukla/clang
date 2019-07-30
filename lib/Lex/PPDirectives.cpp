@@ -2673,7 +2673,8 @@ void Preprocessor::HandleUndefDirective() {
   }
 
   // Set presence condition of this UndefMacroDirective
-  Undef->setConditional(ComputeConditional());
+  if (Undef)
+    Undef->setConditional(ComputeConditional());
 
   // If the callbacks want to know, tell them about the macro #undef.
   // Note: no matter if the macro was defined or not.
@@ -2743,6 +2744,12 @@ void Preprocessor::HandleIfdefDirective(Token &Result,
       Callbacks->Ifdef(DirectiveTok.getLocation(), MacroNameTok, MD);
   }
 
+  // Normalize the presence condition of the #ifdef
+  Variability::PresenceCondition *pc =
+      NormalizedPresenceConditionFromMacroName(MacroNameTok);
+  if (isIfndef)
+    pc = new Variability::Not(pc);
+
   // Should we include the stuff contained by this directive?
   if (PPOpts->SingleFileParseMode && !MI) {
     // In 'single-file-parse mode' undefined identifiers trigger parsing of all
@@ -2750,23 +2757,12 @@ void Preprocessor::HandleIfdefDirective(Token &Result,
     CurPPLexer->pushConditionalLevel(DirectiveTok.getLocation(),
                                      /*wasskip*/false, /*foundnonskip*/false,
                                      /*foundelse*/false);
-  } else if (isMacroVariability(getSpelling(MacroNameTok))) {
-    // Yes, this #ifdef/#ifndef will be used for variability-aware analysis
-    CurPPLexer->pushConditionalLevel(DirectiveTok.getLocation(),
-                                     /*wasskip*/false, /*foundnonskip*/true,
-                                     /*foundelse*/false);
-    std::string name = getSpelling(MacroNameTok);
-    if (isIfndef)
-      VariabilityStack.push_back(
-          {false, DirectiveTok.getLocation(), new Variability::Literal(name)});
-    else
-      VariabilityStack.push_back(
-          {true, DirectiveTok.getLocation(), new Variability::Literal(name)});
-  } else if (!MI == isIfndef) {
+  } else if (pc && pc->isSatisfiable()) {
     // Yes, remember that we are inside a conditional, then lex the next token.
     CurPPLexer->pushConditionalLevel(DirectiveTok.getLocation(),
                                      /*wasskip*/false, /*foundnonskip*/true,
                                      /*foundelse*/false);
+    VariabilityStack.push_back({true, DirectiveTok.getLocation(), pc});
   } else {
     // No, skip the contents of this block.
     SkipExcludedConditionalBlock(HashToken.getLocation(),
