@@ -832,15 +832,13 @@ Variability::PresenceCondition *Preprocessor::ComputeConditional() {
 }
 
 Variability::PresenceCondition *
-Preprocessor::NormalizedPresenceConditionFromMacroName(const Token &MacroNameTok) {
+Preprocessor::NormalizedPresenceConditionFromMacroName(const IdentifierInfo *MacroII) {
   Variability::PresenceCondition *pc = nullptr;
 
   // The given macro will be defined under any of the presence conditions of its
   // previous definitions.
   // TODO any previous #undef's need to be handled differently here.
-  for (MacroDirective *i =
-           CurSubmoduleState->Macros[MacroNameTok.getIdentifierInfo()]
-               .getLatest();
+  for (MacroDirective *i = CurSubmoduleState->Macros[MacroII].getLatest();
        i != nullptr; i = i->getPrevious()) {
     if (!pc)
       pc = i->getConditional();
@@ -848,7 +846,7 @@ Preprocessor::NormalizedPresenceConditionFromMacroName(const Token &MacroNameTok
       pc = new Variability::Or(pc, i->getConditional());
   }
 
-  std::string name = getSpelling(MacroNameTok);
+  std::string name = MacroII->getName();
   if (isMacroVariability(name)) {
     // If the macro is a point of variability, then include it in the presence
     // condition

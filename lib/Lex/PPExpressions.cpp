@@ -908,14 +908,14 @@ Variability::PresenceCondition *Preprocessor::TryParsePresenceCondition() {
     return nullptr;
   }
 
-  if (DT.State == DefinedTracker::DefinedMacro &&
-      isMacroVariability(DT.TheMacro->getName())) {
+  if (DT.State == DefinedTracker::DefinedMacro) {
     // Parsed "defined(X)"
-    return new Variability::Literal(DT.TheMacro->getName());
-  } else if (DT.State == DefinedTracker::NotDefinedMacro &&
-             isMacroVariability(DT.TheMacro->getName())) {
+    return NormalizedPresenceConditionFromMacroName(DT.TheMacro);
+  } else if (DT.State == DefinedTracker::NotDefinedMacro) {
     // Parsed "!defined(X)"
-    return new Variability::Not(new Variability::Literal(DT.TheMacro->getName()));
+    Variability::PresenceCondition *pc =
+        NormalizedPresenceConditionFromMacroName(DT.TheMacro);
+    return new Variability::Not(pc);
   } else {
     // Parsed something other than a "defined(X)" or "!defined(X)" so return failure
     return nullptr;

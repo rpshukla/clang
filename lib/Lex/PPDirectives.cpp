@@ -2745,8 +2745,8 @@ void Preprocessor::HandleIfdefDirective(Token &Result,
   }
 
   // Normalize the presence condition of the #ifdef
-  Variability::PresenceCondition *pc =
-      NormalizedPresenceConditionFromMacroName(MacroNameTok);
+  Variability::PresenceCondition *pc = NormalizedPresenceConditionFromMacroName(
+      MacroNameTok.getIdentifierInfo());
   if (isIfndef)
     pc = new Variability::Not(pc);
 
@@ -2841,10 +2841,17 @@ void Preprocessor::HandleIfDirective(Token &IfToken,
     CurPPLexer->pushConditionalLevel(IfToken.getLocation(), /*wasskip*/false,
                                      /*foundnonskip*/false, /*foundelse*/false);
   } else if (ParsedCondition) {
-    // Yes, perform variability-aware analysis on this block
-    CurPPLexer->pushConditionalLevel(IfToken.getLocation(), /*wasskip*/false,
-                                   /*foundnonskip*/true, /*foundelse*/false);
-    VariabilityStack.push_back({true, IfToken.getLocation(), ParsedCondition});
+    if (ParsedCondition->isSatisfiable()) {
+      // Yes, perform variability-aware analysis on this block
+      CurPPLexer->pushConditionalLevel(IfToken.getLocation(), /*wasskip*/false,
+                                       /*foundnonskip*/true, /*foundelse*/false);
+      VariabilityStack.push_back({true, IfToken.getLocation(), ParsedCondition});
+    } else {
+      // Not satisfiable, skip the contents of this block.
+      SkipExcludedConditionalBlock(HashToken.getLocation(), IfToken.getLocation(),
+                                   /*Foundnonskip*/ false,
+                                   /*FoundElse*/ false);
+    }
   } else if (ConditionalTrue) {
     // Yes, remember that we are inside a conditional, then lex the next token.
     CurPPLexer->pushConditionalLevel(IfToken.getLocation(), /*wasskip*/false,
