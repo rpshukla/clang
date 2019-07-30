@@ -2549,6 +2549,15 @@ void Preprocessor::HandleDefineDirective(
   }
 
 
+  // Update presence condition of previous macro definitions or undefs
+  for (MacroDirective *i =
+           CurSubmoduleState->Macros[MacroNameTok.getIdentifierInfo()]
+               .getLatest();
+       i != nullptr; i = i->getPrevious()) {
+    Variability::PresenceCondition *oldPC = i->getConditional();
+    i->setConditional(new Variability::And(
+        oldPC, new Variability::Not(ComputeConditional())));
+  }
 
   // Finally, if this identifier already had a macro defined for it, verify that
   // the macro bodies are identical, and issue diagnostics if they are not.
@@ -2614,6 +2623,9 @@ void Preprocessor::HandleDefineDirective(
     WarnUnusedMacroLocs.insert(MI->getDefinitionLoc());
   }
 
+  // Set presence condition of this MacroDirective
+  MD->setConditional(ComputeConditional());
+
   // If the callbacks want to know, tell them about the macro definition.
   if (Callbacks)
     Callbacks->MacroDefined(MacroNameTok, MD);
@@ -2649,6 +2661,19 @@ void Preprocessor::HandleUndefDirective() {
 
     Undef = AllocateUndefMacroDirective(MacroNameTok.getLocation());
   }
+
+  // Update presence condition of previous macro definitions or undefs
+  for (MacroDirective *i =
+           CurSubmoduleState->Macros[MacroNameTok.getIdentifierInfo()]
+               .getLatest();
+       i != nullptr; i = i->getPrevious()) {
+    Variability::PresenceCondition *oldPC = i->getConditional();
+    i->setConditional(new Variability::And(
+        oldPC, new Variability::Not(ComputeConditional())));
+  }
+
+  // Set presence condition of this UndefMacroDirective
+  Undef->setConditional(ComputeConditional());
 
   // If the callbacks want to know, tell them about the macro #undef.
   // Note: no matter if the macro was defined or not.

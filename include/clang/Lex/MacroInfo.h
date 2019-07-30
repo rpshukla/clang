@@ -16,6 +16,7 @@
 #define LLVM_CLANG_LEX_MACROINFO_H
 
 #include "clang/Lex/Token.h"
+#include "clang/Basic/Conditional.h"
 #include "clang/Basic/LLVM.h"
 #include "clang/Basic/SourceLocation.h"
 #include "llvm/ADT/ArrayRef.h"
@@ -317,6 +318,9 @@ protected:
   MacroDirective(Kind K, SourceLocation Loc)
       : Loc(Loc), MDKind(K), IsFromPCH(false), IsPublic(true) {}
 
+  /// \brief The presence condition under which this macro directive was seen.
+  Variability::PresenceCondition *condition;
+
 public:
   Kind getKind() const { return Kind(MDKind); }
 
@@ -400,6 +404,12 @@ public:
   void dump() const;
 
   static bool classof(const MacroDirective *) { return true; }
+
+  Variability::PresenceCondition *getConditional() { return condition; }
+
+  void setConditional(Variability::PresenceCondition *condition) {
+    this->condition = condition;
+  }
 };
 
 /// \brief A directive for a defined macro or a macro imported from a module.
