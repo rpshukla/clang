@@ -2750,6 +2750,11 @@ void Preprocessor::HandleIfdefDirective(Token &Result,
   if (isIfndef)
     pc = new Variability::Not(pc);
 
+  // Check if the conjuction of this #ifdef's condition and the current
+  // preprocessor condition is satisfiable
+  Variability::And conjunction(pc, ComputeConditional());
+  bool satisfiable = conjunction.isSatisfiable();
+
   // Should we include the stuff contained by this directive?
   if (PPOpts->SingleFileParseMode && !MI) {
     // In 'single-file-parse mode' undefined identifiers trigger parsing of all
@@ -2757,7 +2762,7 @@ void Preprocessor::HandleIfdefDirective(Token &Result,
     CurPPLexer->pushConditionalLevel(DirectiveTok.getLocation(),
                                      /*wasskip*/false, /*foundnonskip*/false,
                                      /*foundelse*/false);
-  } else if (pc && pc->isSatisfiable()) {
+  } else if (satisfiable) {
     // Yes, remember that we are inside a conditional, then lex the next token.
     CurPPLexer->pushConditionalLevel(DirectiveTok.getLocation(),
                                      /*wasskip*/false, /*foundnonskip*/true,
@@ -2841,7 +2846,12 @@ void Preprocessor::HandleIfDirective(Token &IfToken,
     CurPPLexer->pushConditionalLevel(IfToken.getLocation(), /*wasskip*/false,
                                      /*foundnonskip*/false, /*foundelse*/false);
   } else if (ParsedCondition) {
-    if (ParsedCondition->isSatisfiable()) {
+    // Check if the conjuction of this #ifdef's condition and the current
+    // preprocessor condition is satisfiable
+    Variability::And conjunction(ParsedCondition, ComputeConditional());
+    bool satisfiable = conjunction.isSatisfiable();
+
+    if (satisfiable) {
       // Yes, perform variability-aware analysis on this block
       CurPPLexer->pushConditionalLevel(IfToken.getLocation(), /*wasskip*/false,
                                        /*foundnonskip*/true, /*foundelse*/false);
