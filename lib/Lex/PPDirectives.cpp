@@ -2755,6 +2755,11 @@ void Preprocessor::HandleIfdefDirective(Token &Result,
   Variability::And conjunction(pc, ComputeConditional());
   bool satisfiable = conjunction.isSatisfiable();
 
+  // If #ifdef condition is equivalent to current preprocessor condition, we
+  // shouldn't insert a split token or the parser will get confused
+  if (ComputeConditional()->EquivalentTo(pc))
+    CurPPLexer->setNoSplit();
+
   // Should we include the stuff contained by this directive?
   if (PPOpts->SingleFileParseMode && !MI) {
     // In 'single-file-parse mode' undefined identifiers trigger parsing of all
@@ -2850,6 +2855,11 @@ void Preprocessor::HandleIfDirective(Token &IfToken,
     // preprocessor condition is satisfiable
     Variability::And conjunction(ParsedCondition, ComputeConditional());
     bool satisfiable = conjunction.isSatisfiable();
+
+    // If #if condition is equivalent to current preprocessor condition, we
+    // shouldn't insert a split token or the parser will get confused
+    if (ComputeConditional()->EquivalentTo(ParsedCondition))
+      CurPPLexer->setNoSplit();
 
     if (satisfiable) {
       // Yes, perform variability-aware analysis on this block
