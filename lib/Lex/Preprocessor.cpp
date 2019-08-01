@@ -840,6 +840,10 @@ Preprocessor::NormalizedPresenceConditionFromMacroName(const IdentifierInfo *Mac
   // TODO any previous #undef's need to be handled differently here.
   for (MacroDirective *i = CurSubmoduleState->Macros[MacroII].getLatest();
        i != nullptr; i = i->getPrevious()) {
+    // Don't include unsatisfiable directives in the disjunction.
+    if (!i->getConditional() || !i->getConditional()->isSatisfiable())
+      continue;
+
     if (!pc)
       pc = i->getConditional();
     else
