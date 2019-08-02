@@ -2757,7 +2757,7 @@ void Preprocessor::HandleIfdefDirective(Token &Result,
 
   // If #ifdef condition is equivalent to current preprocessor condition, we
   // shouldn't insert a split token or the parser will get confused
-  if (ComputeConditional()->EquivalentTo(pc))
+  if (ComputeConditional()->EquivalentTo(&conjunction))
     CurPPLexer->setNoSplit();
 
   // Should we include the stuff contained by this directive?
@@ -2858,7 +2858,7 @@ void Preprocessor::HandleIfDirective(Token &IfToken,
 
     // If #if condition is equivalent to current preprocessor condition, we
     // shouldn't insert a split token or the parser will get confused
-    if (ComputeConditional()->EquivalentTo(ParsedCondition))
+    if (ComputeConditional()->EquivalentTo(&conjunction))
       CurPPLexer->setNoSplit();
 
     if (satisfiable) {
