@@ -835,19 +835,27 @@ Variability::PresenceCondition *
 Preprocessor::NormalizedPresenceConditionFromMacroName(const IdentifierInfo *MacroII) {
   Variability::PresenceCondition *pc = nullptr;
 
-  // The given macro will be defined under any of the presence conditions of its
-  // previous definitions.
-  // TODO any previous #undef's need to be handled differently here.
+  // The given macro will be defined when any #define directive is active and
+  // all #undef directives are inactive
   for (MacroDirective *i = CurSubmoduleState->Macros[MacroII].getLatest();
        i != nullptr; i = i->getPrevious()) {
     // Don't include unsatisfiable directives in the disjunction.
     if (!i->getConditional() || !i->getConditional()->isSatisfiable())
       continue;
 
-    if (!pc)
-      pc = i->getConditional();
-    else
-      pc = new Variability::Or(pc, i->getConditional());
+    if (i->getKind() == MacroDirective::MD_Define)
+      // i is a #define directive
+      pc = pc ? new Variability::Or(pc, i->getConditional())
+              : i->getConditional();
+    else if (i->getKind() == MacroDirective::MD_Undefine) {
+      // i is an #undef directive
+      if (pc) {
+        Variability::PresenceCondition *undefCond =
+            new Variability::Not(i->getConditional());
+        pc = new Variability::And(pc, undefCond);
+      } else
+        pc = new Variability::Not(new Variability::True());
+    }
   }
 
   std::string name = MacroII->getName();
