@@ -1719,6 +1719,11 @@ void LookupResult::clearForCondition(Variability::PresenceCondition* pc){
   if(empty() && removed){
     ResultKind = NotFound;
   }
+
+  // At this point, if only one Decl is left, the ResultKind should NOT be set
+  // to FoundOverloaded since sanity() will complain.
+  if (ResultKind == FoundOverloaded && Decls.size() == 1)
+    ResultKind = Found;
 }
 
 void LookupResult::TryAndResolveContextualAmbiguity(){
