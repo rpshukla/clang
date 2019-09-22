@@ -2721,11 +2721,31 @@ void Preprocessor::HandleIfdefDirective(Token &Result,
   auto MD = getMacroDefinition(MII);
   MacroInfo *MI = MD.getMacroInfo();
 
-  if (CurPPLexer->getConditionalStackDepth() == 0) {
+  // Normalize the presence condition of the #ifdef
+  Variability::PresenceCondition *pc = NormalizedPresenceConditionFromMacroName(
+      MacroNameTok.getIdentifierInfo());
+  if (isIfndef)
+    pc = new Variability::Not(pc);
+
+  // Check if the conjuction of this #ifdef's condition and the current
+  // preprocessor condition is satisfiable
+  Variability::And conjunction(pc, ComputeConditional());
+  bool satisfiable = conjunction.isSatisfiable();
+
+  // If #ifdef condition is equivalent to current preprocessor condition, we
+  // shouldn't insert a split token or the parser will get confused
+  if (ComputeConditional()->EquivalentTo(&conjunction))
+    CurPPLexer->setNoSplit();
+
+
+  if (!satisfiable && CurPPLexer->getConditionalStackDepth() == 0) {
     // If the start of a top-level #ifdef and if the macro is not defined,
     // inform MIOpt that this might be the start of a proper include guard.
     // Otherwise it is some other form of unknown conditional which we can't
     // handle.
+    //
+    // Note that this is only done if the presence condition imposed by the
+    // ifdef is not satisfiable
     if (!ReadAnyTokensBeforeDirective && !MI) {
       assert(isIfndef && "#ifdef shouldn't reach here");
       CurPPLexer->MIOpt.EnterTopLevelIfndef(MII, MacroNameTok.getLocation());
@@ -2743,22 +2763,6 @@ void Preprocessor::HandleIfdefDirective(Token &Result,
     else
       Callbacks->Ifdef(DirectiveTok.getLocation(), MacroNameTok, MD);
   }
-
-  // Normalize the presence condition of the #ifdef
-  Variability::PresenceCondition *pc = NormalizedPresenceConditionFromMacroName(
-      MacroNameTok.getIdentifierInfo());
-  if (isIfndef)
-    pc = new Variability::Not(pc);
-
-  // Check if the conjuction of this #ifdef's condition and the current
-  // preprocessor condition is satisfiable
-  Variability::And conjunction(pc, ComputeConditional());
-  bool satisfiable = conjunction.isSatisfiable();
-
-  // If #ifdef condition is equivalent to current preprocessor condition, we
-  // shouldn't insert a split token or the parser will get confused
-  if (ComputeConditional()->EquivalentTo(&conjunction))
-    CurPPLexer->setNoSplit();
 
   // Should we include the stuff contained by this directive?
   if (PPOpts->SingleFileParseMode && !MI) {
@@ -2829,9 +2833,26 @@ void Preprocessor::HandleIfDirective(Token &IfToken,
 
   const SourceLocation ConditionalEnd = CurPPLexer->getSourceLocation();
 
+  // Check the for satisfiability
+  bool satisfiable = false;
+  if (ParsedCondition) {
+    // Check if the conjuction of this #ifdef's condition and the current
+    // preprocessor condition is satisfiable
+    Variability::And conjunction(ParsedCondition, ComputeConditional());
+    satisfiable = conjunction.isSatisfiable();
+    // If #if condition is equivalent to current preprocessor condition, we
+    // shouldn't insert a split token or the parser will get confused
+    if (ComputeConditional()->EquivalentTo(&conjunction))
+      CurPPLexer->setNoSplit();
+  }
+
   // If this condition is equivalent to #ifndef X, and if this is the first
   // directive seen, handle it for the multiple-include optimization.
-  if (CurPPLexer->getConditionalStackDepth() == 0) {
+  //
+  // Note that this is only done if the conditional expression could not be
+  // parsed or if it is not satisfiable
+  if ((!ParsedCondition || !satisfiable) &&
+      CurPPLexer->getConditionalStackDepth() == 0) {
     if (!ReadAnyTokensBeforeDirective && IfNDefMacro && ConditionalTrue)
       // FIXME: Pass in the location of the macro name, not the 'if' token.
       CurPPLexer->MIOpt.EnterTopLevelIfndef(IfNDefMacro, IfToken.getLocation());
@@ -2851,16 +2872,6 @@ void Preprocessor::HandleIfDirective(Token &IfToken,
     CurPPLexer->pushConditionalLevel(IfToken.getLocation(), /*wasskip*/false,
                                      /*foundnonskip*/false, /*foundelse*/false);
   } else if (ParsedCondition) {
-    // Check if the conjuction of this #ifdef's condition and the current
-    // preprocessor condition is satisfiable
-    Variability::And conjunction(ParsedCondition, ComputeConditional());
-    bool satisfiable = conjunction.isSatisfiable();
-
-    // If #if condition is equivalent to current preprocessor condition, we
-    // shouldn't insert a split token or the parser will get confused
-    if (ComputeConditional()->EquivalentTo(&conjunction))
-      CurPPLexer->setNoSplit();
-
     if (satisfiable) {
       // Yes, perform variability-aware analysis on this block
       CurPPLexer->pushConditionalLevel(IfToken.getLocation(), /*wasskip*/false,
