@@ -1730,6 +1730,11 @@ void LookupResult::TryAndResolveContextualAmbiguity(){
   auto i = begin();
   NamedDecl* one = *(i++);
   bool removed;
+
+  VariantDecl* d = VariantDecl::Create(one->getASTContext(),
+                                       one->getDeclContext(), one->getLocation(), one->getIdentifier());
+  d->innerKind = one->getKind();
+  
   while(i != end()){
     if(one->getConditional()->ShouldSkipOnCondition(i->getConditional())
             && one->getKind() == i->getKind()){
@@ -1740,11 +1745,16 @@ void LookupResult::TryAndResolveContextualAmbiguity(){
           continue;
         }
       }
+      d->choices.push_back(*i);
       Decls.erase(i--);
       removed = true;
     }
     i++;
   }
+  llvm::outs() << "returning VariantDecl\n";
+  Decls.clear();
+  addDecl(d);
+  return;
 
   if(removed){
     // if adding this removed part fixes it, clearly this isn't correct
@@ -1810,6 +1820,8 @@ bool Sema::VariableLookupCommon(LookupResult &R, Scope* S, bool Result){
 }
 
 bool Sema::LookupName(LookupResult &R, Scope *S, bool AllowBuiltinCreation) {
+
+  llvm::outs() << "looking up: " << R.getLookupNameInfo().getAsString() << "----------------------------------------\n";
 
   bool res = VariableLookupName(R, S, AllowBuiltinCreation);
 
@@ -2328,6 +2340,7 @@ bool Sema::VariableLookupQualifiedName(LookupResult &R, Scope* S, DeclContext *L
 
 bool Sema::LookupQualifiedName(LookupResult &R, Scope* S, DeclContext *LookupCtx,
                                bool InUnqualifiedLookup) {
+  llvm::outs() << "looking up: " << R.getLookupNameInfo().getAsString() << "----------------------------------------\n";
   bool res = VariableLookupQualifiedName(R, getCurScope(),  LookupCtx, InUnqualifiedLookup);
 
   return VariableLookupCommon(R, S, res);

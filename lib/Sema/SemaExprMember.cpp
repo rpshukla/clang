@@ -679,6 +679,12 @@ static bool LookupMemberExprInRecord(Sema &SemaRef, LookupResult &R,
     }
   }
 
+  if (NamedDecl *d = cast_or_null<NamedDecl>(DC)) {
+    d->getLocation().print(llvm::outs(), SemaRef.getSourceManager());
+    llvm::outs() << "\n";
+  } else {
+    llvm::outs() << "not NamedDecl\n";
+  }
   // The record definition is complete, now look up the member.
   SemaRef.LookupQualifiedName(R, SemaRef.getCurScope(),  DC, SS);
 

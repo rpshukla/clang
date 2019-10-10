@@ -488,6 +488,7 @@ bool Sema::BuildCXXNestedNameSpecifier(Scope *S, NestedNameSpecInfo &IdInfo,
   QualType ObjectType = GetTypeFromParser(IdInfo.ObjectType);
 
   // Determine where to perform name lookup
+  // THIS is probably the namespace
   DeclContext *LookupCtx = nullptr;
   bool isDependent = false;
   if (IsCorrectedToColon)
