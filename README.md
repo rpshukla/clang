@@ -1,5 +1,5 @@
 # Variability-Aware Clang
-A variability-aware analysis tool built on top of the clang source code.
+A variability-aware analysis tool built on top of the clang (release 6.0) source code.
 <!-- Who, Where, When -->
 This was developed as part of [SMR](https://sarahnadi.org/smr/) in collaboration with [IBM](https://www-01.ibm.com/ibm/cas/canada/).
 
