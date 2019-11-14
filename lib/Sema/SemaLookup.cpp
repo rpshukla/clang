@@ -1727,6 +1727,15 @@ void LookupResult::clearForCondition(Variability::PresenceCondition* pc){
 }
 
 void LookupResult::TryAndResolveContextualAmbiguity(){
+  // If only one Decl was found, there is no need to create a VariantDecl.
+  if (Decls.size() == 1) {
+    // Ensure that ResultKind is not set to Ambiguous.
+    ResultKind = Found;
+    return;
+  }
+
+  // Otherwise, there was more than one Decl found.
+  // Wrap all the Decls in a VariantDecl
   auto i = begin();
   NamedDecl* one = *i;
   bool removed;
@@ -1759,8 +1768,7 @@ void LookupResult::TryAndResolveContextualAmbiguity(){
   addDecl(d);
   return;
 
-  // TODO refactor so that we don't use a VariantDecl when there is only one
-  // Decl found
+  // TODO remove dead code
   if(removed){
     // if adding this removed part fixes it, clearly this isn't correct
     if(Decls.size() == 1){
