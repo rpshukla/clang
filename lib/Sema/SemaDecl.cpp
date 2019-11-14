@@ -1111,6 +1111,9 @@ Corrected:
   }
 
   NamedDecl *FirstDecl = (*Result.begin())->getUnderlyingDecl();
+  if (VariantDecl *VDecl = dyn_cast<VariantDecl>(FirstDecl)) {
+    return NameClassification::VariantClassification();
+  }
   if (TypeDecl *Type = dyn_cast<TypeDecl>(FirstDecl)) {
     DiagnoseUseOfDecl(Type, NameLoc);
     MarkAnyDeclReferenced(Type->getLocation(), Type, /*OdrUse=*/false);
