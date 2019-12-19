@@ -1727,50 +1727,30 @@ void LookupResult::clearForCondition(Variability::PresenceCondition* pc){
 }
 
 void LookupResult::TryAndResolveContextualAmbiguity(){
+  // If only one Decl was found, there is no need to create a VariantDecl.
+  if (Decls.size() == 1) {
+    // Ensure that ResultKind is not set to Ambiguous.
+    ResultKind = Found;
+    return;
+  }
+
+  // Otherwise, there was more than one Decl found.
+  // Wrap all the Decls in a VariantDecl
   auto i = begin();
-  NamedDecl* one = *(i++);
+  NamedDecl* one = *i;
   bool removed;
+
+  VariantDecl* d = VariantDecl::Create(one->getASTContext(),
+                                       one->getDeclContext(), one->getLocation(), one->getIdentifier());
+  d->innerKind = one->getKind();
+
   while(i != end()){
-    if(one->getConditional()->ShouldSkipOnCondition(i->getConditional())
-            && one->getKind() == i->getKind()){
-      if(one->getKind() == Decl::Kind::Var){
-        if(reinterpret_cast<ValueDecl*>(*i)->getType() !=
-            reinterpret_cast<ValueDecl*>(one)->getType()){
-          i++;
-          continue;
-        }
-      }
-      Decls.erase(i--);
-      removed = true;
-    }
+    d->choices.push_back(*i);
     i++;
   }
-
-  if(removed){
-    // if adding this removed part fixes it, clearly this isn't correct
-    if(Decls.size() == 1){
-      ResultKind = Found;
-    } else if (Decls.size() > 1){
-      VariantDecl* d = VariantDecl::Create(one->getASTContext(),
-          one->getDeclContext(), one->getLocation(), one->getIdentifier());
-        d->innerKind = one->getKind();
-        i = begin();
-        one = *(i++);
-        while(i != end()){
-          i++;
-          d->choices.push_back(*i);
-        }
-        Decls.clear();
-        //addDecl(d);
-        addDecl(one); // Temporary, return first value
-    }
-  } else {
-    // Ensure that if there is only one Decl, ResultKind is not Ambiguous
-    if (ResultKind == Ambiguous && Decls.size() == 1) {
-      ResultKind = Found;
-    }
-  }
-
+  Decls.clear();
+  addDecl(d);
+  return;
 }
 
 bool LookupResult::CoversWholeConditionalSpace(Variability::PresenceCondition* pc, std::string &msg){
