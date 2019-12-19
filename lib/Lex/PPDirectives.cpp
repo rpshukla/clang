@@ -2549,6 +2549,15 @@ void Preprocessor::HandleDefineDirective(
   }
 
 
+  // Update presence condition of previous macro definitions or undefs
+  for (MacroDirective *i =
+           CurSubmoduleState->Macros[MacroNameTok.getIdentifierInfo()]
+               .getLatest();
+       i != nullptr; i = i->getPrevious()) {
+    Variability::PresenceCondition *oldPC = i->getConditional();
+    i->setConditional(new Variability::And(
+        oldPC, new Variability::Not(ComputeConditional())));
+  }
 
   // Finally, if this identifier already had a macro defined for it, verify that
   // the macro bodies are identical, and issue diagnostics if they are not.
@@ -2614,6 +2623,9 @@ void Preprocessor::HandleDefineDirective(
     WarnUnusedMacroLocs.insert(MI->getDefinitionLoc());
   }
 
+  // Set presence condition of this MacroDirective
+  MD->setConditional(ComputeConditional());
+
   // If the callbacks want to know, tell them about the macro definition.
   if (Callbacks)
     Callbacks->MacroDefined(MacroNameTok, MD);
@@ -2649,6 +2661,20 @@ void Preprocessor::HandleUndefDirective() {
 
     Undef = AllocateUndefMacroDirective(MacroNameTok.getLocation());
   }
+
+  // Update presence condition of previous macro definitions or undefs
+  for (MacroDirective *i =
+           CurSubmoduleState->Macros[MacroNameTok.getIdentifierInfo()]
+               .getLatest();
+       i != nullptr; i = i->getPrevious()) {
+    Variability::PresenceCondition *oldPC = i->getConditional();
+    i->setConditional(new Variability::And(
+        oldPC, new Variability::Not(ComputeConditional())));
+  }
+
+  // Set presence condition of this UndefMacroDirective
+  if (Undef)
+    Undef->setConditional(ComputeConditional());
 
   // If the callbacks want to know, tell them about the macro #undef.
   // Note: no matter if the macro was defined or not.
@@ -2695,11 +2721,31 @@ void Preprocessor::HandleIfdefDirective(Token &Result,
   auto MD = getMacroDefinition(MII);
   MacroInfo *MI = MD.getMacroInfo();
 
-  if (CurPPLexer->getConditionalStackDepth() == 0) {
+  // Normalize the presence condition of the #ifdef
+  Variability::PresenceCondition *pc = NormalizedPresenceConditionFromMacroName(
+      MacroNameTok.getIdentifierInfo());
+  if (isIfndef)
+    pc = new Variability::Not(pc);
+
+  // Check if the conjuction of this #ifdef's condition and the current
+  // preprocessor condition is satisfiable
+  Variability::And conjunction(pc, ComputeConditional());
+  bool satisfiable = conjunction.isSatisfiable();
+
+  // If #ifdef condition is equivalent to current preprocessor condition, we
+  // shouldn't insert a split token or the parser will get confused
+  if (ComputeConditional()->EquivalentTo(&conjunction))
+    CurPPLexer->setNoSplit();
+
+
+  if (!satisfiable && CurPPLexer->getConditionalStackDepth() == 0) {
     // If the start of a top-level #ifdef and if the macro is not defined,
     // inform MIOpt that this might be the start of a proper include guard.
     // Otherwise it is some other form of unknown conditional which we can't
     // handle.
+    //
+    // Note that this is only done if the presence condition imposed by the
+    // ifdef is not satisfiable
     if (!ReadAnyTokensBeforeDirective && !MI) {
       assert(isIfndef && "#ifdef shouldn't reach here");
       CurPPLexer->MIOpt.EnterTopLevelIfndef(MII, MacroNameTok.getLocation());
@@ -2725,23 +2771,12 @@ void Preprocessor::HandleIfdefDirective(Token &Result,
     CurPPLexer->pushConditionalLevel(DirectiveTok.getLocation(),
                                      /*wasskip*/false, /*foundnonskip*/false,
                                      /*foundelse*/false);
-  } else if (isMacroVariability(getSpelling(MacroNameTok))) {
-    // Yes, this #ifdef/#ifndef will be used for variability-aware analysis
-    CurPPLexer->pushConditionalLevel(DirectiveTok.getLocation(),
-                                     /*wasskip*/false, /*foundnonskip*/true,
-                                     /*foundelse*/false);
-    std::string name = getSpelling(MacroNameTok);
-    if (isIfndef)
-      VariabilityStack.push_back(
-          {false, DirectiveTok.getLocation(), new Variability::Literal(name)});
-    else
-      VariabilityStack.push_back(
-          {true, DirectiveTok.getLocation(), new Variability::Literal(name)});
-  } else if (!MI == isIfndef) {
+  } else if (satisfiable) {
     // Yes, remember that we are inside a conditional, then lex the next token.
     CurPPLexer->pushConditionalLevel(DirectiveTok.getLocation(),
                                      /*wasskip*/false, /*foundnonskip*/true,
                                      /*foundelse*/false);
+    VariabilityStack.push_back({true, DirectiveTok.getLocation(), pc});
   } else {
     // No, skip the contents of this block.
     SkipExcludedConditionalBlock(HashToken.getLocation(),
@@ -2798,9 +2833,26 @@ void Preprocessor::HandleIfDirective(Token &IfToken,
 
   const SourceLocation ConditionalEnd = CurPPLexer->getSourceLocation();
 
+  // Check the for satisfiability
+  bool satisfiable = false;
+  if (ParsedCondition) {
+    // Check if the conjuction of this #ifdef's condition and the current
+    // preprocessor condition is satisfiable
+    Variability::And conjunction(ParsedCondition, ComputeConditional());
+    satisfiable = conjunction.isSatisfiable();
+    // If #if condition is equivalent to current preprocessor condition, we
+    // shouldn't insert a split token or the parser will get confused
+    if (ComputeConditional()->EquivalentTo(&conjunction))
+      CurPPLexer->setNoSplit();
+  }
+
   // If this condition is equivalent to #ifndef X, and if this is the first
   // directive seen, handle it for the multiple-include optimization.
-  if (CurPPLexer->getConditionalStackDepth() == 0) {
+  //
+  // Note that this is only done if the conditional expression could not be
+  // parsed or if it is not satisfiable
+  if ((!ParsedCondition || !satisfiable) &&
+      CurPPLexer->getConditionalStackDepth() == 0) {
     if (!ReadAnyTokensBeforeDirective && IfNDefMacro && ConditionalTrue)
       // FIXME: Pass in the location of the macro name, not the 'if' token.
       CurPPLexer->MIOpt.EnterTopLevelIfndef(IfNDefMacro, IfToken.getLocation());
@@ -2820,10 +2872,17 @@ void Preprocessor::HandleIfDirective(Token &IfToken,
     CurPPLexer->pushConditionalLevel(IfToken.getLocation(), /*wasskip*/false,
                                      /*foundnonskip*/false, /*foundelse*/false);
   } else if (ParsedCondition) {
-    // Yes, perform variability-aware analysis on this block
-    CurPPLexer->pushConditionalLevel(IfToken.getLocation(), /*wasskip*/false,
-                                   /*foundnonskip*/true, /*foundelse*/false);
-    VariabilityStack.push_back({true, IfToken.getLocation(), ParsedCondition});
+    if (satisfiable) {
+      // Yes, perform variability-aware analysis on this block
+      CurPPLexer->pushConditionalLevel(IfToken.getLocation(), /*wasskip*/false,
+                                       /*foundnonskip*/true, /*foundelse*/false);
+      VariabilityStack.push_back({true, IfToken.getLocation(), ParsedCondition});
+    } else {
+      // Not satisfiable, skip the contents of this block.
+      SkipExcludedConditionalBlock(HashToken.getLocation(), IfToken.getLocation(),
+                                   /*Foundnonskip*/ false,
+                                   /*FoundElse*/ false);
+    }
   } else if (ConditionalTrue) {
     // Yes, remember that we are inside a conditional, then lex the next token.
     CurPPLexer->pushConditionalLevel(IfToken.getLocation(), /*wasskip*/false,

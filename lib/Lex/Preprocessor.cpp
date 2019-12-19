@@ -831,6 +831,51 @@ Variability::PresenceCondition *Preprocessor::ComputeConditional() {
   return new Variability::True();
 }
 
+Variability::PresenceCondition *
+Preprocessor::NormalizedPresenceConditionFromMacroName(const IdentifierInfo *MacroII) {
+  Variability::PresenceCondition *pc = nullptr;
+
+  // The given macro will be defined when any #define directive is active and
+  // all #undef directives are inactive
+  for (MacroDirective *i = CurSubmoduleState->Macros[MacroII].getLatest();
+       i != nullptr; i = i->getPrevious()) {
+    // Don't include unsatisfiable directives in the disjunction.
+    if (!i->getConditional() || !i->getConditional()->isSatisfiable())
+      continue;
+
+    if (i->getKind() == MacroDirective::MD_Define)
+      // i is a #define directive
+      pc = pc ? new Variability::Or(pc, i->getConditional())
+              : i->getConditional();
+    else if (i->getKind() == MacroDirective::MD_Undefine) {
+      // i is an #undef directive
+      if (pc) {
+        Variability::PresenceCondition *undefCond =
+            new Variability::Not(i->getConditional());
+        pc = new Variability::And(pc, undefCond);
+      } else
+        pc = new Variability::Not(new Variability::True());
+    }
+  }
+
+  std::string name = MacroII->getName();
+  if (isMacroVariability(name)) {
+    // If the macro is a point of variability, then include it in the presence
+    // condition
+    if (pc)
+      pc = new Variability::Or(pc, new Variability::Literal(name));
+    else
+      pc = new Variability::Literal(name);
+  }
+
+  if (!pc)
+    // If pc is null at this point, there is no condition in which the macro is
+    // defined
+    return new Variability::Not(new Variability::True());
+
+  return pc;
+}
+
 void Preprocessor::AssignConditional(Token &Result) {
   if (Result.getConditional() != nullptr)
     return;

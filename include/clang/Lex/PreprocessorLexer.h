@@ -123,6 +123,13 @@ protected:
 
   unsigned getConditionalStackDepth() const { return ConditionalStack.size(); }
 
+  // A flag which can be used to toggle whether or not the lexer inserts a split
+  // token at the next #if or #ifdef
+  bool shouldInsertSplit = true;
+  bool shouldSplit() { return shouldInsertSplit; }
+  void setNoSplit() { shouldInsertSplit = false; }
+  void setSplit() { shouldInsertSplit = true; }
+
 public:
   PreprocessorLexer(const PreprocessorLexer &) = delete;
   PreprocessorLexer &operator=(const PreprocessorLexer &) = delete;

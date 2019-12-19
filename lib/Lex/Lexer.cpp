@@ -3873,6 +3873,13 @@ HandleDirective:
     return true;
   }
 
+  // The preprocessor may have disabled the inserting of the split token by
+  // calling setNoSplit(). If so, return early here.
+  if (!shouldSplit()) {
+    setSplit();
+    return false;
+  }
+
   IdentifierInfo *II = Result.getIdentifierInfo();
   if (!II) return false; // Not an identifier.
   if(II->getPPKeywordID() == tok::pp_ifdef ||
